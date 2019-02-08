@@ -28,18 +28,42 @@ defmodule AutoLinker.Parser do
   # @invalid_url ~r/\.\.+/
   @invalid_url ~r/(\.\.+)|(^(\d+\.){1,2}\d+$)/
 
-  @match_url ~r{^[\w\.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$}
-  @match_scheme ~r{^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$}
+  @match_url ~r{^[\w\.-]+(?:\.[\w\.-]+)+[\w\-\._~%:/?#[\]@!\$&'\(\)\*\+,;=.]+$}
+
+  @match_scheme ~r{^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~%:/?#[\]@!\$&'\(\)\*\+,;=.]+$}
 
   @match_phone ~r"((?:x\d{2,7})|(?:(?:\+?1\s?(?:[.-]\s?)?)?(?:\(\s?(?:[2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9])\s?\)|(?:[2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9]))\s?(?:[.-]\s?)?)(?:[2-9]1[02-9]|[2-9][02-9]1|[2-9][02-9]{2})\s?(?:[.-]\s?)?(?:[0-9]{4}))"
 
-  @match_hostname ~r{^(?:https?:\/\/)?(?:[^@\n]+@)?(?<host>[^:#~\/\n?]+)}
+  @match_hostname ~r{^(?:https?:\/\/)?(?:[^@\n]+\\w@)?(?<host>[^:#~\/\n?]+)}
 
   @match_ip ~r"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
 
-  @default_opts ~w(url)a
+  # @user
+  # @user@example.com
+  @match_mention ~r/^@[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@?[a-zA-Z0-9_-](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*/u
+
+  # https://www.w3.org/TR/html5/forms.html#valid-e-mail-address
+  @match_email ~r/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/u
+
+  @match_hashtag ~r/^\#(?<tag>\w+)/u
+
+  @prefix_extra [
+    "magnet:?",
+    "dweb://",
+    "dat://",
+    "gopher://",
+    "ipfs://",
+    "ipns://",
+    "irc://",
+    "ircs://",
+    "irc6://",
+    "mumble://",
+    "ssb://"
+  ]
 
   @tlds "./priv/tlds.txt" |> File.read!() |> String.trim() |> String.split("\n")
+
+  @default_opts ~w(url)a
 
   def parse(text, opts \\ %{})
   def parse(text, list) when is_list(list), do: parse(text, Enum.into(list, %{}))
@@ -75,10 +99,28 @@ defmodule AutoLinker.Parser do
     |> do_parse(Map.delete(opts, :phone))
   end
 
+  defp do_parse(text, %{mention: true} = opts) do
+    text
+    |> do_parse(false, opts, {"", "", :parsing}, &check_and_link_mention/3)
+    |> do_parse(Map.delete(opts, :mention))
+  end
+
+  defp do_parse(text, %{extra: true} = opts) do
+    text
+    |> do_parse(false, opts, {"", "", :parsing}, &check_and_link_extra/3)
+    |> do_parse(Map.delete(opts, :extra))
+  end
+
   defp do_parse(text, %{markdown: true} = opts) do
     text
     |> Builder.create_markdown_links(opts)
     |> do_parse(Map.delete(opts, :markdown))
+  end
+
+  defp do_parse(text, %{email: true} = opts) do
+    text
+    |> do_parse(false, opts, {"", "", :parsing}, &check_and_link_email/3)
+    |> do_parse(Map.delete(opts, :email))
   end
 
   defp do_parse(text, %{url: _} = opts) do
@@ -88,6 +130,12 @@ defmodule AutoLinker.Parser do
       do_parse(text, Map.get(opts, :scheme, false), opts, {"", "", :parsing}, &check_and_link/3)
     end
     |> do_parse(Map.delete(opts, :url))
+  end
+
+  defp do_parse(text, %{hashtag: true} = opts) do
+    text
+    |> do_parse(false, opts, {"", "", :parsing}, &check_and_link_hashtag/3)
+    |> do_parse(Map.delete(opts, :hashtag))
   end
 
   defp do_parse(text, _), do: text
@@ -110,8 +158,9 @@ defmodule AutoLinker.Parser do
   defp do_parse(">" <> text, scheme, opts, {buffer, acc, {:attrs, level}}, handler),
     do: do_parse(text, scheme, opts, {"", acc <> buffer <> ">", {:html, level}}, handler)
 
-  defp do_parse(<<ch::8>> <> text, scheme, opts, {"", acc, {:attrs, level}}, handler),
-    do: do_parse(text, scheme, opts, {"", acc <> <<ch::8>>, {:attrs, level}}, handler)
+  defp do_parse(<<ch::8>> <> text, scheme, opts, {"", acc, {:attrs, level}}, handler) do
+    do_parse(text, scheme, opts, {"", acc <> <<ch::8>>, {:attrs, level}}, handler)
+  end
 
   defp do_parse("</" <> text, scheme, opts, {buffer, acc, {:html, level}}, handler),
     do:
@@ -178,13 +227,43 @@ defmodule AutoLinker.Parser do
     |> link_url(buffer, opts)
   end
 
+  def check_and_link_email(buffer, _, opts) do
+    buffer
+    |> is_email?
+    |> link_email(buffer, opts)
+  end
+
   def check_and_link_phone(buffer, _, opts) do
     buffer
     |> match_phone
     |> link_phone(buffer, opts)
   end
 
-  @doc false
+  def check_and_link_mention(buffer, _, opts) do
+    buffer
+    |> match_mention
+    |> link_mention(buffer, opts)
+  end
+
+  def check_and_link_hashtag(buffer, _, opts) do
+    buffer
+    |> match_hashtag
+    |> link_hashtag(buffer, opts)
+  end
+
+  def check_and_link_extra("xmpp:" <> handle, _, opts) do
+    handle
+    |> is_email?
+    |> link_extra("xmpp:" <> handle, opts)
+  end
+
+  def check_and_link_extra(buffer, _, opts) do
+    buffer
+    |> String.starts_with?(@prefix_extra)
+    |> link_extra(buffer, opts)
+  end
+
+  # @doc false
   def is_url?(buffer, true) do
     if Regex.match?(@invalid_url, buffer) do
       false
@@ -198,6 +277,14 @@ defmodule AutoLinker.Parser do
       false
     else
       Regex.match?(@match_url, buffer) |> is_valid_tld?(buffer)
+    end
+  end
+
+  def is_email?(buffer) do
+    if Regex.match?(@invalid_url, buffer) do
+      false
+    else
+      Regex.match?(@match_email, buffer) |> is_valid_tld?(buffer)
     end
   end
 
@@ -227,6 +314,37 @@ defmodule AutoLinker.Parser do
     end
   end
 
+  def match_mention(buffer) do
+    case Regex.run(@match_mention, buffer) do
+      [mention] -> mention
+      _ -> nil
+    end
+  end
+
+  def match_hashtag(buffer) do
+    case Regex.run(@match_hashtag, buffer, capture: [:tag]) do
+      [hashtag] -> hashtag
+      _ -> nil
+    end
+  end
+
+  def link_hashtag(nil, buffer, _), do: buffer
+
+  def link_hashtag(hashtag, buffer, opts) do
+    Builder.create_hashtag_link(hashtag, buffer, opts)
+  end
+
+  def link_mention(nil, buffer, _), do: buffer
+
+  def link_mention(mention, _buffer, %{mention_formatter: mention_formatter} = opts) do
+    {buffer, _} = mention_formatter.(mention, opts)
+    buffer
+  end
+
+  def link_mention(mention, buffer, opts) do
+    Builder.create_mention_link(mention, buffer, opts)
+  end
+
   def link_phone(nil, buffer, _), do: buffer
 
   def link_phone(list, buffer, opts) do
@@ -239,4 +357,17 @@ defmodule AutoLinker.Parser do
   end
 
   def link_url(_, buffer, _opts), do: buffer
+
+  @doc false
+  def link_email(true, buffer, opts) do
+    Builder.create_email_link(buffer, opts)
+  end
+
+  def link_email(_, buffer, _opts), do: buffer
+
+  def link_extra(true, buffer, opts) do
+    Builder.create_extra_link(buffer, opts)
+  end
+
+  def link_extra(_, buffer, _opts), do: buffer
 end
