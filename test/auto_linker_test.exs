@@ -51,6 +51,57 @@ defmodule AutoLinkerTest do
            ) == expected
   end
 
+  describe "custom handlers" do
+    test "mentions handler" do
+      text = "hello @user, @valid_user and @invalid_user"
+      valid_users = ["user", "valid_user"]
+
+      handler = fn "@" <> user = mention, buffer, _opts, parsed ->
+        if Enum.member?(valid_users, user) do
+          link = ~s(<a href="https://example.com/user/#{user}" data-user="#{user}">#{mention}</a>)
+          {link, %{parsed | mentions: MapSet.put(parsed.mentions, {mention, user})}}
+        else
+          {buffer, parsed}
+        end
+      end
+
+      {result_text, %{mentions: mentions}} =
+        AutoLinker.link_and_parse(text, %{mentions: MapSet.new()},
+          mention: true,
+          mention_handler: handler
+        )
+
+      assert result_text ==
+               "hello <a href=\"https://example.com/user/user\" data-user=\"user\">@user</a> <a href=\"https://example.com/user/valid_user\" data-user=\"valid_user\">@valid_user</a> and @invalid_user"
+
+      assert mentions |> MapSet.to_list() |> Enum.map(&elem(&1, 1)) == valid_users
+    end
+
+    test "hashtags handler" do
+      text = "#hello #world"
+
+      handler = fn hashtag, buffer, opts, parsed ->
+        link = AutoLinker.Builder.create_hashtag_link(hashtag, buffer, opts)
+        {link, %{parsed | tags: MapSet.put(parsed.tags, hashtag)}}
+      end
+
+      {result_text, %{tags: tags}} =
+        AutoLinker.link_and_parse(text, %{tags: MapSet.new()},
+          hashtag: true,
+          hashtag_handler: handler,
+          hashtag_prefix: "https://example.com/user/",
+          class: false,
+          new_window: false,
+          rel: false
+        )
+
+      assert result_text ==
+               "<a href='https://example.com/user/hello'>#hello</a> <a href='https://example.com/user/world'>#world</a>"
+
+      assert MapSet.to_list(tags) == ["hello", "world"]
+    end
+  end
+
   describe "mentions" do
     test "simple mentions" do
       expected =
