@@ -1,5 +1,5 @@
 defmodule AutoLinkerTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   doctest AutoLinker
 
   test "phone number" do

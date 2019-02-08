@@ -1,5 +1,5 @@
 defmodule AutoLinker.BuilderTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   doctest AutoLinker.Builder
 
   import AutoLinker.Builder

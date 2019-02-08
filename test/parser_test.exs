@@ -1,5 +1,5 @@
 defmodule AutoLinker.ParserTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   doctest AutoLinker.Parser
 
   import AutoLinker.Parser
@@ -68,7 +68,7 @@ defmodule AutoLinker.ParserTest do
 
     test "excludes html with specified class" do
       text = "```Check out <div class='section'>google.com</div>```"
-      assert parse(text, exclude_pattern: "```") == text
+      assert parse(text, exclude_patterns: ["```"]) == text
     end
   end
 
