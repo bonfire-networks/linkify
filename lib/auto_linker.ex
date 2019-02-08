@@ -40,6 +40,14 @@ defmodule AutoLinker do
   * `exclude_id: false` - Set to an element id when you don't want urls auto linked in the html of the give element
   * `exclude_patterns: ["```"]` - Don't link anything between the the pattern
   * `markdown: false` - link markdown style links
+  * `email: false` - link email links
+  * `mention: false` - link @mentions (when `true`, requires `mention_prefix` or `mention_handler` options to be set)
+  * `mention_prefix: nil` - a prefix to build a link for a mention (example: `https://example.com/user/`)
+  * `mention_handler: nil` - a custom handler to validate and formart a mention
+  * `hashtag: false` - link #hashtags (when `true`, requires `hashtag_prefix` or `hashtag_handler` options to be set)
+  * `hashtag_prefix: nil` - a prefix to build a link for a hashtag (example: `https://example.com/tag/`)
+  * `hashtag_handler: nil` - a custom handler to validate and formart a hashtag
+  * `extra: false` - link urls with rarely used schemes (magnet, ipfs, irc, etc.)
 
   Each of the above options can be specified when calling `link(text, opts)`
   or can be set in the `:auto_linker`'s configuration. For example:
