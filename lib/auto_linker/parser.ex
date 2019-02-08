@@ -66,6 +66,7 @@ defmodule AutoLinker.Parser do
   @default_opts ~w(url)a
 
   def parse(input, opts \\ %{})
+  def parse(input, opts) when is_binary(input), do: parse({input, nil}, opts) |> elem(0)
   def parse(input, list) when is_list(list), do: parse(input, Enum.into(list, %{}))
 
   def parse(input, opts) do
