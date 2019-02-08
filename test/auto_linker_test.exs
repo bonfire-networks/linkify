@@ -56,12 +56,12 @@ defmodule AutoLinkerTest do
       text = "hello @user, @valid_user and @invalid_user"
       valid_users = ["user", "valid_user"]
 
-      handler = fn "@" <> user = mention, buffer, _opts, parsed ->
+      handler = fn "@" <> user = mention, buffer, _opts, acc ->
         if Enum.member?(valid_users, user) do
           link = ~s(<a href="https://example.com/user/#{user}" data-user="#{user}">#{mention}</a>)
-          {link, %{parsed | mentions: MapSet.put(parsed.mentions, {mention, user})}}
+          {link, %{acc | mentions: MapSet.put(acc.mentions, {mention, user})}}
         else
-          {buffer, parsed}
+          {buffer, acc}
         end
       end
 
@@ -80,9 +80,9 @@ defmodule AutoLinkerTest do
     test "hashtags handler" do
       text = "#hello #world"
 
-      handler = fn hashtag, buffer, opts, parsed ->
+      handler = fn hashtag, buffer, opts, acc ->
         link = AutoLinker.Builder.create_hashtag_link(hashtag, buffer, opts)
-        {link, %{parsed | tags: MapSet.put(parsed.tags, hashtag)}}
+        {link, %{acc | tags: MapSet.put(acc.tags, hashtag)}}
       end
 
       {result_text, %{tags: tags}} =
