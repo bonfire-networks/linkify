@@ -66,7 +66,7 @@ defmodule AutoLinker.Parser do
   @default_opts ~w(url)a
 
   def parse(input, opts \\ %{})
-  def parse(input, opts) when is_binary(input), do: parse({input, nil}, opts) |> elem(0)
+  def parse(input, opts) when is_binary(input), do: {input, nil} |> parse(opts) |> elem(0)
   def parse(input, list) when is_list(list), do: parse(input, Enum.into(list, %{}))
 
   def parse(input, opts) do
@@ -126,17 +126,22 @@ defmodule AutoLinker.Parser do
   end
 
   defp do_parse({text, user_acc}, %{url: _} = opts) do
-    if (exclude = Map.get(opts, :exclude_pattern, false)) && String.starts_with?(text, exclude) do
-      {text, user_acc}
-    else
-      do_parse(
-        {text, user_acc},
-        opts,
-        {"", "", :parsing},
-        &check_and_link/3
-      )
-    end
-    |> do_parse(Map.delete(opts, :url))
+    input =
+      with exclude <- Map.get(opts, :exclude_patterns),
+           true <- is_list(exclude),
+           true <- String.starts_with?(text, exclude) do
+        {text, user_acc}
+      else
+        _ ->
+          do_parse(
+            {text, user_acc},
+            opts,
+            {"", "", :parsing},
+            &check_and_link/3
+          )
+      end
+
+    do_parse(input, Map.delete(opts, :url))
   end
 
   defp do_parse(input, %{hashtag: true} = opts) do
@@ -310,7 +315,7 @@ defmodule AutoLinker.Parser do
     if Regex.match?(@invalid_url, buffer) do
       false
     else
-      Regex.match?(@match_scheme, buffer) |> is_valid_tld?(buffer)
+      @match_scheme |> Regex.match?(buffer) |> is_valid_tld?(buffer)
     end
   end
 
@@ -318,7 +323,7 @@ defmodule AutoLinker.Parser do
     if Regex.match?(@invalid_url, buffer) do
       false
     else
-      Regex.match?(@match_url, buffer) |> is_valid_tld?(buffer)
+      @match_url |> Regex.match?(buffer) |> is_valid_tld?(buffer)
     end
   end
 
@@ -326,7 +331,7 @@ defmodule AutoLinker.Parser do
     if Regex.match?(@invalid_url, buffer) do
       false
     else
-      Regex.match?(@match_email, buffer) |> is_valid_tld?(buffer)
+      @match_email |> Regex.match?(buffer) |> is_valid_tld?(buffer)
     end
   end
 
