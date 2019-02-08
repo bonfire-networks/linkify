@@ -1,0 +1,26 @@
+image: elixir:1.7.2
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+          - deps
+          - _build
+stages:
+  - lint
+  - test
+
+before_script:
+  - mix local.hex --force
+  - mix local.rebar --force
+  - mix deps.get
+  - mix compile --force
+
+lint:
+  stage: lint
+  script:
+    - mix format --check-formatted
+
+unit-testing:
+  stage: test
+  script:
+    - mix test --trace
