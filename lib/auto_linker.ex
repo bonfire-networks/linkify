@@ -54,7 +54,7 @@ defmodule AutoLinker do
     parse({text, nil}, opts) |> elem(0)
   end
 
-  def link_and_parse(text, parsed, opts \\ []) do
-    parse({text, parsed}, opts)
+  def link_map(text, acc, opts \\ []) do
+    parse({text, acc}, opts)
   end
 end

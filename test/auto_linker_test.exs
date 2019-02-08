@@ -66,7 +66,7 @@ defmodule AutoLinkerTest do
       end
 
       {result_text, %{mentions: mentions}} =
-        AutoLinker.link_and_parse(text, %{mentions: MapSet.new()},
+        AutoLinker.link_map(text, %{mentions: MapSet.new()},
           mention: true,
           mention_handler: handler
         )
@@ -86,7 +86,7 @@ defmodule AutoLinkerTest do
       end
 
       {result_text, %{tags: tags}} =
-        AutoLinker.link_and_parse(text, %{tags: MapSet.new()},
+        AutoLinker.link_map(text, %{tags: MapSet.new()},
           hashtag: true,
           hashtag_handler: handler,
           hashtag_prefix: "https://example.com/user/",
