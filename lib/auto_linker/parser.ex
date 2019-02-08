@@ -61,7 +61,7 @@ defmodule AutoLinker.Parser do
     "ssb://"
   ]
 
-  @tlds "./priv/tlds.txt" |> File.read!() |> String.trim() |> String.split("\n")
+  @tlds "./priv/tlds.txt" |> File.read!() |> String.split("\n", trim: true)
 
   @default_opts ~w(url)a
 
