@@ -117,11 +117,10 @@ defmodule AutoLinker.Builder do
 
     url = mention_prefix <> name
 
-    []
+    [href: url]
     |> build_attrs(url, opts, :rel)
     |> build_attrs(url, opts, :target)
     |> build_attrs(url, opts, :class)
-    |> build_attrs(url, opts, :scheme)
     |> format_mention(name, opts)
   end
 
