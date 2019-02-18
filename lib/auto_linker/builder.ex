@@ -53,7 +53,7 @@ defmodule AutoLinker.Builder do
 
   defp format_attrs(attrs) do
     attrs
-    |> Enum.map(fn {key, value} -> ~s(#{key}='#{value}') end)
+    |> Enum.map(fn {key, value} -> ~s(#{key}="#{value}") end)
     |> Enum.join(" ")
   end
 
@@ -117,24 +117,22 @@ defmodule AutoLinker.Builder do
 
     url = mention_prefix <> name
 
-    []
+    [href: url]
     |> build_attrs(url, opts, :rel)
     |> build_attrs(url, opts, :target)
     |> build_attrs(url, opts, :class)
-    |> build_attrs(url, opts, :scheme)
     |> format_mention(name, opts)
   end
 
-  def create_hashtag_link(tag, _buffer, opts) do
+  def create_hashtag_link("#" <> tag, _buffer, opts) do
     hashtag_prefix = opts[:hashtag_prefix]
 
     url = hashtag_prefix <> tag
 
-    []
+    [href: url]
     |> build_attrs(url, opts, :rel)
     |> build_attrs(url, opts, :target)
     |> build_attrs(url, opts, :class)
-    |> build_attrs(url, opts, :scheme)
     |> format_hashtag(tag, opts)
   end
 
@@ -162,12 +160,12 @@ defmodule AutoLinker.Builder do
 
   def format_email(attrs, email, _opts) do
     attrs = format_attrs(attrs)
-    "<a href='mailto:#{email}' #{attrs}>#{email}</a>"
+    ~s(<a href="mailto:#{email}" #{attrs}>#{email}</a>)
   end
 
   def format_extra(attrs, uri, _opts) do
-    attrs = format_attrs(attrs)
-    "<a href='#{uri}' #{attrs}>#{uri}</a>"
+    attrs = format_attributes(attrs)
+    ~s(<a href="#{uri}"#{attrs}>#{uri}</a>)
   end
 
   defp format_attributes(attrs) do
