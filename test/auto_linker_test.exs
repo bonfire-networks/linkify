@@ -30,19 +30,15 @@ defmodule AutoLinkerTest do
 
   test "all kinds of links" do
     text =
-      "hello @user google.com https://ddg.com 888 888-8888 #tag user@email.com [google.com](http://google.com) irc:///mIRC"
+      "hello google.com https://ddg.com 888 888-8888 user@email.com [google.com](http://google.com) irc:///mIRC"
 
     expected =
-      "hello <a href=\"https://example.com/user/user\">@user</a> <a href=\"http://google.com\">google.com</a> <a href=\"https://ddg.com\">ddg.com</a> <a href=\"#\" class=\"phone-number\" data-phone=\"8888888888\">888 888-8888</a> <a href=\"https://example.com/tag/tag\">#tag</a> <a href=\"mailto:user@email.com\" >user@email.com</a> <a href='http://google.com'>google.com</a> <a href=\"irc:///mIRC\">irc:///mIRC</a>"
+      "hello <a href=\"http://google.com\">google.com</a> <a href=\"https://ddg.com\">ddg.com</a> <a href=\"#\" class=\"phone-number\" data-phone=\"8888888888\">888 888-8888</a> <a href=\"mailto:user@email.com\" >user@email.com</a> <a href='http://google.com'>google.com</a> <a href=\"irc:///mIRC\">irc:///mIRC</a>"
 
     assert AutoLinker.link(text,
              phone: true,
              markdown: true,
              email: true,
-             mention: true,
-             mention_prefix: "https://example.com/user/",
-             hashtag: true,
-             hashtag_prefix: "https://example.com/tag/",
              scheme: true,
              extra: true,
              class: false,
@@ -137,18 +133,6 @@ defmodule AutoLinkerTest do
 
       expected =
         "hey <a class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://example.com/user/user@example.com\">@user@example.com</a>"
-
-      assert AutoLinker.link(text,
-               mention: true,
-               mention_prefix: "https://example.com/user/"
-             ) == expected
-    end
-
-    test "skip if starts with @@" do
-      text = "hello @@user and @anotherUser"
-
-      expected =
-        "hello @@user and <a href='https://example.com/user/anotherUser' class='auto-linker' target='_blank' rel='noopener noreferrer'>@anotherUser</a>"
 
       assert AutoLinker.link(text,
                mention: true,
