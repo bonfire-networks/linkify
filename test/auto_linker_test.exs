@@ -100,6 +100,25 @@ defmodule AutoLinkerTest do
 
       assert MapSet.to_list(tags) == ["#hello", "#world"]
     end
+
+    test "mention handler and hashtag prefix" do
+      text =
+        "Hello again, @user.&lt;script&gt;&lt;/script&gt;\nThis is on another :moominmamma: line. #2hu #epic #phantasmagoric"
+
+      handler = fn "@" <> user = mention, _, _, _ ->
+        ~s(<span class='h-card'><a href='#/user/#{user}'>@<span>#{mention}</span></a></span>)
+      end
+
+      expected =
+        "Hello again, <span class='h-card'><a href='#/user/user'>@<span>@user</span></a></span>.&lt;script&gt;&lt;/script&gt;\nThis is on another :moominmamma: line. <a class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\" href=\"/tag/2hu\">#2hu</a> <a class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\" href=\"/tag/epic\">#epic</a> <a class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\" href=\"/tag/phantasmagoric\">#phantasmagoric</a>"
+
+      assert AutoLinker.link(text,
+               mention: true,
+               mention_handler: handler,
+               hashtag: true,
+               hashtag_prefix: "/tag/"
+             ) == expected
+    end
   end
 
   describe "mentions" do

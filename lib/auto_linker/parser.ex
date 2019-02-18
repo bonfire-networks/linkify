@@ -100,10 +100,10 @@ defmodule AutoLinker.Parser do
     |> do_parse(Map.delete(opts, :phone))
   end
 
-  defp do_parse(input, %{mention: true} = opts) do
+  defp do_parse(input, %{hashtag: true} = opts) do
     input
-    |> do_parse(opts, {"", "", :parsing}, &check_and_link_mention/3)
-    |> do_parse(Map.delete(opts, :mention))
+    |> do_parse(opts, {"", "", :parsing}, &check_and_link_hashtag/3)
+    |> do_parse(Map.delete(opts, :hashtag))
   end
 
   defp do_parse(input, %{extra: true} = opts) do
@@ -144,10 +144,10 @@ defmodule AutoLinker.Parser do
     do_parse(input, Map.delete(opts, :url))
   end
 
-  defp do_parse(input, %{hashtag: true} = opts) do
+  defp do_parse(input, %{mention: true} = opts) do
     input
-    |> do_parse(opts, {"", "", :parsing}, &check_and_link_hashtag/3)
-    |> do_parse(Map.delete(opts, :hashtag))
+    |> do_parse(opts, {"", "", :parsing}, &check_and_link_mention/3)
+    |> do_parse(Map.delete(opts, :mention))
   end
 
   defp do_parse(input, _), do: input
