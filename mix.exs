@@ -29,8 +29,9 @@ defmodule AutoLinker.Mixfile do
   # Dependencies can be Hex packages:
   defp deps do
     [
-      {:ex_doc, "~> 0.18", only: :dev},
-      {:earmark, "~> 1.2", only: :dev, override: true}
+      {:ex_doc, "~> 0.19", only: :dev, runtime: false},
+      {:earmark, "~> 1.2", only: :dev, override: true},
+      {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false}
     ]
   end
 
