@@ -98,7 +98,7 @@ defmodule AutoLinkerTest do
       assert result_text ==
                "<a href=\"https://example.com/user/hello\">#hello</a> <a href=\"https://example.com/user/world\">#world</a>"
 
-      assert MapSet.to_list(tags) == ["hello", "world"]
+      assert MapSet.to_list(tags) == ["#hello", "#world"]
     end
   end
 

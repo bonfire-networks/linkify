@@ -125,16 +125,15 @@ defmodule AutoLinker.Builder do
     |> format_mention(name, opts)
   end
 
-  def create_hashtag_link(tag, _buffer, opts) do
+  def create_hashtag_link("#" <> tag, _buffer, opts) do
     hashtag_prefix = opts[:hashtag_prefix]
 
     url = hashtag_prefix <> tag
 
-    []
+    [href: url]
     |> build_attrs(url, opts, :rel)
     |> build_attrs(url, opts, :target)
     |> build_attrs(url, opts, :class)
-    |> build_attrs(url, opts, :scheme)
     |> format_hashtag(tag, opts)
   end
 
