@@ -13,7 +13,7 @@ defmodule AutoLinker.Parser do
   ## Examples
 
       iex> AutoLinker.Parser.parse("Check out google.com")
-      "Check out <a href='http://google.com' class='auto-linker' target='_blank' rel='noopener noreferrer'>google.com</a>"
+      ~s{Check out <a href="http://google.com" class="auto-linker" target="_blank" rel="noopener noreferrer">google.com</a>}
 
       iex> AutoLinker.Parser.parse("call me at x9999", phone: true)
       ~s{call me at <a href="#" class="phone-number" data-phone="9999">x9999</a>}

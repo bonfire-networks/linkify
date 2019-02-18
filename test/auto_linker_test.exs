@@ -9,12 +9,12 @@ defmodule AutoLinkerTest do
 
   test "default link" do
     assert AutoLinker.link("google.com") ==
-             "<a href='http://google.com' class='auto-linker' target='_blank' rel='noopener noreferrer'>google.com</a>"
+             "<a href=\"http://google.com\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">google.com</a>"
   end
 
   test "markdown" do
     assert AutoLinker.link("[google.com](http://google.com)", markdown: true) ==
-             "<a href='http://google.com' class='auto-linker' target='_blank' rel='noopener noreferrer'>google.com</a>"
+             "<a href='http://google.com' class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">google.com</a>"
   end
 
   test "does on link existing links" do
@@ -25,7 +25,7 @@ defmodule AutoLinkerTest do
   test "phone number and markdown link" do
     assert AutoLinker.link("888 888-8888  [ab](a.com)", phone: true, markdown: true) ==
              "<a href=\"#\" class=\"phone-number\" data-phone=\"8888888888\">888 888-8888</a>" <>
-               "  <a href='a.com' class='auto-linker' target='_blank' rel='noopener noreferrer'>ab</a>"
+               "  <a href='a.com' class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">ab</a>"
   end
 
   test "all kinds of links" do
@@ -33,7 +33,7 @@ defmodule AutoLinkerTest do
       "hello @user google.com https://ddg.com 888 888-8888 #tag user@email.com [google.com](http://google.com) irc:///mIRC"
 
     expected =
-      "hello <a href='https://example.com/user/user'>@user</a> <a href='http://google.com'>google.com</a> <a href='https://ddg.com'>ddg.com</a> <a href=\"#\" class=\"phone-number\" data-phone=\"8888888888\">888 888-8888</a> <a href='https://example.com/tag/tag'>#tag</a> <a href='mailto:user@email.com' >user@email.com</a> <a href='http://google.com'>google.com</a> <a href='irc:///mIRC' >irc:///mIRC</a>"
+      "hello <a href=\"https://example.com/user/user\">@user</a> <a href=\"http://google.com\">google.com</a> <a href=\"https://ddg.com\">ddg.com</a> <a href=\"#\" class=\"phone-number\" data-phone=\"8888888888\">888 888-8888</a> <a href=\"https://example.com/tag/tag\">#tag</a> <a href=\"mailto:user@email.com\" >user@email.com</a> <a href='http://google.com'>google.com</a> <a href=\"irc:///mIRC\">irc:///mIRC</a>"
 
     assert AutoLinker.link(text,
              phone: true,
@@ -72,7 +72,7 @@ defmodule AutoLinkerTest do
         )
 
       assert result_text ==
-               "hello <a href=\"https://example.com/user/user\" data-user=\"user\">@user</a> <a href=\"https://example.com/user/valid_user\" data-user=\"valid_user\">@valid_user</a> and @invalid_user"
+               "hello <a href=\"https://example.com/user/user\" data-user=\"user\">@user</a>, <a href=\"https://example.com/user/valid_user\" data-user=\"valid_user\">@valid_user</a> and @invalid_user"
 
       assert mentions |> MapSet.to_list() |> Enum.map(&elem(&1, 1)) == valid_users
     end
@@ -96,7 +96,7 @@ defmodule AutoLinkerTest do
         )
 
       assert result_text ==
-               "<a href='https://example.com/user/hello'>#hello</a> <a href='https://example.com/user/world'>#world</a>"
+               "<a href=\"https://example.com/user/hello\">#hello</a> <a href=\"https://example.com/user/world\">#world</a>"
 
       assert MapSet.to_list(tags) == ["hello", "world"]
     end
@@ -105,9 +105,9 @@ defmodule AutoLinkerTest do
   describe "mentions" do
     test "simple mentions" do
       expected =
-        ~s{hello <a href='https://example.com/user/user' class='auto-linker' target='_blank' rel='noopener noreferrer'>@user</a> and <a href='https://example.com/user/anotherUser' class='auto-linker' target='_blank' rel='noopener noreferrer'>@anotherUser</a>}
+        ~s{hello <a class="auto-linker" target="_blank" rel="noopener noreferrer" href="https://example.com/user/user">@user</a> and <a class="auto-linker" target="_blank" rel="noopener noreferrer" href="https://example.com/user/anotherUser">@anotherUser</a>.}
 
-      assert AutoLinker.link("hello @user and @anotherUser",
+      assert AutoLinker.link("hello @user and @anotherUser.",
                mention: true,
                mention_prefix: "https://example.com/user/"
              ) == expected
@@ -117,7 +117,7 @@ defmodule AutoLinkerTest do
       text = "hey @user@example.com"
 
       expected =
-        "hey <a href='https://example.com/user/user@example.com' class='auto-linker' target='_blank' rel='noopener noreferrer'>@user@example.com</a>"
+        "hey <a class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://example.com/user/user@example.com\">@user@example.com</a>"
 
       assert AutoLinker.link(text,
                mention: true,
@@ -141,9 +141,9 @@ defmodule AutoLinkerTest do
   describe "hashtag links" do
     test "hashtag" do
       expected =
-        "one <a href='https://example.com/tag/two' class='auto-linker' target='_blank' rel='noopener noreferrer'>#two</a> three <a href='https://example.com/tag/four' class='auto-linker' target='_blank' rel='noopener noreferrer'>#four</a>"
+        " one <a class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://example.com/tag/2two\">#2two</a> three <a class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://example.com/tag/four\">#four</a>."
 
-      assert AutoLinker.link("one #two three #four",
+      assert AutoLinker.link(" one #2two three #four.",
                hashtag: true,
                hashtag_prefix: "https://example.com/tag/"
              ) == expected
@@ -153,7 +153,7 @@ defmodule AutoLinkerTest do
       text = "google.com#test #test google.com/#test #tag"
 
       expected =
-        "<a href='http://google.com#test'>google.com#test</a> <a href='https://example.com/tag/test'>#test</a> <a href='http://google.com/#test'>google.com/#test</a> <a href='https://example.com/tag/tag'>#tag</a>"
+        "<a href=\"http://google.com#test\">google.com#test</a> <a href=\"https://example.com/tag/test\">#test</a> <a href=\"http://google.com/#test\">google.com/#test</a> <a href=\"https://example.com/tag/tag\">#tag</a>"
 
       assert AutoLinker.link(text,
                scheme: true,
@@ -169,7 +169,7 @@ defmodule AutoLinkerTest do
       text = "#漢字 #は #тест #ทดสอบ"
 
       expected =
-        "<a href='https://example.com/tag/漢字'>#漢字</a> <a href='https://example.com/tag/は'>#は</a> <a href='https://example.com/tag/тест'>#тест</a> <a href='https://example.com/tag/ทดสอบ'>#ทดสอบ</a>"
+        "<a href=\"https://example.com/tag/漢字\">#漢字</a> <a href=\"https://example.com/tag/は\">#は</a> <a href=\"https://example.com/tag/тест\">#тест</a> <a href=\"https://example.com/tag/ทดสอบ\">#ทดสอบ</a>"
 
       assert AutoLinker.link(text,
                scheme: true,
@@ -187,7 +187,7 @@ defmodule AutoLinkerTest do
       text = "Hey, check out http://www.youtube.com/watch?v=8Zg1-TufF%20zY?x=1&y=2#blabla ."
 
       expected =
-        "Hey, check out <a href='http://www.youtube.com/watch?v=8Zg1-TufF%20zY?x=1&y=2#blabla' class='auto-linker' target='_blank' rel='noopener noreferrer'>youtube.com/watch?v=8Zg1-TufF%20zY?x=1&y=2#blabla</a> ."
+        "Hey, check out <a href=\"http://www.youtube.com/watch?v=8Zg1-TufF%20zY?x=1&y=2#blabla\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">youtube.com/watch?v=8Zg1-TufF%20zY?x=1&y=2#blabla</a> ."
 
       assert AutoLinker.link(text, scheme: true) == expected
 
@@ -200,21 +200,21 @@ defmodule AutoLinkerTest do
       text = "https://example.com/@user"
 
       expected =
-        "<a href='https://example.com/@user' class='auto-linker' target='_blank' rel='noopener noreferrer'>example.com/@user</a>"
+        "<a href=\"https://example.com/@user\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">example.com/@user</a>"
 
       assert AutoLinker.link(text, scheme: true) == expected
 
       text = "https://example.com:4000/@user"
 
       expected =
-        "<a href='https://example.com:4000/@user' class='auto-linker' target='_blank' rel='noopener noreferrer'>example.com:4000/@user</a>"
+        "<a href=\"https://example.com:4000/@user\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">example.com:4000/@user</a>"
 
       assert AutoLinker.link(text, scheme: true) == expected
 
       text = "https://example.com:4000/@user"
 
       expected =
-        "<a href='https://example.com:4000/@user' class='auto-linker' target='_blank' rel='noopener noreferrer'>example.com:4000/@user</a>"
+        "<a href=\"https://example.com:4000/@user\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">example.com:4000/@user</a>"
 
       assert AutoLinker.link(text, scheme: true) == expected
 
@@ -225,28 +225,28 @@ defmodule AutoLinkerTest do
       text = "http://www.cs.vu.nl/~ast/intel/"
 
       expected =
-        "<a href='http://www.cs.vu.nl/~ast/intel/' class='auto-linker' target='_blank' rel='noopener noreferrer'>cs.vu.nl/~ast/intel/</a>"
+        "<a href=\"http://www.cs.vu.nl/~ast/intel/\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">cs.vu.nl/~ast/intel/</a>"
 
       assert AutoLinker.link(text, scheme: true) == expected
 
       text = "https://forum.zdoom.org/viewtopic.php?f=44&t=57087"
 
       expected =
-        "<a href='https://forum.zdoom.org/viewtopic.php?f=44&t=57087' class='auto-linker' target='_blank' rel='noopener noreferrer'>forum.zdoom.org/viewtopic.php?f=44&t=57087</a>"
+        "<a href=\"https://forum.zdoom.org/viewtopic.php?f=44&t=57087\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">forum.zdoom.org/viewtopic.php?f=44&t=57087</a>"
 
       assert AutoLinker.link(text, scheme: true) == expected
 
       text = "https://en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul"
 
       expected =
-        "<a href='https://en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul' class='auto-linker' target='_blank' rel='noopener noreferrer'>en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul</a>"
+        "<a href=\"https://en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul</a>"
 
       assert AutoLinker.link(text, scheme: true) == expected
 
       text = "https://en.wikipedia.org/wiki/Duff's_device"
 
       expected =
-        "<a href='https://en.wikipedia.org/wiki/Duff's_device' class='auto-linker' target='_blank' rel='noopener noreferrer'>en.wikipedia.org/wiki/Duff's_device</a>"
+        "<a href=\"https://en.wikipedia.org/wiki/Duff's_device\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">en.wikipedia.org/wiki/Duff's_device</a>"
 
       assert AutoLinker.link(text, scheme: true) == expected
     end
@@ -255,13 +255,16 @@ defmodule AutoLinkerTest do
   describe "non http links" do
     test "xmpp" do
       text = "xmpp:user@example.com"
-      expected = "<a href='xmpp:user@example.com' class='auto-linker'>xmpp:user@example.com</a>"
+
+      expected =
+        "<a href=\"xmpp:user@example.com\" class=\"auto-linker\">xmpp:user@example.com</a>"
+
       assert AutoLinker.link(text, extra: true) == expected
     end
 
     test "email" do
       text = "user@example.com"
-      expected = "<a href='mailto:user@example.com' class='auto-linker'>user@example.com</a>"
+      expected = "<a href=\"mailto:user@example.com\" class=\"auto-linker\">user@example.com</a>"
       assert AutoLinker.link(text, email: true) == expected
     end
 
@@ -270,7 +273,7 @@ defmodule AutoLinkerTest do
         "magnet:?xt=urn:btih:a4104a9d2f5615601c429fe8bab8177c47c05c84&dn=ubuntu-18.04.1.0-live-server-amd64.iso&tr=http%3A%2F%2Ftorrent.ubuntu.com%3A6969%2Fannounce&tr=http%3A%2F%2Fipv6.torrent.ubuntu.com%3A6969%2Fannounce"
 
       expected =
-        "<a href='magnet:?xt=urn:btih:a4104a9d2f5615601c429fe8bab8177c47c05c84&dn=ubuntu-18.04.1.0-live-server-amd64.iso&tr=http%3A%2F%2Ftorrent.ubuntu.com%3A6969%2Fannounce&tr=http%3A%2F%2Fipv6.torrent.ubuntu.com%3A6969%2Fannounce' class='auto-linker'>magnet:?xt=urn:btih:a4104a9d2f5615601c429fe8bab8177c47c05c84&dn=ubuntu-18.04.1.0-live-server-amd64.iso&tr=http%3A%2F%2Ftorrent.ubuntu.com%3A6969%2Fannounce&tr=http%3A%2F%2Fipv6.torrent.ubuntu.com%3A6969%2Fannounce</a>"
+        "<a href=\"magnet:?xt=urn:btih:a4104a9d2f5615601c429fe8bab8177c47c05c84&dn=ubuntu-18.04.1.0-live-server-amd64.iso&tr=http%3A%2F%2Ftorrent.ubuntu.com%3A6969%2Fannounce&tr=http%3A%2F%2Fipv6.torrent.ubuntu.com%3A6969%2Fannounce\" class=\"auto-linker\">magnet:?xt=urn:btih:a4104a9d2f5615601c429fe8bab8177c47c05c84&dn=ubuntu-18.04.1.0-live-server-amd64.iso&tr=http%3A%2F%2Ftorrent.ubuntu.com%3A6969%2Fannounce&tr=http%3A%2F%2Fipv6.torrent.ubuntu.com%3A6969%2Fannounce</a>"
 
       assert AutoLinker.link(text, extra: true) == expected
     end
@@ -280,7 +283,7 @@ defmodule AutoLinkerTest do
         "dweb://584faa05d394190ab1a3f0240607f9bf2b7e2bd9968830a11cf77db0cea36a21+v1.0.0/path/to/file.txt"
 
       expected =
-        "<a href='dweb://584faa05d394190ab1a3f0240607f9bf2b7e2bd9968830a11cf77db0cea36a21+v1.0.0/path/to/file.txt' class='auto-linker'>dweb://584faa05d394190ab1a3f0240607f9bf2b7e2bd9968830a11cf77db0cea36a21+v1.0.0/path/to/file.txt</a>"
+        "<a href=\"dweb://584faa05d394190ab1a3f0240607f9bf2b7e2bd9968830a11cf77db0cea36a21+v1.0.0/path/to/file.txt\" class=\"auto-linker\">dweb://584faa05d394190ab1a3f0240607f9bf2b7e2bd9968830a11cf77db0cea36a21+v1.0.0/path/to/file.txt</a>"
 
       assert AutoLinker.link(text, extra: true) == expected
     end
@@ -291,7 +294,7 @@ defmodule AutoLinkerTest do
       text = "https://google.com"
 
       expected =
-        "<a href='https://google.com' class='auto-linker' target='_blank' rel='noopener noreferrer'>google.com</a>"
+        "<a href=\"https://google.com\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">google.com</a>"
 
       assert AutoLinker.link(text, scheme: true) == expected
     end
@@ -305,7 +308,7 @@ defmodule AutoLinkerTest do
       text = "this url https://google.foobar.com/ has valid TLD"
 
       expected =
-        "this url <a href='https://google.foobar.com/' class='auto-linker' target='_blank' rel='noopener noreferrer'>google.foobar.com/</a> has valid TLD"
+        "this url <a href=\"https://google.foobar.com/\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">google.foobar.com/</a> has valid TLD"
 
       assert AutoLinker.link(text, scheme: true) == expected
     end
@@ -318,7 +321,7 @@ defmodule AutoLinkerTest do
       text = "this url google.foobar.com/ has valid TLD"
 
       expected =
-        "this url <a href='http://google.foobar.com/' class='auto-linker' target='_blank' rel='noopener noreferrer'>google.foobar.com/</a> has valid TLD"
+        "this url <a href=\"http://google.foobar.com/\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">google.foobar.com/</a> has valid TLD"
 
       assert AutoLinker.link(text, scheme: false) == expected
     end
@@ -327,14 +330,14 @@ defmodule AutoLinkerTest do
       text = "this url http://google.foobar.com/ has valid TLD"
 
       expected =
-        "this url <a href='http://google.foobar.com/' class='auto-linker' target='_blank' rel='noopener noreferrer'>google.foobar.com/</a> has valid TLD"
+        "this url <a href=\"http://google.foobar.com/\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">google.foobar.com/</a> has valid TLD"
 
       assert AutoLinker.link(text, scheme: true) == expected
 
       text = "this url google.foobar.com/ has valid TLD"
 
       expected =
-        "this url <a href='http://google.foobar.com/' class='auto-linker' target='_blank' rel='noopener noreferrer'>google.foobar.com/</a> has valid TLD"
+        "this url <a href=\"http://google.foobar.com/\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">google.foobar.com/</a> has valid TLD"
 
       assert AutoLinker.link(text, scheme: true) == expected
     end
