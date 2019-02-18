@@ -62,7 +62,10 @@ defmodule AutoLinker.ParserTest do
 
     test "links url inside html" do
       text = "Check out <div class='section'>google.com</div>"
-      expected = "Check out <div class='section'><a href='http://google.com'>google.com</a></div>"
+
+      expected =
+        "Check out <div class='section'><a href=\"http://google.com\">google.com</a></div>"
+
       assert parse(text, class: false, rel: false, new_window: false) == expected
     end
 

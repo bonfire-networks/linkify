@@ -13,7 +13,7 @@ defmodule AutoLinker.Parser do
   ## Examples
 
       iex> AutoLinker.Parser.parse("Check out google.com")
-      "Check out <a href='http://google.com' class='auto-linker' target='_blank' rel='noopener noreferrer'>google.com</a>"
+      ~s{Check out <a href="http://google.com" class="auto-linker" target="_blank" rel="noopener noreferrer">google.com</a>}
 
       iex> AutoLinker.Parser.parse("call me at x9999", phone: true)
       ~s{call me at <a href="#" class="phone-number" data-phone="9999">x9999</a>}
@@ -40,12 +40,12 @@ defmodule AutoLinker.Parser do
 
   # @user
   # @user@example.com
-  @match_mention ~r/^@[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@?[a-zA-Z0-9_-](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*/u
+  @match_mention ~r/^@[a-zA-Z\d_-]+@[a-zA-Z0-9_-](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*|@[a-zA-Z\d_-]+/u
 
   # https://www.w3.org/TR/html5/forms.html#valid-e-mail-address
   @match_email ~r/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/u
 
-  @match_hashtag ~r/^\#(?<tag>\w+)/u
+  @match_hashtag ~r/^(?<tag>\#\w+)/u
 
   @prefix_extra [
     "magnet:?",
@@ -100,10 +100,10 @@ defmodule AutoLinker.Parser do
     |> do_parse(Map.delete(opts, :phone))
   end
 
-  defp do_parse(input, %{mention: true} = opts) do
+  defp do_parse(input, %{hashtag: true} = opts) do
     input
-    |> do_parse(opts, {"", "", :parsing}, &check_and_link_mention/3)
-    |> do_parse(Map.delete(opts, :mention))
+    |> do_parse(opts, {"", "", :parsing}, &check_and_link_hashtag/3)
+    |> do_parse(Map.delete(opts, :hashtag))
   end
 
   defp do_parse(input, %{extra: true} = opts) do
@@ -144,10 +144,10 @@ defmodule AutoLinker.Parser do
     do_parse(input, Map.delete(opts, :url))
   end
 
-  defp do_parse(input, %{hashtag: true} = opts) do
+  defp do_parse(input, %{mention: true} = opts) do
     input
-    |> do_parse(opts, {"", "", :parsing}, &check_and_link_hashtag/3)
-    |> do_parse(Map.delete(opts, :hashtag))
+    |> do_parse(opts, {"", "", :parsing}, &check_and_link_mention/3)
+    |> do_parse(Map.delete(opts, :mention))
   end
 
   defp do_parse(input, _), do: input
@@ -378,22 +378,42 @@ defmodule AutoLinker.Parser do
   def link_hashtag(nil, buffer, _, _user_acc), do: buffer
 
   def link_hashtag(hashtag, buffer, %{hashtag_handler: hashtag_handler} = opts, user_acc) do
-    hashtag_handler.(hashtag, buffer, opts, user_acc)
+    hashtag
+    |> hashtag_handler.(buffer, opts, user_acc)
+    |> maybe_update_buffer(hashtag, buffer)
   end
 
   def link_hashtag(hashtag, buffer, opts, _user_acc) do
-    Builder.create_hashtag_link(hashtag, buffer, opts)
+    hashtag
+    |> Builder.create_hashtag_link(buffer, opts)
+    |> maybe_update_buffer(hashtag, buffer)
   end
 
   def link_mention(nil, buffer, _, user_acc), do: {buffer, user_acc}
 
   def link_mention(mention, buffer, %{mention_handler: mention_handler} = opts, user_acc) do
-    mention_handler.(mention, buffer, opts, user_acc)
+    mention
+    |> mention_handler.(buffer, opts, user_acc)
+    |> maybe_update_buffer(mention, buffer)
   end
 
   def link_mention(mention, buffer, opts, _user_acc) do
-    Builder.create_mention_link(mention, buffer, opts)
+    mention
+    |> Builder.create_mention_link(buffer, opts)
+    |> maybe_update_buffer(mention, buffer)
   end
+
+  defp maybe_update_buffer(out, match, buffer) when is_binary(out) do
+    maybe_update_buffer({out, nil}, match, buffer)
+  end
+
+  defp maybe_update_buffer({out, user_acc}, match, buffer)
+       when match != buffer and out != buffer do
+    out = String.replace(buffer, match, out)
+    {out, user_acc}
+  end
+
+  defp maybe_update_buffer(out, _match, _buffer), do: out
 
   def link_phone(nil, buffer, _), do: buffer
 
