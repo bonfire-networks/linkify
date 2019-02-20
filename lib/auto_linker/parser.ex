@@ -205,23 +205,20 @@ defmodule AutoLinker.Parser do
         handler
       )
 
-  defp do_parse({" " <> text, user_acc}, opts, {buffer, acc, {:open, level}}, handler),
-    do:
-      do_parse(
-        {text, user_acc},
-        opts,
-        {"", acc <> buffer <> " ", {:attrs, level}},
-        handler
-      )
-
-  defp do_parse({"\n" <> text, user_acc}, opts, {buffer, acc, {:open, level}}, handler),
-    do:
-      do_parse(
-        {text, user_acc},
-        opts,
-        {"", acc <> buffer <> "\n", {:attrs, level}},
-        handler
-      )
+  defp do_parse(
+         {<<char::bytes-size(1), text::binary>>, user_acc},
+         opts,
+         {buffer, acc, {:open, level}},
+         handler
+       )
+       when char in [" ", "\r", "\n"] do
+    do_parse(
+      {text, user_acc},
+      opts,
+      {"", acc <> buffer <> char, {:attrs, level}},
+      handler
+    )
+  end
 
   # default cases where state is not important
   defp do_parse(
@@ -232,24 +229,19 @@ defmodule AutoLinker.Parser do
        ),
        do: do_parse({text, user_acc}, opts, {buffer <> " ", acc, state}, handler)
 
-  defp do_parse({" " <> text, user_acc}, opts, {buffer, acc, state}, handler) do
+  defp do_parse(
+         {<<char::bytes-size(1), text::binary>>, user_acc},
+         opts,
+         {buffer, acc, state},
+         handler
+       )
+       when char in [" ", "\r", "\n"] do
     {buffer, user_acc} = run_handler(handler, buffer, opts, user_acc)
 
     do_parse(
       {text, user_acc},
       opts,
-      {"", acc <> buffer <> " ", state},
-      handler
-    )
-  end
-
-  defp do_parse({"\n" <> text, user_acc}, opts, {buffer, acc, state}, handler) do
-    {buffer, user_acc} = run_handler(handler, buffer, opts, user_acc)
-
-    do_parse(
-      {text, user_acc},
-      opts,
-      {"", acc <> buffer <> "\n", state},
+      {"", acc <> buffer <> char, state},
       handler
     )
   end
