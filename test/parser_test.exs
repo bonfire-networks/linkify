@@ -51,6 +51,15 @@ defmodule AutoLinker.ParserTest do
   end
 
   describe "parse" do
+    test "handle line breakes" do
+      text = "google.com\r\nssss"
+
+      expected =
+        "<a href=\"http://google.com\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">google.com</a>\r\nssss"
+
+      assert parse(text) == expected
+    end
+
     test "does not link attributes" do
       text = "Check out <a href='google.com'>google</a>"
       assert parse(text) == text
