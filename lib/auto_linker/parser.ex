@@ -362,8 +362,11 @@ defmodule AutoLinker.Parser do
 
   def match_hashtag(buffer) do
     case Regex.run(@match_hashtag, buffer, capture: [:tag]) do
-      [hashtag] -> hashtag
-      _ -> nil
+      [hashtag] ->
+        if Regex.match?(~r/#\d+$/, hashtag), do: nil, else: hashtag
+
+      _ ->
+        nil
     end
   end
 

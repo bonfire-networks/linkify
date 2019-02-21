@@ -152,6 +152,18 @@ defmodule AutoLinkerTest do
              ) == expected
     end
 
+    test "must have non-numbers" do
+      expected = "<a href=\"/t/1ok\">#1ok</a> #42 #7"
+
+      assert AutoLinker.link("#1ok #42 #7",
+               hashtag: true,
+               hashtag_prefix: "/t/",
+               class: false,
+               rel: false,
+               new_window: false
+             ) == expected
+    end
+
     test "do not turn urls with hashes into hashtags" do
       text = "google.com#test #test google.com/#test #tag"
 
