@@ -7,11 +7,13 @@ defmodule AutoLinker.Builder do
   Create a link.
   """
   def create_link(url, opts) do
+    url = add_scheme(url)
+
     []
     |> build_attrs(url, opts, :rel)
     |> build_attrs(url, opts, :target)
     |> build_attrs(url, opts, :class)
-    |> build_attrs(url, opts, :scheme)
+    |> build_attrs(url, opts, :href)
     |> format_url(url, opts)
   end
 
@@ -21,6 +23,13 @@ defmodule AutoLinker.Builder do
     |> build_attrs(text, opts, :target)
     |> build_attrs(text, opts, :class)
     |> format_markdown(text, opts)
+  end
+
+  defp build_attrs(attrs, uri, %{rel: get_rel}, :rel) when is_function(get_rel, 1) do
+    case get_rel.(uri) do
+      nil -> attrs
+      rel -> [{:rel, rel} | attrs]
+    end
   end
 
   defp build_attrs(attrs, _, opts, :rel) do
@@ -35,11 +44,13 @@ defmodule AutoLinker.Builder do
     if cls = Map.get(opts, :class, "auto-linker"), do: [{:class, cls} | attrs], else: attrs
   end
 
-  defp build_attrs(attrs, url, _opts, :scheme) do
-    if String.starts_with?(url, ["http://", "https://"]),
-      do: [{:href, url} | attrs],
-      else: [{:href, "http://" <> url} | attrs]
+  defp build_attrs(attrs, url, _opts, :href) do
+    [{:href, url} | attrs]
   end
+
+  defp add_scheme("http://" <> _ = url), do: url
+  defp add_scheme("https://" <> _ = url), do: url
+  defp add_scheme(url), do: "http://" <> url
 
   defp format_url(attrs, url, opts) do
     url =
@@ -117,10 +128,11 @@ defmodule AutoLinker.Builder do
 
     url = mention_prefix <> name
 
-    [href: url]
+    []
     |> build_attrs(url, opts, :rel)
     |> build_attrs(url, opts, :target)
     |> build_attrs(url, opts, :class)
+    |> build_attrs(url, opts, :href)
     |> format_mention(name, opts)
   end
 
@@ -129,43 +141,48 @@ defmodule AutoLinker.Builder do
 
     url = hashtag_prefix <> tag
 
-    [href: url]
+    []
     |> build_attrs(url, opts, :rel)
     |> build_attrs(url, opts, :target)
     |> build_attrs(url, opts, :class)
+    |> build_attrs(url, opts, :href)
     |> format_hashtag(tag, opts)
   end
 
   def create_email_link(email, opts) do
     []
     |> build_attrs(email, opts, :class)
+    |> build_attrs("mailto:#{email}", opts, :href)
     |> format_email(email, opts)
   end
 
   def create_extra_link(uri, opts) do
     []
     |> build_attrs(uri, opts, :class)
+    |> build_attrs(uri, opts, :rel)
+    |> build_attrs(uri, opts, :target)
+    |> build_attrs(uri, opts, :href)
     |> format_extra(uri, opts)
   end
 
   def format_mention(attrs, name, _opts) do
     attrs = format_attrs(attrs)
-    "<a #{attrs}>@" <> name <> "</a>"
+    "<a #{attrs}>@#{name}</a>"
   end
 
   def format_hashtag(attrs, tag, _opts) do
     attrs = format_attrs(attrs)
-    "<a #{attrs}>#" <> tag <> "</a>"
+    "<a #{attrs}>##{tag}</a>"
   end
 
   def format_email(attrs, email, _opts) do
     attrs = format_attrs(attrs)
-    ~s(<a href="mailto:#{email}" #{attrs}>#{email}</a>)
+    ~s(<a #{attrs}>#{email}</a>)
   end
 
   def format_extra(attrs, uri, _opts) do
-    attrs = format_attributes(attrs)
-    ~s(<a href="#{uri}"#{attrs}>#{uri}</a>)
+    attrs = format_attrs(attrs)
+    ~s(<a #{attrs}>#{uri}</a>)
   end
 
   defp format_attributes(attrs) do

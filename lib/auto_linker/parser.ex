@@ -25,7 +25,6 @@ defmodule AutoLinker.Parser do
       ~s{, work <a href="#" class="phone-number" data-phone="5555555555">(555) 555-5555</a>}
   """
 
-  # @invalid_url ~r/\.\.+/
   @invalid_url ~r/(\.\.+)|(^(\d+\.){1,2}\d+$)/
 
   @match_url ~r{^[\w\.-]+(?:\.[\w\.-]+)+[\w\-\._~%:/?#[\]@!\$&'\(\)\*\+,;=.]+$}
@@ -45,7 +44,7 @@ defmodule AutoLinker.Parser do
   # https://www.w3.org/TR/html5/forms.html#valid-e-mail-address
   @match_email ~r/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/u
 
-  @match_hashtag ~r/^(?<tag>\#\w+)/u
+  @match_hashtag ~r/^(?<tag>\#[[:word:]_]*[[:alpha:]_·][[:word:]_·]*)/u
 
   @prefix_extra [
     "magnet:?",
