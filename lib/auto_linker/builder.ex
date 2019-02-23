@@ -6,15 +6,15 @@ defmodule AutoLinker.Builder do
   @doc """
   Create a link.
   """
-  def create_link(url, opts) do
-    url = add_scheme(url)
+  def create_link(text, opts) do
+    url = add_scheme(text)
 
     []
     |> build_attrs(url, opts, :rel)
     |> build_attrs(url, opts, :target)
     |> build_attrs(url, opts, :class)
     |> build_attrs(url, opts, :href)
-    |> format_url(url, opts)
+    |> format_url(text, opts)
   end
 
   def create_markdown_links(text, opts) do
