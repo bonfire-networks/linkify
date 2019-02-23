@@ -6,15 +6,15 @@ defmodule AutoLinker.Builder do
   @doc """
   Create a link.
   """
-  def create_link(url, opts) do
-    url = add_scheme(url)
+  def create_link(text, opts) do
+    url = add_scheme(text)
 
     []
     |> build_attrs(url, opts, :rel)
     |> build_attrs(url, opts, :target)
     |> build_attrs(url, opts, :class)
     |> build_attrs(url, opts, :href)
-    |> format_url(url, opts)
+    |> format_url(text, opts)
   end
 
   def create_markdown_links(text, opts) do
@@ -59,7 +59,7 @@ defmodule AutoLinker.Builder do
       |> truncate(Map.get(opts, :truncate, false))
 
     attrs = format_attrs(attrs)
-    "<a #{attrs}>" <> url <> "</a>"
+    "<a #{attrs}>#{url}</a>"
   end
 
   defp format_attrs(attrs) do
@@ -93,9 +93,7 @@ defmodule AutoLinker.Builder do
 
   defp strip_prefix(url, _), do: url
 
-  def create_phone_link([], buffer, _) do
-    buffer
-  end
+  def create_phone_link([], buffer, _), do: buffer
 
   def create_phone_link([h | t], buffer, opts) do
     create_phone_link(t, format_phone_link(h, buffer, opts), opts)
