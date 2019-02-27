@@ -8,15 +8,15 @@ defmodule AutoLinker.BuilderTest do
     expected =
       "<a href=\"http://text\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">text</a>"
 
-    assert create_link("text", %{href: "url"}) == expected
+    assert create_link("text", %{}) == expected
 
     expected = "<a href=\"http://text\" class=\"auto-linker\" target=\"_blank\">text</a>"
-    assert create_link("text", %{href: "url", rel: nil}) == expected
+    assert create_link("text", %{rel: nil}) == expected
 
     expected =
       "<a href=\"http://text\" class=\"auto-linker\" target=\"_blank\" rel=\"me\">text</a>"
 
-    assert create_link("text", %{href: "url", rel: "me"}) == expected
+    assert create_link("text", %{rel: "me"}) == expected
   end
 
   test "create_markdown_links/2" do
