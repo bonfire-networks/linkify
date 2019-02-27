@@ -6,14 +6,16 @@ defmodule AutoLinker.BuilderTest do
 
   test "create_link/2" do
     expected =
-      "<a href=\"text\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">text</a>"
+      "<a href=\"http://text\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">text</a>"
 
     assert create_link("text", %{href: "url"}) == expected
 
-    expected = "<a href=\"text\" class=\"auto-linker\" target=\"_blank\">text</a>"
+    expected = "<a href=\"http://text\" class=\"auto-linker\" target=\"_blank\">text</a>"
     assert create_link("text", %{href: "url", rel: nil}) == expected
 
-    expected = "<a href=\"text\" class=\"auto-linker\" target=\"_blank\" rel=\"me\">text</a>"
+    expected =
+      "<a href=\"http://text\" class=\"auto-linker\" target=\"_blank\" rel=\"me\">text</a>"
+
     assert create_link("text", %{href: "url", rel: "me"}) == expected
   end
 
