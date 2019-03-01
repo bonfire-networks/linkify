@@ -40,7 +40,7 @@ defmodule AutoLinker.BuilderTest do
 
   test "format_mention/3" do
     expected = "<a href=\"url\">@user@host</a>"
-    format_mention(%{href: "url"}, "user@host", nil) == expected
+    assert format_mention(%{href: "url"}, "user@host", nil) == expected
   end
 
   describe "create_phone_link" do
