@@ -195,6 +195,21 @@ defmodule AutoLinkerTest do
              ) == expected
     end
 
+    test "support Telugu" do
+      text = "#చక్రం #కకకకక్ #కకకకాక #కకకక్రకకకక"
+
+      expected =
+        "<a href=\"/t/చక్రం\">#చక్రం</a> <a href=\"/t/కకకకక్\">#కకకకక్</a> <a href=\"/t/కకకకాక\">#కకకకాక</a> <a href=\"/t/కకకక్రకకకక\">#కకకక్రకకకక</a>"
+
+      assert AutoLinker.link(text,
+               hashtag: true,
+               hashtag_prefix: "/t/",
+               class: false,
+               rel: false,
+               new_window: false
+             ) == expected
+    end
+
     test "do not turn urls with hashes into hashtags" do
       text = "google.com#test #test google.com/#test #tag"
 
@@ -240,6 +255,14 @@ defmodule AutoLinkerTest do
       # no scheme
       text = "Hey, check out www.youtube.com/watch?v=8Zg1-TufF%20zY?x=1&y=2#blabla ."
       assert AutoLinker.link(text, scheme: true) == expected
+    end
+
+    test "turn urls with schema into urls" do
+      text = "📌https://google.com"
+      expected = "📌<a href=\"https://google.com\">google.com</a>"
+
+      assert AutoLinker.link(text, scheme: true, class: false, new_window: false, rel: false) ==
+               expected
     end
 
     test "hostname/@user" do
