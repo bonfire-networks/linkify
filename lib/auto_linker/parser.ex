@@ -29,22 +29,20 @@ defmodule AutoLinker.Parser do
 
   @match_url ~r{^[\w\.-]+(?:\.[\w\.-]+)+[\w\-\._~%:/?#[\]@!\$&'\(\)\*\+,;=.]+$}
 
-  @match_scheme ~r{^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~%:/?#[\]@!\$&'\(\)\*\+,;=.]+$}
+  @match_scheme ~r{^(?:\W*)?(?<url>(?:\W*https?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~%:\/?#[\]@!\$&'\(\)\*\+,;=.]+$)}u
 
   @match_phone ~r"((?:x\d{2,7})|(?:(?:\+?1\s?(?:[.-]\s?)?)?(?:\(\s?(?:[2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9])\s?\)|(?:[2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9]))\s?(?:[.-]\s?)?)(?:[2-9]1[02-9]|[2-9][02-9]1|[2-9][02-9]{2})\s?(?:[.-]\s?)?(?:[0-9]{4}))"
 
-  @match_hostname ~r{^(?:https?:\/\/)?(?:[^@\n]+\\w@)?(?<host>[^:#~\/\n?]+)}
+  @match_hostname ~r{^(?:\W*https?:\/\/)?(?:[^@\n]+\\w@)?(?<host>[^:#~\/\n?]+)}u
 
   @match_ip ~r"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
 
   # @user
   # @user@example.com
-  # credo:disable-for-next-line
-  @match_mention ~r/^@[a-zA-Z\d_-]+@[a-zA-Z0-9_-](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*|@[a-zA-Z\d_-]+/u
+  @match_mention ~r"^@[a-zA-Z\d_-]+@[a-zA-Z0-9_-](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*|@[a-zA-Z\d_-]+"u
 
   # https://www.w3.org/TR/html5/forms.html#valid-e-mail-address
-  # credo:disable-for-next-line
-  @match_email ~r/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/u
+  @match_email ~r"^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"u
 
   @match_hashtag ~r/^(?<tag>\#[[:word:]_]*[[:alpha:]_·][[:word:]_·]*)/u
 
@@ -260,6 +258,17 @@ defmodule AutoLinker.Parser do
 
   defp do_parse({<<ch::8>> <> text, user_acc}, opts, {buffer, acc, state}, handler),
     do: do_parse({text, user_acc}, opts, {buffer <> <<ch::8>>, acc, state}, handler)
+
+  def check_and_link(buffer, %{scheme: true} = opts, _user_acc) do
+    if is_url?(buffer, opts[:scheme]) do
+      case Regex.run(@match_scheme, buffer, capture: [:url]) do
+        [^buffer] -> link_url(true, buffer, opts)
+        [url] -> String.replace(buffer, url, link_url(true, url, opts))
+      end
+    else
+      buffer
+    end
+  end
 
   def check_and_link(buffer, opts, _user_acc) do
     buffer

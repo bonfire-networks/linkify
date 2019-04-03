@@ -242,6 +242,14 @@ defmodule AutoLinkerTest do
       assert AutoLinker.link(text, scheme: true) == expected
     end
 
+    test "turn urls with schema into urls" do
+      text = "📌https://google.com"
+      expected = "📌<a href=\"https://google.com\">google.com</a>"
+
+      assert AutoLinker.link(text, scheme: true, class: false, new_window: false, rel: false) ==
+               expected
+    end
+
     test "hostname/@user" do
       text = "https://example.com/@user"
 
