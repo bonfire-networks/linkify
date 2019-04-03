@@ -22,5 +22,8 @@ lint:
 
 unit-testing:
   stage: test
+  coverage: '/(\d+\.\d+\%) \| Total/'
+  script:
+    - mix test --trace --cover
   script:
     - mix test --trace
