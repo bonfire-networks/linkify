@@ -44,7 +44,7 @@ defmodule AutoLinker.Parser do
   # https://www.w3.org/TR/html5/forms.html#valid-e-mail-address
   @match_email ~r"^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"u
 
-  @match_hashtag ~r/^(?<tag>\#[[:word:]_]*[[:alpha:]_·][[:word:]_·]*)/u
+  @match_hashtag ~r/^(?<tag>\#[[:word:]_]*[[:alpha:]_·][[:word:]_·\p{M}]*)/u
 
   @prefix_extra [
     "magnet:?",

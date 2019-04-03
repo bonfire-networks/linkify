@@ -195,6 +195,21 @@ defmodule AutoLinkerTest do
              ) == expected
     end
 
+    test "support Telugu" do
+      text = "#చక్రం #కకకకక్ #కకకకాక #కకకక్రకకకక"
+
+      expected =
+        "<a href=\"/t/చక్రం\">#చక్రం</a> <a href=\"/t/కకకకక్\">#కకకకక్</a> <a href=\"/t/కకకకాక\">#కకకకాక</a> <a href=\"/t/కకకక్రకకకక\">#కకకక్రకకకక</a>"
+
+      assert AutoLinker.link(text,
+               hashtag: true,
+               hashtag_prefix: "/t/",
+               class: false,
+               rel: false,
+               new_window: false
+             ) == expected
+    end
+
     test "do not turn urls with hashes into hashtags" do
       text = "google.com#test #test google.com/#test #tag"
 
