@@ -3,11 +3,13 @@ image: elixir:1.7.2
 cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
-          - deps
-          - _build
+    - deps
+    - _build
+
 stages:
   - lint
   - test
+  - analysis
 
 before_script:
   - mix local.hex --force
@@ -25,5 +27,8 @@ unit-testing:
   coverage: '/(\d+\.\d+\%) \| Total/'
   script:
     - mix test --trace --cover
+
+analysis:
+  stage: analysis
   script:
-    - mix test --trace
+    - mix credo --strict
