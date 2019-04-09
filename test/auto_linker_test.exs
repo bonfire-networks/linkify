@@ -61,6 +61,24 @@ defmodule AutoLinkerTest do
              new_window: false,
              rel: custom_rel
            ) == expected
+
+    text = "google.com"
+
+    expected = "<a href=\"http://google.com\">google.com</a>"
+
+    custom_rel = fn _ -> nil end
+
+    assert AutoLinker.link(text,
+             class: false,
+             new_window: false,
+             rel: custom_rel
+           ) == expected
+  end
+
+  test "link_map/2" do
+    assert AutoLinker.link_map("google.com", []) ==
+             {"<a href=\"http://google.com\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">google.com</a>",
+              []}
   end
 
   describe "custom handlers" do
