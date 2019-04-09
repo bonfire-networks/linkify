@@ -95,6 +95,12 @@ defmodule AutoLinker.ParserTest do
       assert parse(text, class: false, rel: false, new_window: false) == expected
     end
 
+    test "links url inside nested html" do
+      text = "<p><strong>google.com</strong></p>"
+      expected = "<p><strong><a href=\"http://google.com\">google.com</a></strong></p>"
+      assert parse(text, class: false, rel: false, new_window: false) == expected
+    end
+
     test "excludes html with specified class" do
       text = "```Check out <div class='section'>google.com</div>```"
       assert parse(text, exclude_patterns: ["```"]) == text

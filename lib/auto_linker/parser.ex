@@ -180,6 +180,10 @@ defmodule AutoLinker.Parser do
   defp do_parse({"<" <> text, user_acc}, opts, {"", acc, :parsing}, handler),
     do: do_parse({text, user_acc}, opts, {"<", acc, {:open, 1}}, handler)
 
+  defp do_parse({"<" <> text, user_acc}, opts, {"", acc, {:html, level}}, handler) do
+    do_parse({text, user_acc}, opts, {"<", acc, {:open, level + 1}}, handler)
+  end
+
   defp do_parse({">" <> text, user_acc}, opts, {buffer, acc, {:attrs, level}}, handler),
     do:
       do_parse(
