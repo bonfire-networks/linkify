@@ -82,7 +82,7 @@ defmodule AutoLinker.Builder do
   defp truncate(url, len) when len < 3, do: url
 
   defp truncate(url, len) do
-    if String.length(url) > len, do: String.slice(url, 0, len - 2) <> "..", else: url
+    if String.length(url) > len, do: String.slice(url, 0, len - 2) <> "...", else: url
   end
 
   defp strip_prefix(url, true) do
