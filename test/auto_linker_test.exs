@@ -144,6 +144,22 @@ defmodule AutoLinkerTest do
              ) == expected
     end
 
+    test "mentions inside html tags" do
+      text =
+        "<p><strong>hello world</strong></p>\n<p><`em>another @user__test and @user__test google.com paragraph</em></p>\n"
+
+      expected =
+        "<p><strong>hello world</strong></p>\n<p><`em>another <a href=\"u/user__test\">@user__test</a> and <a href=\"u/user__test\">@user__test</a> <a href=\"http://google.com\">google.com</a> paragraph</em></p>\n"
+
+      assert AutoLinker.link(text,
+               mention: true,
+               mention_prefix: "u/",
+               class: false,
+               rel: false,
+               new_window: false
+             ) == expected
+    end
+
     test "metion @user@example.com" do
       text = "hey @user@example.com"
 
