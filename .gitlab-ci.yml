@@ -1,29 +1,24 @@
 image: elixir:1.7.2
 
-variables:
-  MIX_ENV: test
-
 cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
     - deps
     - _build
+
 stages:
-  - build
+  - lint
   - test
+  - analysis
 
 before_script:
   - mix local.hex --force
   - mix local.rebar --force
-
-build:
-  stage: build
-  script:
   - mix deps.get
   - mix compile --force
 
 lint:
-  stage: test
+  stage: lint
   script:
     - mix format --check-formatted
 
@@ -34,6 +29,6 @@ unit-testing:
     - mix test --trace --cover
 
 analysis:
-  stage: test
+  stage: analysis
   script:
     - mix credo --strict
