@@ -17,6 +17,16 @@ defmodule AutoLinker.BuilderTest do
       "<a href=\"http://text\" class=\"auto-linker\" target=\"_blank\" rel=\"me\">text</a>"
 
     assert create_link("text", %{rel: "me"}) == expected
+
+    expected = "<a href=\"http://text\" class=\"auto-linker\" target=\"_blank\">t...</a>"
+
+    assert create_link("text", %{truncate: 3, rel: false}) == expected
+
+    expected = "<a href=\"http://text\" class=\"auto-linker\" target=\"_blank\">text</a>"
+    assert create_link("text", %{truncate: 2, rel: false}) == expected
+
+    expected = "<a href=\"http://text\" class=\"auto-linker\" target=\"_blank\">http://text</a>"
+    assert create_link("http://text", %{rel: false, strip_prefix: false}) == expected
   end
 
   test "create_markdown_links/2" do
@@ -52,9 +62,9 @@ defmodule AutoLinker.BuilderTest do
       phrase = "my exten is x888. Call me."
 
       expected =
-        ~s'my exten is <a href="#" class="phone-number" data-phone="888">x888</a>. Call me.'
+        ~s'my exten is <a href="#" class="phone-number" data-phone="888" test=\"test\">x888</a>. Call me.'
 
-      assert create_phone_link([["x888", ""]], phrase, []) == expected
+      assert create_phone_link([["x888", ""]], phrase, attributes: [test: "test"]) == expected
     end
 
     test "handles multiple links" do

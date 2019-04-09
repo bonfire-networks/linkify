@@ -69,7 +69,24 @@ defmodule AutoLinker.ParserTest do
       assert parse(text) == text
     end
 
+    test "does not link inside `<pre>` and `<code>`" do
+      text = "<pre>google.com</pre>"
+      assert parse(text) == text
+
+      text = "<code>google.com</code>"
+      assert parse(text) == text
+
+      text = "<pre><code>google.com</code></pre>"
+      assert parse(text) == text
+    end
+
     test "links url inside html" do
+      text = "<div>google.com</div>"
+
+      expected = "<div><a href=\"http://google.com\">google.com</a></div>"
+
+      assert parse(text, class: false, rel: false, new_window: false, phone: false) == expected
+
       text = "Check out <div class='section'>google.com</div>"
 
       expected =
@@ -78,9 +95,20 @@ defmodule AutoLinker.ParserTest do
       assert parse(text, class: false, rel: false, new_window: false) == expected
     end
 
+    test "links url inside nested html" do
+      text = "<p><strong>google.com</strong></p>"
+      expected = "<p><strong><a href=\"http://google.com\">google.com</a></strong></p>"
+      assert parse(text, class: false, rel: false, new_window: false) == expected
+    end
+
     test "excludes html with specified class" do
       text = "```Check out <div class='section'>google.com</div>```"
       assert parse(text, exclude_patterns: ["```"]) == text
+    end
+
+    test "do not link urls" do
+      text = "google.com"
+      assert parse(text, url: false, phone: true) == text
     end
   end
 

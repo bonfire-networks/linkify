@@ -5,31 +5,11 @@ defmodule AutoLinker.Parser do
 
   alias AutoLinker.Builder
 
-  @doc """
-  Parse the given string, identifying items to link.
-
-  Parses the string, replacing the matching urls and phone numbers with an html link.
-
-  ## Examples
-
-      iex> AutoLinker.Parser.parse("Check out google.com")
-      ~s{Check out <a href="http://google.com" class="auto-linker" target="_blank" rel="noopener noreferrer">google.com</a>}
-
-      iex> AutoLinker.Parser.parse("call me at x9999", phone: true)
-      ~s{call me at <a href="#" class="phone-number" data-phone="9999">x9999</a>}
-
-      iex> AutoLinker.Parser.parse("or at home on 555.555.5555", phone: true)
-      ~s{or at home on <a href="#" class="phone-number" data-phone="5555555555">555.555.5555</a>}
-
-      iex> AutoLinker.Parser.parse(", work (555) 555-5555", phone: true)
-      ~s{, work <a href="#" class="phone-number" data-phone="5555555555">(555) 555-5555</a>}
-  """
-
   @invalid_url ~r/(\.\.+)|(^(\d+\.){1,2}\d+$)/
 
   @match_url ~r{^[\w\.-]+(?:\.[\w\.-]+)+[\w\-\._~%:/?#[\]@!\$&'\(\)\*\+,;=.]+$}
 
-  @match_scheme ~r{^(?:\W*)?(?<url>(?:\W*https?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~%:\/?#[\]@!\$&'\(\)\*\+,;=.]+$)}u
+  @match_scheme ~r{^(?:\W*)?(?<url>(?:https?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~%:\/?#[\]@!\$&'\(\)\*\+,;=.]+$)}u
 
   @match_phone ~r"((?:x\d{2,7})|(?:(?:\+?1\s?(?:[.-]\s?)?)?(?:\(\s?(?:[2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9])\s?\)|(?:[2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9]))\s?(?:[.-]\s?)?)(?:[2-9]1[02-9]|[2-9][02-9]1|[2-9][02-9]{2})\s?(?:[.-]\s?)?(?:[0-9]{4}))"
 
@@ -63,6 +43,26 @@ defmodule AutoLinker.Parser do
   @tlds "./priv/tlds.txt" |> File.read!() |> String.split("\n", trim: true)
 
   @default_opts ~w(url)a
+
+  @doc """
+  Parse the given string, identifying items to link.
+
+  Parses the string, replacing the matching urls and phone numbers with an html link.
+
+  ## Examples
+
+      iex> AutoLinker.Parser.parse("Check out google.com")
+      ~s{Check out <a href="http://google.com" class="auto-linker" target="_blank" rel="noopener noreferrer">google.com</a>}
+
+      iex> AutoLinker.Parser.parse("call me at x9999", phone: true)
+      ~s{call me at <a href="#" class="phone-number" data-phone="9999">x9999</a>}
+
+      iex> AutoLinker.Parser.parse("or at home on 555.555.5555", phone: true)
+      ~s{or at home on <a href="#" class="phone-number" data-phone="5555555555">555.555.5555</a>}
+
+      iex> AutoLinker.Parser.parse(", work (555) 555-5555", phone: true)
+      ~s{, work <a href="#" class="phone-number" data-phone="5555555555">(555) 555-5555</a>}
+  """
 
   def parse(input, opts \\ %{})
   def parse(input, opts) when is_binary(input), do: {input, nil} |> parse(opts) |> elem(0)
@@ -154,19 +154,30 @@ defmodule AutoLinker.Parser do
   defp do_parse({"", user_acc}, _opts, {"", acc, _}, _handler),
     do: {acc, user_acc}
 
-  defp do_parse({"", user_acc}, opts, {buffer, acc, _}, handler) do
-    {buffer, user_acc} = run_handler(handler, buffer, opts, user_acc)
-    {acc <> buffer, user_acc}
-  end
-
   defp do_parse({"<a" <> text, user_acc}, opts, {buffer, acc, :parsing}, handler),
     do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "<a", :skip}, handler)
+
+  defp do_parse({"<pre" <> text, user_acc}, opts, {buffer, acc, :parsing}, handler),
+    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "<pre", :skip}, handler)
+
+  defp do_parse({"<code" <> text, user_acc}, opts, {buffer, acc, :parsing}, handler),
+    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "<code", :skip}, handler)
 
   defp do_parse({"</a>" <> text, user_acc}, opts, {buffer, acc, :skip}, handler),
     do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "</a>", :parsing}, handler)
 
+  defp do_parse({"</pre>" <> text, user_acc}, opts, {buffer, acc, :skip}, handler),
+    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "</pre>", :parsing}, handler)
+
+  defp do_parse({"</code>" <> text, user_acc}, opts, {buffer, acc, :skip}, handler),
+    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "</code>", :parsing}, handler)
+
   defp do_parse({"<" <> text, user_acc}, opts, {"", acc, :parsing}, handler),
     do: do_parse({text, user_acc}, opts, {"<", acc, {:open, 1}}, handler)
+
+  defp do_parse({"<" <> text, user_acc}, opts, {"", acc, {:html, level}}, handler) do
+    do_parse({text, user_acc}, opts, {"<", acc, {:open, level + 1}}, handler)
+  end
 
   defp do_parse({">" <> text, user_acc}, opts, {buffer, acc, {:attrs, level}}, handler),
     do:
@@ -204,19 +215,8 @@ defmodule AutoLinker.Parser do
         handler
       )
 
-  defp do_parse(
-         {<<char::bytes-size(1), text::binary>>, user_acc},
-         opts,
-         {buffer, acc, {:open, level}},
-         handler
-       )
-       when char in [" ", "\r", "\n"] do
-    do_parse(
-      {text, user_acc},
-      opts,
-      {"", acc <> buffer <> char, {:attrs, level}},
-      handler
-    )
+  defp do_parse({text, user_acc}, opts, {buffer, acc, {:open, level}}, handler) do
+    do_parse({text, user_acc}, opts, {"", acc <> buffer, {:attrs, level}}, handler)
   end
 
   # default cases where state is not important

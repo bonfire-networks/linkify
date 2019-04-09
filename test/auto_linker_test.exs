@@ -61,6 +61,24 @@ defmodule AutoLinkerTest do
              new_window: false,
              rel: custom_rel
            ) == expected
+
+    text = "google.com"
+
+    expected = "<a href=\"http://google.com\">google.com</a>"
+
+    custom_rel = fn _ -> nil end
+
+    assert AutoLinker.link(text,
+             class: false,
+             new_window: false,
+             rel: custom_rel
+           ) == expected
+  end
+
+  test "link_map/2" do
+    assert AutoLinker.link_map("google.com", []) ==
+             {"<a href=\"http://google.com\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">google.com</a>",
+              []}
   end
 
   describe "custom handlers" do
@@ -141,6 +159,22 @@ defmodule AutoLinkerTest do
       assert AutoLinker.link("hello @user and @anotherUser.",
                mention: true,
                mention_prefix: "https://example.com/user/"
+             ) == expected
+    end
+
+    test "mentions inside html tags" do
+      text =
+        "<p><strong>hello world</strong></p>\n<p><`em>another @user__test and @user__test google.com paragraph</em></p>\n"
+
+      expected =
+        "<p><strong>hello world</strong></p>\n<p><`em>another <a href=\"u/user__test\">@user__test</a> and <a href=\"u/user__test\">@user__test</a> <a href=\"http://google.com\">google.com</a> paragraph</em></p>\n"
+
+      assert AutoLinker.link(text,
+               mention: true,
+               mention_prefix: "u/",
+               class: false,
+               rel: false,
+               new_window: false
              ) == expected
     end
 
