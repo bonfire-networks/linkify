@@ -40,7 +40,7 @@ defmodule AutoLinker.Parser do
     "ssb://"
   ]
 
-  @tlds "./priv/tlds.txt" |> File.read!() |> String.split("\n", trim: true)
+  @tlds "./priv/tlds.txt" |> File.read!() |> String.split("\n", trim: true) |> MapSet.new()
 
   @default_opts ~w(url)a
 
@@ -344,8 +344,7 @@ defmodule AutoLinker.Parser do
       true
     else
       tld = host |> String.split(".") |> List.last()
-
-      Enum.member?(@tlds, tld)
+      MapSet.member?(@tlds, tld)
     end
   end
 
