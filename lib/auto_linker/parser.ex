@@ -162,8 +162,20 @@ defmodule AutoLinker.Parser do
   defp do_parse({"<a" <> text, user_acc}, opts, {buffer, acc, :parsing}, handler),
     do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "<a", :skip}, handler)
 
+  defp do_parse({"<pre" <> text, user_acc}, opts, {buffer, acc, :parsing}, handler),
+    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "<pre", :skip}, handler)
+
+  defp do_parse({"<code" <> text, user_acc}, opts, {buffer, acc, :parsing}, handler),
+    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "<code", :skip}, handler)
+
   defp do_parse({"</a>" <> text, user_acc}, opts, {buffer, acc, :skip}, handler),
     do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "</a>", :parsing}, handler)
+
+  defp do_parse({"</pre>" <> text, user_acc}, opts, {buffer, acc, :skip}, handler),
+    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "</pre>", :parsing}, handler)
+
+  defp do_parse({"</code>" <> text, user_acc}, opts, {buffer, acc, :skip}, handler),
+    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "</code>", :parsing}, handler)
 
   defp do_parse({"<" <> text, user_acc}, opts, {"", acc, :parsing}, handler),
     do: do_parse({text, user_acc}, opts, {"<", acc, {:open, 1}}, handler)

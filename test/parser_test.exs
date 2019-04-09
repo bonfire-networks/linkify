@@ -69,6 +69,17 @@ defmodule AutoLinker.ParserTest do
       assert parse(text) == text
     end
 
+    test "does not link inside `<pre>` and `<code>`" do
+      text = "<pre>google.com</pre>"
+      assert parse(text) == text
+
+      text = "<code>google.com</code>"
+      assert parse(text) == text
+
+      text = "<pre><code>google.com</code></pre>"
+      assert parse(text) == text
+    end
+
     test "links url inside html" do
       text = "<div>google.com</div>"
 
