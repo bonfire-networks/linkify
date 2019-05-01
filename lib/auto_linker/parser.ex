@@ -338,13 +338,15 @@ defmodule AutoLinker.Parser do
   end
 
   def is_valid_tld?(true, buffer) do
-    [host] = Regex.run(@match_hostname, buffer, capture: [:host])
-
-    if is_ip?(host) do
-      true
+    with [host] <- Regex.run(@match_hostname, buffer, capture: [:host]) do
+      if is_ip?(host) do
+        true
+      else
+        tld = host |> String.split(".") |> List.last()
+        MapSet.member?(@tlds, tld)
+      end
     else
-      tld = host |> String.split(".") |> List.last()
-      MapSet.member?(@tlds, tld)
+      _ -> false
     end
   end
 

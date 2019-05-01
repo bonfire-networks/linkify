@@ -110,6 +110,19 @@ defmodule AutoLinker.ParserTest do
       text = "google.com"
       assert parse(text, url: false, phone: true) == text
     end
+
+    test "do not link `:test.test`" do
+      text = ":test.test"
+
+      assert parse(text, %{
+               scheme: true,
+               extra: true,
+               class: false,
+               strip_prefix: false,
+               new_window: false,
+               rel: false
+             }) == text
+    end
   end
 
   def valid_number?([list], number) do
