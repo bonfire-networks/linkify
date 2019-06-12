@@ -273,13 +273,13 @@ defmodule AutoLinker.Parser do
   end
 
   defp parse_link(str, %{scheme: true}) do
-    Regex.run(@match_scheme, str, capture: [:url]) |> hd()
+    @match_scheme |> Regex.run(str, capture: [:url]) |> hd()
   end
 
   defp parse_link(str, _), do: str
 
   defp strip_parens("(" <> buffer) do
-    Regex.run(~r/[^\)]*/, buffer) |> hd()
+    ~r/[^\)]*/ |> Regex.run(buffer) |> hd()
   end
 
   defp strip_parens(buffer), do: buffer
