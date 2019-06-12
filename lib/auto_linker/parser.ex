@@ -259,27 +259,33 @@ defmodule AutoLinker.Parser do
   defp do_parse({<<ch::8>> <> text, user_acc}, opts, {buffer, acc, state}, handler),
     do: do_parse({text, user_acc}, opts, {buffer <> <<ch::8>>, acc, state}, handler)
 
-  def check_and_link(buffer, %{scheme: true} = opts, _user_acc) do
-    if is_url?(buffer, opts[:scheme]) do
-      case Regex.run(@match_scheme, buffer, capture: [:url]) do
-        [^buffer] -> link_url(true, buffer, opts)
-        [url] -> String.replace(buffer, url, link_url(true, url, opts))
+  def check_and_link(buffer, opts, _user_acc) do
+    str = strip_parens(buffer)
+
+    if url?(str, opts[:scheme]) do
+      case parse_link(str, opts) do
+        ^buffer -> link_url(buffer, opts)
+        url -> String.replace(buffer, url, link_url(url, opts))
       end
     else
       buffer
     end
   end
 
-  def check_and_link(buffer, opts, _user_acc) do
-    buffer
-    |> is_url?(opts[:scheme])
-    |> link_url(buffer, opts)
+  defp parse_link(str, %{scheme: true}) do
+    @match_scheme |> Regex.run(str, capture: [:url]) |> hd()
   end
 
+  defp parse_link(str, _), do: str
+
+  defp strip_parens("(" <> buffer) do
+    ~r/[^\)]*/ |> Regex.run(buffer) |> hd()
+  end
+
+  defp strip_parens(buffer), do: buffer
+
   def check_and_link_email(buffer, opts, _user_acc) do
-    buffer
-    |> is_email?
-    |> link_email(buffer, opts)
+    if email?(buffer), do: link_email(buffer, opts), else: buffer
   end
 
   def check_and_link_phone(buffer, opts, _user_acc) do
@@ -301,45 +307,31 @@ defmodule AutoLinker.Parser do
   end
 
   def check_and_link_extra("xmpp:" <> handle, opts, _user_acc) do
-    handle
-    |> is_email?
-    |> link_extra("xmpp:" <> handle, opts)
+    if email?(handle), do: link_extra("xmpp:" <> handle, opts), else: handle
   end
 
   def check_and_link_extra(buffer, opts, _user_acc) do
-    buffer
-    |> String.starts_with?(@prefix_extra)
-    |> link_extra(buffer, opts)
+    if String.starts_with?(buffer, @prefix_extra), do: link_extra(buffer, opts), else: buffer
   end
 
   # @doc false
-  def is_url?(buffer, true) do
-    if Regex.match?(@invalid_url, buffer) do
-      false
-    else
-      @match_scheme |> Regex.match?(buffer) |> is_valid_tld?(buffer)
-    end
+  def url?(buffer, true) do
+    valid_url?(buffer) && Regex.match?(@match_scheme, buffer) && valid_tld?(buffer)
   end
 
-  def is_url?(buffer, _) do
-    if Regex.match?(@invalid_url, buffer) do
-      false
-    else
-      @match_url |> Regex.match?(buffer) |> is_valid_tld?(buffer)
-    end
+  def url?(buffer, _) do
+    valid_url?(buffer) && Regex.match?(@match_url, buffer) && valid_tld?(buffer)
   end
 
-  def is_email?(buffer) do
-    if Regex.match?(@invalid_url, buffer) do
-      false
-    else
-      @match_email |> Regex.match?(buffer) |> is_valid_tld?(buffer)
-    end
+  def email?(buffer) do
+    valid_url?(buffer) && Regex.match?(@match_email, buffer) && valid_tld?(buffer)
   end
 
-  def is_valid_tld?(true, buffer) do
+  defp valid_url?(url), do: !Regex.match?(@invalid_url, url)
+
+  def valid_tld?(buffer) do
     with [host] <- Regex.run(@match_hostname, buffer, capture: [:host]) do
-      if is_ip?(host) do
+      if ip?(host) do
         true
       else
         tld = host |> String.split(".") |> List.last()
@@ -350,11 +342,7 @@ defmodule AutoLinker.Parser do
     end
   end
 
-  def is_valid_tld?(false, _), do: false
-
-  def is_ip?(buffer) do
-    Regex.match?(@match_ip, buffer)
-  end
+  def ip?(buffer), do: Regex.match?(@match_ip, buffer)
 
   @doc false
   def match_phone(buffer) do
@@ -425,24 +413,18 @@ defmodule AutoLinker.Parser do
   end
 
   @doc false
-  def link_url(true, buffer, opts) do
+  def link_url(buffer, opts) do
     Builder.create_link(buffer, opts)
   end
 
-  def link_url(_, buffer, _opts), do: buffer
-
   @doc false
-  def link_email(true, buffer, opts) do
+  def link_email(buffer, opts) do
     Builder.create_email_link(buffer, opts)
   end
 
-  def link_email(_, buffer, _opts), do: buffer
-
-  def link_extra(true, buffer, opts) do
+  def link_extra(buffer, opts) do
     Builder.create_extra_link(buffer, opts)
   end
-
-  def link_extra(_, buffer, _opts), do: buffer
 
   defp run_handler(handler, buffer, opts, user_acc) do
     case handler.(buffer, opts, user_acc) do

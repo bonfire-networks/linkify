@@ -4,32 +4,32 @@ defmodule AutoLinker.ParserTest do
 
   import AutoLinker.Parser
 
-  describe "is_url" do
+  describe "url?/2" do
     test "valid scheme true" do
       valid_scheme_urls()
       |> Enum.each(fn url ->
-        assert is_url?(url, true)
+        assert url?(url, true)
       end)
     end
 
     test "invalid scheme true" do
       invalid_scheme_urls()
       |> Enum.each(fn url ->
-        refute is_url?(url, true)
+        refute url?(url, true)
       end)
     end
 
     test "valid scheme false" do
       valid_non_scheme_urls()
       |> Enum.each(fn url ->
-        assert is_url?(url, false)
+        assert url?(url, false)
       end)
     end
 
     test "invalid scheme false" do
       invalid_non_scheme_urls()
       |> Enum.each(fn url ->
-        refute is_url?(url, false)
+        refute url?(url, false)
       end)
     end
   end
@@ -104,6 +104,22 @@ defmodule AutoLinker.ParserTest do
     test "excludes html with specified class" do
       text = "```Check out <div class='section'>google.com</div>```"
       assert parse(text, exclude_patterns: ["```"]) == text
+    end
+
+    test "do not link parens" do
+      text = " foo (https://example.com/path/folder/), bar"
+
+      expected =
+        " foo (<a href=\"https://example.com/path/folder/\">example.com/path/folder/</a>), bar"
+
+      assert parse(text, class: false, rel: false, new_window: false, scheme: true) == expected
+
+      text = " foo (example.com/path/folder/), bar"
+
+      expected =
+        " foo (<a href=\"http://example.com/path/folder/\">example.com/path/folder/</a>), bar"
+
+      assert parse(text, class: false, rel: false, new_window: false) == expected
     end
 
     test "do not link urls" do
