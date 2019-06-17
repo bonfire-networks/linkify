@@ -4,7 +4,7 @@ defmodule AutoLinker.ParserTest do
 
   import AutoLinker.Parser
 
-  describe "url?/2" do
+  describe "url?/3" do
     test "valid scheme true" do
       valid_scheme_urls()
       |> Enum.each(fn url ->
@@ -30,6 +30,48 @@ defmodule AutoLinker.ParserTest do
       invalid_non_scheme_urls()
       |> Enum.each(fn url ->
         refute url?(url, false)
+      end)
+    end
+
+    test "checks the tld for url with a scheme when validate_tld: true" do
+      custom_tld_scheme_urls()
+      |> Enum.each(fn url ->
+        refute url?(url, true, true)
+      end)
+    end
+
+    test "does not check the tld for url with a scheme when validate_tld: false" do
+      custom_tld_scheme_urls()
+      |> Enum.each(fn url ->
+        assert url?(url, true, false)
+      end)
+    end
+
+    test "does not check the tld for url with a scheme when validate_tld: :no_scheme" do
+      custom_tld_scheme_urls()
+      |> Enum.each(fn url ->
+        assert url?(url, true, :no_scheme)
+      end)
+    end
+
+    test "checks the tld for url without a scheme when validate_tld: true" do
+      custom_tld_non_scheme_urls()
+      |> Enum.each(fn url ->
+        refute url?(url, false, true)
+      end)
+    end
+
+    test "checks the tld for url without a scheme when validate_tld: :no_scheme" do
+      custom_tld_non_scheme_urls()
+      |> Enum.each(fn url ->
+        refute url?(url, false, :no_scheme)
+      end)
+    end
+
+    test "does not check the tld for url without a scheme when validate_tld: false" do
+      custom_tld_non_scheme_urls()
+      |> Enum.each(fn url ->
+        assert url?(url, false, false)
       end)
     end
   end
@@ -215,5 +257,21 @@ defmodule AutoLinker.ParserTest do
       "5555",
       "x5",
       "(555) 555-55"
+    ]
+
+  def custom_tld_scheme_urls,
+    do: [
+      "http://whatever.null/",
+      "https://example.o/index.html",
+      "http://pleroma.i2p/test",
+      "http://misskey.loki"
+    ]
+
+  def custom_tld_non_scheme_urls,
+    do: [
+      "whatever.null/",
+      "example.o/index.html",
+      "pleroma.i2p/test",
+      "misskey.loki"
     ]
 end
