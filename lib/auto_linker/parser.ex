@@ -262,7 +262,7 @@ defmodule AutoLinker.Parser do
   def check_and_link(buffer, opts, _user_acc) do
     str = strip_parens(buffer)
 
-    if url?(str, opts[:scheme], opts[:validate_tld]) do
+    if url?(str, opts) do
       case parse_link(str, opts) do
         ^buffer -> link_url(buffer, opts)
         url -> String.replace(buffer, url, link_url(url, opts))
@@ -315,16 +315,15 @@ defmodule AutoLinker.Parser do
   end
 
   # @doc false
-  def url?(buffer, scheme, validate_tld \\ true)
 
-  def url?(buffer, true, validate_tld) do
-    valid_url?(buffer) && Regex.match?(@match_scheme, buffer) &&
-      (!validate_tld or validate_tld == :no_scheme || valid_tld?(buffer))
-  end
-
-  def url?(buffer, _, validate_tld) do
-    valid_url?(buffer) && Regex.match?(@match_url, buffer) &&
-      (validate_tld == false || valid_tld?(buffer))
+  def url?(buffer, opts) do
+    if opts[:scheme] do
+      valid_url?(buffer) && Regex.match?(@match_scheme, buffer) &&
+        (!opts[:validate_tld] or opts[:validate_tld] == :no_scheme || valid_tld?(buffer))
+    else
+      valid_url?(buffer) && Regex.match?(@match_url, buffer) &&
+        (opts[:validate_tld] == false || valid_tld?(buffer))
+    end
   end
 
   def email?(buffer) do

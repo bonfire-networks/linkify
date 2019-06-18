@@ -4,74 +4,74 @@ defmodule AutoLinker.ParserTest do
 
   import AutoLinker.Parser
 
-  describe "url?/3" do
+  describe "url?/2" do
     test "valid scheme true" do
       valid_scheme_urls()
       |> Enum.each(fn url ->
-        assert url?(url, true)
+        assert url?(url, scheme: true, validate_tld: true)
       end)
     end
 
     test "invalid scheme true" do
       invalid_scheme_urls()
       |> Enum.each(fn url ->
-        refute url?(url, true)
+        refute url?(url, scheme: true, validate_tld: true)
       end)
     end
 
     test "valid scheme false" do
       valid_non_scheme_urls()
       |> Enum.each(fn url ->
-        assert url?(url, false)
+        assert url?(url, scheme: false, validate_tld: true)
       end)
     end
 
     test "invalid scheme false" do
       invalid_non_scheme_urls()
       |> Enum.each(fn url ->
-        refute url?(url, false)
+        refute url?(url, scheme: false, validate_tld: true)
       end)
     end
 
     test "checks the tld for url with a scheme when validate_tld: true" do
       custom_tld_scheme_urls()
       |> Enum.each(fn url ->
-        refute url?(url, true, true)
+        refute url?(url, scheme: true, validate_tld: true)
       end)
     end
 
     test "does not check the tld for url with a scheme when validate_tld: false" do
       custom_tld_scheme_urls()
       |> Enum.each(fn url ->
-        assert url?(url, true, false)
+        assert url?(url, scheme: true, validate_tld: false)
       end)
     end
 
     test "does not check the tld for url with a scheme when validate_tld: :no_scheme" do
       custom_tld_scheme_urls()
       |> Enum.each(fn url ->
-        assert url?(url, true, :no_scheme)
+        assert url?(url, scheme: true, validate_tld: :no_scheme)
       end)
     end
 
     test "checks the tld for url without a scheme when validate_tld: true" do
       custom_tld_non_scheme_urls()
       |> Enum.each(fn url ->
-        refute url?(url, false, true)
+        refute url?(url, scheme: false, validate_tld: true)
       end)
     end
 
     test "checks the tld for url without a scheme when validate_tld: :no_scheme" do
       custom_tld_non_scheme_urls()
       |> Enum.each(fn url ->
-        refute url?(url, false, :no_scheme)
+        refute url?(url, scheme: false, validate_tld: :no_scheme)
       end)
     end
 
     test "does not check the tld for url without a scheme when validate_tld: false" do
       custom_tld_non_scheme_urls()
       |> Enum.each(fn url ->
-        assert url?(url, false, false)
+        assert url?(url, scheme: false, validate_tld: false)
       end)
     end
   end
