@@ -318,30 +318,37 @@ defmodule AutoLinker.Parser do
 
   def url?(buffer, opts) do
     if opts[:scheme] do
-      valid_url?(buffer) && Regex.match?(@match_scheme, buffer) &&
-        (!opts[:validate_tld] or opts[:validate_tld] == :no_scheme || valid_tld?(buffer))
+      valid_url?(buffer) && Regex.match?(@match_scheme, buffer) && valid_tld?(buffer, opts)
     else
-      valid_url?(buffer) && Regex.match?(@match_url, buffer) &&
-        (opts[:validate_tld] == false || valid_tld?(buffer))
+      valid_url?(buffer) && Regex.match?(@match_url, buffer) && valid_tld?(buffer, opts)
     end
   end
 
   def email?(buffer) do
-    valid_url?(buffer) && Regex.match?(@match_email, buffer) && valid_tld?(buffer)
+    valid_url?(buffer) && Regex.match?(@match_email, buffer) && valid_tld?(buffer, [])
   end
 
   defp valid_url?(url), do: !Regex.match?(@invalid_url, url)
 
-  def valid_tld?(buffer) do
-    with [host] <- Regex.run(@match_hostname, buffer, capture: [:host]) do
-      if ip?(host) do
+  def valid_tld?(buffer, opts) do
+    cond do
+      opts[:validate_tld] == false ->
         true
-      else
-        tld = host |> String.split(".") |> List.last()
-        MapSet.member?(@tlds, tld)
-      end
-    else
-      _ -> false
+
+      opts[:validate_tld] == :no_scheme && opts[:scheme] ->
+        true
+
+      true ->
+        with [host] <- Regex.run(@match_hostname, buffer, capture: [:host]) do
+          if ip?(host) do
+            true
+          else
+            tld = host |> String.split(".") |> List.last()
+            MapSet.member?(@tlds, tld)
+          end
+        else
+          _ -> false
+        end
     end
   end
 
