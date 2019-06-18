@@ -48,7 +48,7 @@ defmodule AutoLinker do
   * `hashtag_prefix: nil` - a prefix to build a link for a hashtag (example: `https://example.com/tag/`)
   * `hashtag_handler: nil` - a custom handler to validate and formart a hashtag
   * `extra: false` - link urls with rarely used schemes (magnet, ipfs, irc, etc.)
-  * `validate_tld: true` - Set to false to disable TLD validation for urls, also can be set to :no_scheme to validate TLDs only for urls without a scheme (e.g `example.com` will be validated, but `http://example.loki` won't)
+  * `validate_tld: true` - Set to false to disable TLD validation for urls/emails, also can be set to :no_scheme to validate TLDs only for urls without a scheme (e.g `example.com` will be validated, but `http://example.loki` won't)
 
   Each of the above options can be specified when calling `link(text, opts)`
   or can be set in the `:auto_linker`'s configuration. For example:

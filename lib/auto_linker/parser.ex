@@ -285,7 +285,7 @@ defmodule AutoLinker.Parser do
   defp strip_parens(buffer), do: buffer
 
   def check_and_link_email(buffer, opts, _user_acc) do
-    if email?(buffer), do: link_email(buffer, opts), else: buffer
+    if email?(buffer, opts), do: link_email(buffer, opts), else: buffer
   end
 
   def check_and_link_phone(buffer, opts, _user_acc) do
@@ -307,7 +307,7 @@ defmodule AutoLinker.Parser do
   end
 
   def check_and_link_extra("xmpp:" <> handle, opts, _user_acc) do
-    if email?(handle), do: link_extra("xmpp:" <> handle, opts), else: handle
+    if email?(handle, opts), do: link_extra("xmpp:" <> handle, opts), else: handle
   end
 
   def check_and_link_extra(buffer, opts, _user_acc) do
@@ -324,8 +324,8 @@ defmodule AutoLinker.Parser do
     end
   end
 
-  def email?(buffer) do
-    valid_url?(buffer) && Regex.match?(@match_email, buffer) && valid_tld?(buffer, [])
+  def email?(buffer, opts) do
+    valid_url?(buffer) && Regex.match?(@match_email, buffer) && valid_tld?(buffer, opts)
   end
 
   defp valid_url?(url), do: !Regex.match?(@invalid_url, url)

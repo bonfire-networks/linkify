@@ -76,6 +76,36 @@ defmodule AutoLinker.ParserTest do
     end
   end
 
+  describe "email?" do
+    test "identifies valid emails" do
+      valid_emails()
+      |> Enum.each(fn email ->
+        assert email?(email, [])
+      end)
+    end
+
+    test "identifies invalid emails" do
+      invalid_emails()
+      |> Enum.each(fn email ->
+        refute email?(email, [])
+      end)
+    end
+
+    test "does not validate tlds when validate_tld: false" do
+      valid_custom_tld_emails()
+      |> Enum.each(fn email ->
+        assert email?(email, validate_tld: false)
+      end)
+    end
+
+    test "validates tlds when validate_tld: true" do
+      valid_custom_tld_emails()
+      |> Enum.each(fn email ->
+        refute email?(email, validate_tld: true)
+      end)
+    end
+  end
+
   describe "match_phone" do
     test "valid" do
       valid_phone_nunbers()
@@ -274,4 +304,8 @@ defmodule AutoLinker.ParserTest do
       "pleroma.i2p/test",
       "misskey.loki"
     ]
+
+  def valid_emails, do: ["rms@ai.mit.edu", "vc@cock.li"]
+  def invalid_emails, do: ["rms[at]ai.mit.edu", "vc@cock", "xmpp:lain@trashserver.net"]
+  def valid_custom_tld_emails, do: ["guardian@33y6fjyhs3phzfjj.onion", "hi@company.null"]
 end
