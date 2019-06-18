@@ -42,7 +42,7 @@ defmodule AutoLinker.Parser do
 
   @tlds "./priv/tlds.txt" |> File.read!() |> String.split("\n", trim: true) |> MapSet.new()
 
-  @default_opts ~w(url)a
+  @default_opts ~w(url validate_tld)a
 
   @doc """
   Parse the given string, identifying items to link.
@@ -262,7 +262,7 @@ defmodule AutoLinker.Parser do
   def check_and_link(buffer, opts, _user_acc) do
     str = strip_parens(buffer)
 
-    if url?(str, opts[:scheme]) do
+    if url?(str, opts) do
       case parse_link(str, opts) do
         ^buffer -> link_url(buffer, opts)
         url -> String.replace(buffer, url, link_url(url, opts))
@@ -285,7 +285,7 @@ defmodule AutoLinker.Parser do
   defp strip_parens(buffer), do: buffer
 
   def check_and_link_email(buffer, opts, _user_acc) do
-    if email?(buffer), do: link_email(buffer, opts), else: buffer
+    if email?(buffer, opts), do: link_email(buffer, opts), else: buffer
   end
 
   def check_and_link_phone(buffer, opts, _user_acc) do
@@ -307,7 +307,7 @@ defmodule AutoLinker.Parser do
   end
 
   def check_and_link_extra("xmpp:" <> handle, opts, _user_acc) do
-    if email?(handle), do: link_extra("xmpp:" <> handle, opts), else: handle
+    if email?(handle, opts), do: link_extra("xmpp:" <> handle, opts), else: handle
   end
 
   def check_and_link_extra(buffer, opts, _user_acc) do
@@ -315,30 +315,40 @@ defmodule AutoLinker.Parser do
   end
 
   # @doc false
-  def url?(buffer, true) do
-    valid_url?(buffer) && Regex.match?(@match_scheme, buffer) && valid_tld?(buffer)
+
+  def url?(buffer, opts) do
+    if opts[:scheme] do
+      valid_url?(buffer) && Regex.match?(@match_scheme, buffer) && valid_tld?(buffer, opts)
+    else
+      valid_url?(buffer) && Regex.match?(@match_url, buffer) && valid_tld?(buffer, opts)
+    end
   end
 
-  def url?(buffer, _) do
-    valid_url?(buffer) && Regex.match?(@match_url, buffer) && valid_tld?(buffer)
-  end
-
-  def email?(buffer) do
-    valid_url?(buffer) && Regex.match?(@match_email, buffer) && valid_tld?(buffer)
+  def email?(buffer, opts) do
+    valid_url?(buffer) && Regex.match?(@match_email, buffer) && valid_tld?(buffer, opts)
   end
 
   defp valid_url?(url), do: !Regex.match?(@invalid_url, url)
 
-  def valid_tld?(buffer) do
-    with [host] <- Regex.run(@match_hostname, buffer, capture: [:host]) do
-      if ip?(host) do
+  def valid_tld?(buffer, opts) do
+    cond do
+      opts[:validate_tld] == false ->
         true
-      else
-        tld = host |> String.split(".") |> List.last()
-        MapSet.member?(@tlds, tld)
-      end
-    else
-      _ -> false
+
+      opts[:validate_tld] == :no_scheme && opts[:scheme] ->
+        true
+
+      true ->
+        with [host] <- Regex.run(@match_hostname, buffer, capture: [:host]) do
+          if ip?(host) do
+            true
+          else
+            tld = host |> String.split(".") |> List.last()
+            MapSet.member?(@tlds, tld)
+          end
+        else
+          _ -> false
+        end
     end
   end
 

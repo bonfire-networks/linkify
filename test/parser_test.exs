@@ -8,28 +8,100 @@ defmodule AutoLinker.ParserTest do
     test "valid scheme true" do
       valid_scheme_urls()
       |> Enum.each(fn url ->
-        assert url?(url, true)
+        assert url?(url, scheme: true, validate_tld: true)
       end)
     end
 
     test "invalid scheme true" do
       invalid_scheme_urls()
       |> Enum.each(fn url ->
-        refute url?(url, true)
+        refute url?(url, scheme: true, validate_tld: true)
       end)
     end
 
     test "valid scheme false" do
       valid_non_scheme_urls()
       |> Enum.each(fn url ->
-        assert url?(url, false)
+        assert url?(url, scheme: false, validate_tld: true)
       end)
     end
 
     test "invalid scheme false" do
       invalid_non_scheme_urls()
       |> Enum.each(fn url ->
-        refute url?(url, false)
+        refute url?(url, scheme: false, validate_tld: true)
+      end)
+    end
+
+    test "checks the tld for url with a scheme when validate_tld: true" do
+      custom_tld_scheme_urls()
+      |> Enum.each(fn url ->
+        refute url?(url, scheme: true, validate_tld: true)
+      end)
+    end
+
+    test "does not check the tld for url with a scheme when validate_tld: false" do
+      custom_tld_scheme_urls()
+      |> Enum.each(fn url ->
+        assert url?(url, scheme: true, validate_tld: false)
+      end)
+    end
+
+    test "does not check the tld for url with a scheme when validate_tld: :no_scheme" do
+      custom_tld_scheme_urls()
+      |> Enum.each(fn url ->
+        assert url?(url, scheme: true, validate_tld: :no_scheme)
+      end)
+    end
+
+    test "checks the tld for url without a scheme when validate_tld: true" do
+      custom_tld_non_scheme_urls()
+      |> Enum.each(fn url ->
+        refute url?(url, scheme: false, validate_tld: true)
+      end)
+    end
+
+    test "checks the tld for url without a scheme when validate_tld: :no_scheme" do
+      custom_tld_non_scheme_urls()
+      |> Enum.each(fn url ->
+        refute url?(url, scheme: false, validate_tld: :no_scheme)
+      end)
+    end
+
+    test "does not check the tld for url without a scheme when validate_tld: false" do
+      custom_tld_non_scheme_urls()
+      |> Enum.each(fn url ->
+        assert url?(url, scheme: false, validate_tld: false)
+      end)
+    end
+  end
+
+  describe "email?" do
+    test "identifies valid emails" do
+      valid_emails()
+      |> Enum.each(fn email ->
+        assert email?(email, [])
+      end)
+    end
+
+    test "identifies invalid emails" do
+      invalid_emails()
+      |> Enum.each(fn email ->
+        refute email?(email, [])
+      end)
+    end
+
+    test "does not validate tlds when validate_tld: false" do
+      valid_custom_tld_emails()
+      |> Enum.each(fn email ->
+        assert email?(email, validate_tld: false)
+      end)
+    end
+
+    test "validates tlds when validate_tld: true" do
+      valid_custom_tld_emails()
+      |> Enum.each(fn email ->
+        refute email?(email, validate_tld: true)
       end)
     end
   end
@@ -216,4 +288,24 @@ defmodule AutoLinker.ParserTest do
       "x5",
       "(555) 555-55"
     ]
+
+  def custom_tld_scheme_urls,
+    do: [
+      "http://whatever.null/",
+      "https://example.o/index.html",
+      "http://pleroma.i2p/test",
+      "http://misskey.loki"
+    ]
+
+  def custom_tld_non_scheme_urls,
+    do: [
+      "whatever.null/",
+      "example.o/index.html",
+      "pleroma.i2p/test",
+      "misskey.loki"
+    ]
+
+  def valid_emails, do: ["rms@ai.mit.edu", "vc@cock.li"]
+  def invalid_emails, do: ["rms[at]ai.mit.edu", "vc@cock", "xmpp:lain@trashserver.net"]
+  def valid_custom_tld_emails, do: ["guardian@33y6fjyhs3phzfjj.onion", "hi@company.null"]
 end
