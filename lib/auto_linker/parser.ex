@@ -46,13 +46,15 @@ defmodule AutoLinker.Parser do
   @doc """
   Parse the given string, identifying items to link.
 
-  Parses the string, replacing the matching urls and phone numbers with an html link.
+  Parses the string, replacing the matching urls with an html link.
 
   ## Examples
 
       iex> AutoLinker.Parser.parse("Check out google.com")
       ~s{Check out <a href="http://google.com" class="auto-linker" target="_blank" rel="noopener noreferrer">google.com</a>}
   """
+
+  @types [:url, :email, :hashtag, :mention, :extra]
 
   def parse(input, opts \\ %{})
   def parse(input, opts) when is_binary(input), do: {input, %{}} |> parse(opts) |> elem(0)
@@ -61,157 +63,115 @@ defmodule AutoLinker.Parser do
   def parse(input, opts) do
     opts = Map.merge(@default_opts, opts)
 
+    Enum.reduce(opts, input, fn
+      {type, true}, input when type in @types ->
+        do_parse(input, opts, {"", "", :parsing}, type)
 
-    do_parse(input, Map.merge(config, opts))
+      _, input ->
+        input
+    end)
   end
-
-  defp do_parse(input, %{url: false} = opts), do: do_parse(input, Map.delete(opts, :url))
-
-  defp do_parse(input, %{hashtag: true} = opts) do
-    input
-    |> do_parse(opts, {"", "", :parsing}, &check_and_link_hashtag/3)
-    |> do_parse(Map.delete(opts, :hashtag))
-  end
-
-  defp do_parse(input, %{extra: true} = opts) do
-    input
-    |> do_parse(opts, {"", "", :parsing}, &check_and_link_extra/3)
-    |> do_parse(Map.delete(opts, :extra))
-  end
-
-  defp do_parse(input, %{email: true} = opts) do
-    input
-    |> do_parse(opts, {"", "", :parsing}, &check_and_link_email/3)
-    |> do_parse(Map.delete(opts, :email))
-  end
-
-  defp do_parse({text, user_acc}, %{url: _} = opts) do
-    input =
-      with exclude <- Map.get(opts, :exclude_patterns),
-           true <- is_list(exclude),
-           true <- String.starts_with?(text, exclude) do
-        {text, user_acc}
-      else
-        _ ->
-          do_parse(
-            {text, user_acc},
-            opts,
-            {"", "", :parsing},
-            &check_and_link/3
-          )
-      end
-
-    do_parse(input, Map.delete(opts, :url))
-  end
-
-  defp do_parse(input, %{mention: true} = opts) do
-    input
-    |> do_parse(opts, {"", "", :parsing}, &check_and_link_mention/3)
-    |> do_parse(Map.delete(opts, :mention))
-  end
-
-  defp do_parse(input, _), do: input
 
   defp do_parse({"", user_acc}, _opts, {"", acc, _}, _handler),
     do: {acc, user_acc}
 
-  defp do_parse({"<a" <> text, user_acc}, opts, {buffer, acc, :parsing}, handler),
-    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "<a", :skip}, handler)
+  defp do_parse({"<a" <> text, user_acc}, opts, {buffer, acc, :parsing}, type),
+    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "<a", :skip}, type)
 
-  defp do_parse({"<pre" <> text, user_acc}, opts, {buffer, acc, :parsing}, handler),
-    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "<pre", :skip}, handler)
+  defp do_parse({"<pre" <> text, user_acc}, opts, {buffer, acc, :parsing}, type),
+    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "<pre", :skip}, type)
 
-  defp do_parse({"<code" <> text, user_acc}, opts, {buffer, acc, :parsing}, handler),
-    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "<code", :skip}, handler)
+  defp do_parse({"<code" <> text, user_acc}, opts, {buffer, acc, :parsing}, type),
+    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "<code", :skip}, type)
 
-  defp do_parse({"</a>" <> text, user_acc}, opts, {buffer, acc, :skip}, handler),
-    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "</a>", :parsing}, handler)
+  defp do_parse({"</a>" <> text, user_acc}, opts, {buffer, acc, :skip}, type),
+    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "</a>", :parsing}, type)
 
-  defp do_parse({"</pre>" <> text, user_acc}, opts, {buffer, acc, :skip}, handler),
-    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "</pre>", :parsing}, handler)
+  defp do_parse({"</pre>" <> text, user_acc}, opts, {buffer, acc, :skip}, type),
+    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "</pre>", :parsing}, type)
 
-  defp do_parse({"</code>" <> text, user_acc}, opts, {buffer, acc, :skip}, handler),
-    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "</code>", :parsing}, handler)
+  defp do_parse({"</code>" <> text, user_acc}, opts, {buffer, acc, :skip}, type),
+    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "</code>", :parsing}, type)
 
-  defp do_parse({"<" <> text, user_acc}, opts, {"", acc, :parsing}, handler),
-    do: do_parse({text, user_acc}, opts, {"<", acc, {:open, 1}}, handler)
+  defp do_parse({"<" <> text, user_acc}, opts, {"", acc, :parsing}, type),
+    do: do_parse({text, user_acc}, opts, {"<", acc, {:open, 1}}, type)
 
-  defp do_parse({"<" <> text, user_acc}, opts, {"", acc, {:html, level}}, handler) do
-    do_parse({text, user_acc}, opts, {"<", acc, {:open, level + 1}}, handler)
+  defp do_parse({"<" <> text, user_acc}, opts, {"", acc, {:html, level}}, type) do
+    do_parse({text, user_acc}, opts, {"<", acc, {:open, level + 1}}, type)
   end
 
-  defp do_parse({">" <> text, user_acc}, opts, {buffer, acc, {:attrs, level}}, handler),
+  defp do_parse({">" <> text, user_acc}, opts, {buffer, acc, {:attrs, level}}, type),
     do:
       do_parse(
         {text, user_acc},
         opts,
         {"", acc <> buffer <> ">", {:html, level}},
-        handler
+        type
       )
 
-  defp do_parse({<<ch::8>> <> text, user_acc}, opts, {"", acc, {:attrs, level}}, handler) do
-    do_parse({text, user_acc}, opts, {"", acc <> <<ch::8>>, {:attrs, level}}, handler)
+  defp do_parse({<<ch::8>> <> text, user_acc}, opts, {"", acc, {:attrs, level}}, type) do
+    do_parse({text, user_acc}, opts, {"", acc <> <<ch::8>>, {:attrs, level}}, type)
   end
 
-  defp do_parse({"</" <> text, user_acc}, opts, {buffer, acc, {:html, level}}, handler) do
-    {buffer, user_acc} = run_handler(handler, buffer, opts, user_acc)
+  defp do_parse({"</" <> text, user_acc}, opts, {buffer, acc, {:html, level}}, type) do
+    {buffer, user_acc} = link(type, buffer, opts, user_acc)
 
     do_parse(
       {text, user_acc},
       opts,
       {"", acc <> buffer <> "</", {:close, level}},
-      handler
+      type
     )
   end
 
-  defp do_parse({">" <> text, user_acc}, opts, {buffer, acc, {:close, 1}}, handler),
-    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> ">", :parsing}, handler)
+  defp do_parse({">" <> text, user_acc}, opts, {buffer, acc, {:close, 1}}, type),
+    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> ">", :parsing}, type)
 
-  defp do_parse({">" <> text, user_acc}, opts, {buffer, acc, {:close, level}}, handler),
+  defp do_parse({">" <> text, user_acc}, opts, {buffer, acc, {:close, level}}, type),
     do:
       do_parse(
         {text, user_acc},
         opts,
         {"", acc <> buffer <> ">", {:html, level - 1}},
-        handler
+        type
       )
 
-  defp do_parse({text, user_acc}, opts, {buffer, acc, {:open, level}}, handler) do
-    do_parse({text, user_acc}, opts, {"", acc <> buffer, {:attrs, level}}, handler)
+  defp do_parse({text, user_acc}, opts, {buffer, acc, {:open, level}}, type) do
+    do_parse({text, user_acc}, opts, {"", acc <> buffer, {:attrs, level}}, type)
   end
 
   defp do_parse(
          {<<char::bytes-size(1), text::binary>>, user_acc},
          opts,
          {buffer, acc, state},
-         handler
+         type
        )
        when char in [" ", "\r", "\n"] do
-    {buffer, user_acc} = run_handler(handler, buffer, opts, user_acc)
+    {buffer, user_acc} = link(type, buffer, opts, user_acc)
 
     do_parse(
       {text, user_acc},
       opts,
       {"", acc <> buffer <> char, state},
-      handler
+      type
     )
   end
 
-  defp do_parse({<<ch::8>>, user_acc}, opts, {buffer, acc, state}, handler) do
-    {buffer, user_acc} = run_handler(handler, buffer <> <<ch::8>>, opts, user_acc)
+  defp do_parse({<<ch::8>>, user_acc}, opts, {buffer, acc, state}, type) do
+    {buffer, user_acc} = link(type, buffer <> <<ch::8>>, opts, user_acc)
 
     do_parse(
       {"", user_acc},
       opts,
       {"", acc <> buffer, state},
-      handler
+      type
     )
   end
 
-  defp do_parse({<<ch::8>> <> text, user_acc}, opts, {buffer, acc, state}, handler),
-    do: do_parse({text, user_acc}, opts, {buffer <> <<ch::8>>, acc, state}, handler)
+  defp do_parse({<<ch::8>> <> text, user_acc}, opts, {buffer, acc, state}, type),
+    do: do_parse({text, user_acc}, opts, {buffer <> <<ch::8>>, acc, state}, type)
 
-  def check_and_link(buffer, opts, _user_acc) do
+  def check_and_link(:url, buffer, opts, _user_acc) do
     str = strip_parens(buffer)
 
     if url?(str, opts) do
@@ -224,35 +184,35 @@ defmodule AutoLinker.Parser do
     end
   end
 
-  defp strip_parens("(" <> buffer) do
-    ~r/[^\)]*/ |> Regex.run(buffer) |> hd()
-  end
-
-  defp strip_parens(buffer), do: buffer
-
-  def check_and_link_email(buffer, opts, _user_acc) do
+  def check_and_link(:email, buffer, opts, _user_acc) do
     if email?(buffer, opts), do: link_email(buffer, opts), else: buffer
   end
 
-  def check_and_link_mention(buffer, opts, user_acc) do
+  def check_and_link(:mention, buffer, opts, user_acc) do
     buffer
     |> match_mention
     |> link_mention(buffer, opts, user_acc)
   end
 
-  def check_and_link_hashtag(buffer, opts, user_acc) do
+  def check_and_link(:hashtag, buffer, opts, user_acc) do
     buffer
     |> match_hashtag
     |> link_hashtag(buffer, opts, user_acc)
   end
 
-  def check_and_link_extra("xmpp:" <> handle, opts, _user_acc) do
+  def check_and_link(:extra, "xmpp:" <> handle, opts, _user_acc) do
     if email?(handle, opts), do: link_extra("xmpp:" <> handle, opts), else: handle
   end
 
-  def check_and_link_extra(buffer, opts, _user_acc) do
+  def check_and_link(:extra, buffer, opts, _user_acc) do
     if String.starts_with?(buffer, @prefix_extra), do: link_extra(buffer, opts), else: buffer
   end
+
+  defp strip_parens("(" <> buffer) do
+    ~r/[^\)]*/ |> Regex.run(buffer) |> hd()
+  end
+
+  defp strip_parens(buffer), do: buffer
 
   # @doc false
 
@@ -363,8 +323,8 @@ defmodule AutoLinker.Parser do
     Builder.create_extra_link(buffer, opts)
   end
 
-  defp run_handler(handler, buffer, opts, user_acc) do
-    case handler.(buffer, opts, user_acc) do
+  defp link(type, buffer, opts, user_acc) do
+    case check_and_link(type, buffer, opts, user_acc) do
       {buffer, user_acc} -> {buffer, user_acc}
       buffer -> {buffer, user_acc}
     end

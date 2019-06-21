@@ -31,7 +31,6 @@ defmodule AutoLinker do
   * `strip_prefix: true` - Strip the scheme prefix
   * `exclude_class: false` - Set to a class name when you don't want urls auto linked in the html of the give class
   * `exclude_id: false` - Set to an element id when you don't want urls auto linked in the html of the give element
-  * `exclude_patterns: ["```"]` - Don't link anything between the the pattern
   * `email: false` - link email links
   * `mention: false` - link @mentions (when `true`, requires `mention_prefix` or `mention_handler` options to be set)
   * `mention_prefix: nil` - a prefix to build a link for a mention (example: `https://example.com/user/`)

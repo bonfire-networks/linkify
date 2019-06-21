@@ -157,11 +157,6 @@ defmodule AutoLinker.ParserTest do
       assert parse(text, class: false, rel: false, new_window: false) == expected
     end
 
-    test "excludes html with specified class" do
-      text = "```Check out <div class='section'>google.com</div>```"
-      assert parse(text, exclude_patterns: ["```"]) == text
-    end
-
     test "do not link parens" do
       text = " foo (https://example.com/path/folder/), bar"
 

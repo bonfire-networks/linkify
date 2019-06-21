@@ -25,7 +25,10 @@ defmodule AutoLinker.Builder do
   end
 
   defp build_attrs(attrs, _, opts, :rel) do
-    if rel = Map.get(opts, :rel, "noopener noreferrer"), do: [{:rel, rel} | attrs], else: attrs
+    case Map.get(opts, :rel, "noopener noreferrer") do
+      rel when is_binary(rel) -> [{:rel, rel} | attrs]
+      _ -> attrs
+    end
   end
 
   defp build_attrs(attrs, _, opts, :target) do
@@ -33,7 +36,10 @@ defmodule AutoLinker.Builder do
   end
 
   defp build_attrs(attrs, _, opts, :class) do
-    if cls = Map.get(opts, :class, "auto-linker"), do: [{:class, cls} | attrs], else: attrs
+    case Map.get(opts, :class, "auto-linker") do
+      cls when is_binary(cls) -> [{:class, cls} | attrs]
+      _ -> attrs
+    end
   end
 
   defp build_attrs(attrs, url, _opts, :href) do
