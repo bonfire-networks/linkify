@@ -106,22 +106,6 @@ defmodule AutoLinker.ParserTest do
     end
   end
 
-  describe "match_phone" do
-    test "valid" do
-      valid_phone_nunbers()
-      |> Enum.each(fn number ->
-        assert number |> match_phone() |> valid_number?(number)
-      end)
-    end
-
-    test "invalid" do
-      invalid_phone_numbers()
-      |> Enum.each(fn number ->
-        assert number |> match_phone() |> is_nil
-      end)
-    end
-  end
-
   describe "parse" do
     test "handle line breakes" do
       text = "google.com\r\nssss"
@@ -157,7 +141,7 @@ defmodule AutoLinker.ParserTest do
 
       expected = "<div><a href=\"http://google.com\">google.com</a></div>"
 
-      assert parse(text, class: false, rel: false, new_window: false, phone: false) == expected
+      assert parse(text, class: false, rel: false, new_window: false) == expected
 
       text = "Check out <div class='section'>google.com</div>"
 
@@ -196,7 +180,7 @@ defmodule AutoLinker.ParserTest do
 
     test "do not link urls" do
       text = "google.com"
-      assert parse(text, url: false, phone: true) == text
+      assert parse(text, url: false) == text
     end
 
     test "do not link `:test.test`" do
@@ -258,35 +242,6 @@ defmodule AutoLinker.ParserTest do
       "invalid.",
       "hi..there",
       "555.555.5555"
-    ]
-
-  def valid_phone_nunbers,
-    do: [
-      "x55",
-      "x555",
-      "x5555",
-      "x12345",
-      "+1 555 555-5555",
-      "555 555-5555",
-      "555.555.5555",
-      "613-555-5555",
-      "1 (555) 555-5555",
-      "(555) 555-5555",
-      "1.555.555.5555",
-      "800 555-5555",
-      "1.800.555.5555",
-      "1 (800) 555-5555",
-      "888 555-5555",
-      "887 555-5555",
-      "1-877-555-5555",
-      "1 800 710-5515"
-    ]
-
-  def invalid_phone_numbers,
-    do: [
-      "5555",
-      "x5",
-      "(555) 555-55"
     ]
 
   def custom_tld_scheme_urls,

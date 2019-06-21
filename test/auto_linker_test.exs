@@ -2,11 +2,6 @@ defmodule AutoLinkerTest do
   use ExUnit.Case, async: true
   doctest AutoLinker
 
-  test "phone number" do
-    assert AutoLinker.link(", work (555) 555-5555", phone: true) ==
-             ~s{, work <a href="#" class="phone-number" data-phone="5555555555">(555) 555-5555</a>}
-  end
-
   test "default link" do
     assert AutoLinker.link("google.com") ==
              "<a href=\"http://google.com\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">google.com</a>"
@@ -18,13 +13,12 @@ defmodule AutoLinkerTest do
   end
 
   test "all kinds of links" do
-    text = "hello google.com https://ddg.com 888 888-8888 user@email.com irc:///mIRC"
+    text = "hello google.com https://ddg.com user@email.com irc:///mIRC"
 
     expected =
-      "hello <a href=\"http://google.com\">google.com</a> <a href=\"https://ddg.com\">ddg.com</a> <a href=\"#\" class=\"phone-number\" data-phone=\"8888888888\">888 888-8888</a> <a href=\"mailto:user@email.com\">user@email.com</a> <a href=\"irc:///mIRC\">irc:///mIRC</a>"
+      "hello <a href=\"http://google.com\">google.com</a> <a href=\"https://ddg.com\">ddg.com</a> <a href=\"mailto:user@email.com\">user@email.com</a> <a href=\"irc:///mIRC\">irc:///mIRC</a>"
 
     assert AutoLinker.link(text,
-             phone: true,
              email: true,
              extra: true,
              class: false,

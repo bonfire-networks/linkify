@@ -9,8 +9,6 @@ defmodule AutoLinker.Parser do
 
   @match_url ~r{^(?:\W*)?(?<url>(?:https?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~%:\/?#[\]@!\$&'\(\)\*\+,;=.]+$)}u
 
-  @match_phone ~r"((?:x\d{2,7})|(?:(?:\+?1\s?(?:[.-]\s?)?)?(?:\(\s?(?:[2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9])\s?\)|(?:[2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9]))\s?(?:[.-]\s?)?)(?:[2-9]1[02-9]|[2-9][02-9]1|[2-9][02-9]{2})\s?(?:[.-]\s?)?(?:[0-9]{4}))"
-
   @match_hostname ~r{^\W*(?<scheme>https?:\/\/)?(?:[^@\n]+\\w@)?(?<host>[^:#~\/\n?]+)}u
 
   @match_ip ~r"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
@@ -51,15 +49,6 @@ defmodule AutoLinker.Parser do
 
       iex> AutoLinker.Parser.parse("Check out google.com")
       ~s{Check out <a href="http://google.com" class="auto-linker" target="_blank" rel="noopener noreferrer">google.com</a>}
-
-      iex> AutoLinker.Parser.parse("call me at x9999", phone: true)
-      ~s{call me at <a href="#" class="phone-number" data-phone="9999">x9999</a>}
-
-      iex> AutoLinker.Parser.parse("or at home on 555.555.5555", phone: true)
-      ~s{or at home on <a href="#" class="phone-number" data-phone="5555555555">555.555.5555</a>}
-
-      iex> AutoLinker.Parser.parse(", work (555) 555-5555", phone: true)
-      ~s{, work <a href="#" class="phone-number" data-phone="5555555555">(555) 555-5555</a>}
   """
 
   def parse(input, opts \\ %{})
@@ -88,14 +77,7 @@ defmodule AutoLinker.Parser do
     do_parse(input, Map.merge(config, opts))
   end
 
-  defp do_parse(input, %{phone: false} = opts), do: do_parse(input, Map.delete(opts, :phone))
   defp do_parse(input, %{url: false} = opts), do: do_parse(input, Map.delete(opts, :url))
-
-  defp do_parse(input, %{phone: _} = opts) do
-    input
-    |> do_parse(opts, {"", "", :parsing}, &check_and_link_phone/3)
-    |> do_parse(Map.delete(opts, :phone))
-  end
 
   defp do_parse(input, %{hashtag: true} = opts) do
     input
@@ -210,15 +192,6 @@ defmodule AutoLinker.Parser do
     do_parse({text, user_acc}, opts, {"", acc <> buffer, {:attrs, level}}, handler)
   end
 
-  # default cases where state is not important
-  defp do_parse(
-         {" " <> text, user_acc},
-         %{phone: _} = opts,
-         {buffer, acc, state},
-         handler
-       ),
-       do: do_parse({text, user_acc}, opts, {buffer <> " ", acc, state}, handler)
-
   defp do_parse(
          {<<char::bytes-size(1), text::binary>>, user_acc},
          opts,
@@ -271,12 +244,6 @@ defmodule AutoLinker.Parser do
 
   def check_and_link_email(buffer, opts, _user_acc) do
     if email?(buffer, opts), do: link_email(buffer, opts), else: buffer
-  end
-
-  def check_and_link_phone(buffer, opts, _user_acc) do
-    buffer
-    |> match_phone
-    |> link_phone(buffer, opts)
   end
 
   def check_and_link_mention(buffer, opts, user_acc) do
@@ -340,14 +307,6 @@ defmodule AutoLinker.Parser do
 
   def ip?(buffer), do: Regex.match?(@match_ip, buffer)
 
-  @doc false
-  def match_phone(buffer) do
-    case Regex.scan(@match_phone, buffer) do
-      [] -> nil
-      other -> other
-    end
-  end
-
   def match_mention(buffer) do
     case Regex.run(@match_mention, buffer) do
       [mention] -> mention
@@ -401,12 +360,6 @@ defmodule AutoLinker.Parser do
   end
 
   defp maybe_update_buffer(out, _match, _buffer), do: out
-
-  def link_phone(nil, buffer, _), do: buffer
-
-  def link_phone(list, buffer, opts) do
-    Builder.create_phone_link(list, buffer, opts)
-  end
 
   @doc false
   def link_url(buffer, opts) do
