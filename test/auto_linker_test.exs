@@ -13,8 +13,8 @@ defmodule AutoLinkerTest do
   end
 
   test "does on link existing links" do
-    assert AutoLinker.link("<a href='http://google.com'>google.com</a>") ==
-             "<a href='http://google.com'>google.com</a>"
+    text = ~s(<a href="http://google.com">google.com</a>)
+    assert AutoLinker.link(text) == text
   end
 
   test "all kinds of links" do
@@ -123,11 +123,11 @@ defmodule AutoLinkerTest do
         "Hello again, @user.&lt;script&gt;&lt;/script&gt;\nThis is on another :moominmamma: line. #2hu #epic #phantasmagoric"
 
       handler = fn "@" <> user = mention, _, _, _ ->
-        ~s(<span class='h-card'><a href='#/user/#{user}'>@<span>#{mention}</span></a></span>)
+        ~s(<span class="h-card"><a href="#/user/#{user}">@<span>#{mention}</span></a></span>)
       end
 
       expected =
-        "Hello again, <span class='h-card'><a href='#/user/user'>@<span>@user</span></a></span>.&lt;script&gt;&lt;/script&gt;\nThis is on another :moominmamma: line. <a href=\"/tag/2hu\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">#2hu</a> <a href=\"/tag/epic\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">#epic</a> <a href=\"/tag/phantasmagoric\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">#phantasmagoric</a>"
+        ~s(Hello again, <span class="h-card"><a href="#/user/user">@<span>@user</span></a></span>.&lt;script&gt;&lt;/script&gt;\nThis is on another :moominmamma: line. <a href="/tag/2hu" class="auto-linker" target="_blank" rel="noopener noreferrer">#2hu</a> <a href="/tag/epic" class="auto-linker" target="_blank" rel="noopener noreferrer">#epic</a> <a href="/tag/phantasmagoric" class="auto-linker" target="_blank" rel="noopener noreferrer">#phantasmagoric</a>)
 
       assert AutoLinker.link(text,
                mention: true,
