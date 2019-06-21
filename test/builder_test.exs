@@ -29,13 +29,6 @@ defmodule AutoLinker.BuilderTest do
     assert create_link("http://text", %{rel: false, strip_prefix: false}) == expected
   end
 
-  test "create_markdown_links/2" do
-    expected =
-      "<a href='url' class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">text</a>"
-
-    assert create_markdown_links("[text](url)", %{}) == expected
-  end
-
   test "format_hashtag/3" do
     expected = "<a href=\"/t/girls\">#girls</a>"
     assert format_hashtag(%{href: "/t/girls"}, "girls", nil) == expected

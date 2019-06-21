@@ -111,13 +111,6 @@ defmodule AutoLinker.Parser do
     |> do_parse(Map.delete(opts, :extra))
   end
 
-  defp do_parse({text, user_acc}, %{markdown: true} = opts) do
-    text
-    |> Builder.create_markdown_links(opts)
-    |> (&{&1, user_acc}).()
-    |> do_parse(Map.delete(opts, :markdown))
-  end
-
   defp do_parse(input, %{email: true} = opts) do
     input
     |> do_parse(opts, {"", "", :parsing}, &check_and_link_email/3)

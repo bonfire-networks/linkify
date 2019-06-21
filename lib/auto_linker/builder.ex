@@ -17,14 +17,6 @@ defmodule AutoLinker.Builder do
     |> format_url(text, opts)
   end
 
-  def create_markdown_links(text, opts) do
-    []
-    |> build_attrs(text, opts, :rel)
-    |> build_attrs(text, opts, :target)
-    |> build_attrs(text, opts, :class)
-    |> format_markdown(text, opts)
-  end
-
   defp build_attrs(attrs, uri, %{rel: get_rel}, :rel) when is_function(get_rel, 1) do
     case get_rel.(uri) do
       nil -> attrs
@@ -66,16 +58,6 @@ defmodule AutoLinker.Builder do
     attrs
     |> Enum.map(fn {key, value} -> ~s(#{key}="#{value}") end)
     |> Enum.join(" ")
-  end
-
-  defp format_markdown(attrs, text, _opts) do
-    attrs =
-      case format_attrs(attrs) do
-        "" -> ""
-        attrs -> " " <> attrs
-      end
-
-    Regex.replace(~r/\[(.+?)\]\((.+?)\)/, text, "<a href='\\2'#{attrs}>\\1</a>")
   end
 
   defp truncate(url, false), do: url

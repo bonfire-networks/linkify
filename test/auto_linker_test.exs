@@ -12,32 +12,19 @@ defmodule AutoLinkerTest do
              "<a href=\"http://google.com\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">google.com</a>"
   end
 
-  test "markdown" do
-    assert AutoLinker.link("[google.com](http://google.com)", markdown: true) ==
-             "<a href='http://google.com' class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">google.com</a>"
-  end
-
   test "does on link existing links" do
     assert AutoLinker.link("<a href='http://google.com'>google.com</a>") ==
              "<a href='http://google.com'>google.com</a>"
   end
 
-  test "phone number and markdown link" do
-    assert AutoLinker.link("888 888-8888  [ab](a.com)", phone: true, markdown: true) ==
-             ~s(<a href="#" class="phone-number" data-phone="8888888888">888 888-8888</a>) <>
-               ~s(  <a href='a.com' class="auto-linker" target="_blank" rel="noopener noreferrer">ab</a>)
-  end
-
   test "all kinds of links" do
-    text =
-      "hello google.com https://ddg.com 888 888-8888 user@email.com [google.com](http://google.com) irc:///mIRC"
+    text = "hello google.com https://ddg.com 888 888-8888 user@email.com irc:///mIRC"
 
     expected =
-      "hello <a href=\"http://google.com\">google.com</a> <a href=\"https://ddg.com\">ddg.com</a> <a href=\"#\" class=\"phone-number\" data-phone=\"8888888888\">888 888-8888</a> <a href=\"mailto:user@email.com\">user@email.com</a> <a href='http://google.com'>google.com</a> <a href=\"irc:///mIRC\">irc:///mIRC</a>"
+      "hello <a href=\"http://google.com\">google.com</a> <a href=\"https://ddg.com\">ddg.com</a> <a href=\"#\" class=\"phone-number\" data-phone=\"8888888888\">888 888-8888</a> <a href=\"mailto:user@email.com\">user@email.com</a> <a href=\"irc:///mIRC\">irc:///mIRC</a>"
 
     assert AutoLinker.link(text,
              phone: true,
-             markdown: true,
              email: true,
              scheme: true,
              extra: true,
