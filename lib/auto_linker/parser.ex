@@ -38,7 +38,10 @@ defmodule AutoLinker.Parser do
 
   @tlds "./priv/tlds.txt" |> File.read!() |> String.split("\n", trim: true) |> MapSet.new()
 
-  @default_opts ~w(url validate_tld)a
+  @default_opts %{
+    url: true,
+    validate_tld: true
+  }
 
   @doc """
   Parse the given string, identifying items to link.
@@ -52,27 +55,12 @@ defmodule AutoLinker.Parser do
   """
 
   def parse(input, opts \\ %{})
-  def parse(input, opts) when is_binary(input), do: {input, nil} |> parse(opts) |> elem(0)
+  def parse(input, opts) when is_binary(input), do: {input, %{}} |> parse(opts) |> elem(0)
   def parse(input, list) when is_list(list), do: parse(input, Enum.into(list, %{}))
 
   def parse(input, opts) do
-    config =
-      :auto_linker
-      |> Application.get_env(:opts, [])
-      |> Enum.into(%{})
-      |> Map.put(
-        :attributes,
-        Application.get_env(:auto_linker, :attributes, [])
-      )
+    opts = Map.merge(@default_opts, opts)
 
-    opts =
-      Enum.reduce(@default_opts, opts, fn opt, acc ->
-        if is_nil(opts[opt]) and is_nil(config[opt]) do
-          Map.put(acc, opt, true)
-        else
-          acc
-        end
-      end)
 
     do_parse(input, Map.merge(config, opts))
   end
