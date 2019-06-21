@@ -27,7 +27,6 @@ defmodule AutoLinker do
   * `class: "auto-linker"` - specify the class to be added to the generated link. false to clear
   * `rel: "noopener noreferrer"` - override the rel attribute. false to clear
   * `new_window: true` - set to false to remove `target='_blank'` attribute
-  * `scheme: false` - Set to true to link urls with schema `http://google`
   * `truncate: false` - Set to a number to truncate urls longer then the number. Truncated urls will end in `..`
   * `strip_prefix: true` - Strip the scheme prefix
   * `exclude_class: false` - Set to a class name when you don't want urls auto linked in the html of the give class

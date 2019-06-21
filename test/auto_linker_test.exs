@@ -26,7 +26,6 @@ defmodule AutoLinkerTest do
     assert AutoLinker.link(text,
              phone: true,
              email: true,
-             scheme: true,
              extra: true,
              class: false,
              new_window: false,
@@ -238,7 +237,6 @@ defmodule AutoLinkerTest do
         "<a href=\"http://google.com#test\">google.com#test</a> <a href=\"https://example.com/tag/test\">#test</a> <a href=\"http://google.com/#test\">google.com/#test</a> <a href=\"https://example.com/tag/tag\">#tag</a>"
 
       assert AutoLinker.link(text,
-               scheme: true,
                hashtag: true,
                class: false,
                new_window: false,
@@ -254,7 +252,6 @@ defmodule AutoLinkerTest do
         "<a href=\"https://example.com/tag/漢字\">#漢字</a> <a href=\"https://example.com/tag/は\">#は</a> <a href=\"https://example.com/tag/тест\">#тест</a> <a href=\"https://example.com/tag/ทดสอบ\">#ทดสอบ</a>"
 
       assert AutoLinker.link(text,
-               scheme: true,
                class: false,
                new_window: false,
                rel: false,
@@ -271,19 +268,18 @@ defmodule AutoLinkerTest do
       expected =
         "Hey, check out <a href=\"http://www.youtube.com/watch?v=8Zg1-TufF%20zY?x=1&y=2#blabla\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">youtube.com/watch?v=8Zg1-TufF%20zY?x=1&y=2#blabla</a> ."
 
-      assert AutoLinker.link(text, scheme: true) == expected
+      assert AutoLinker.link(text) == expected
 
       # no scheme
       text = "Hey, check out www.youtube.com/watch?v=8Zg1-TufF%20zY?x=1&y=2#blabla ."
-      assert AutoLinker.link(text, scheme: true) == expected
+      assert AutoLinker.link(text) == expected
     end
 
     test "turn urls with schema into urls" do
       text = "📌https://google.com"
       expected = "📌<a href=\"https://google.com\">google.com</a>"
 
-      assert AutoLinker.link(text, scheme: true, class: false, new_window: false, rel: false) ==
-               expected
+      assert AutoLinker.link(text, class: false, new_window: false, rel: false) == expected
     end
 
     test "hostname/@user" do
@@ -292,53 +288,53 @@ defmodule AutoLinkerTest do
       expected =
         "<a href=\"https://example.com/@user\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">example.com/@user</a>"
 
-      assert AutoLinker.link(text, scheme: true) == expected
+      assert AutoLinker.link(text) == expected
 
       text = "https://example.com:4000/@user"
 
       expected =
         "<a href=\"https://example.com:4000/@user\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">example.com:4000/@user</a>"
 
-      assert AutoLinker.link(text, scheme: true) == expected
+      assert AutoLinker.link(text) == expected
 
       text = "https://example.com:4000/@user"
 
       expected =
         "<a href=\"https://example.com:4000/@user\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">example.com:4000/@user</a>"
 
-      assert AutoLinker.link(text, scheme: true) == expected
+      assert AutoLinker.link(text) == expected
 
       text = "@username"
       expected = "@username"
-      assert AutoLinker.link(text, scheme: true) == expected
+      assert AutoLinker.link(text) == expected
 
       text = "http://www.cs.vu.nl/~ast/intel/"
 
       expected =
         "<a href=\"http://www.cs.vu.nl/~ast/intel/\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">cs.vu.nl/~ast/intel/</a>"
 
-      assert AutoLinker.link(text, scheme: true) == expected
+      assert AutoLinker.link(text) == expected
 
       text = "https://forum.zdoom.org/viewtopic.php?f=44&t=57087"
 
       expected =
         "<a href=\"https://forum.zdoom.org/viewtopic.php?f=44&t=57087\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">forum.zdoom.org/viewtopic.php?f=44&t=57087</a>"
 
-      assert AutoLinker.link(text, scheme: true) == expected
+      assert AutoLinker.link(text) == expected
 
       text = "https://en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul"
 
       expected =
         "<a href=\"https://en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul</a>"
 
-      assert AutoLinker.link(text, scheme: true) == expected
+      assert AutoLinker.link(text) == expected
 
       text = "https://en.wikipedia.org/wiki/Duff's_device"
 
       expected =
         "<a href=\"https://en.wikipedia.org/wiki/Duff's_device\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">en.wikipedia.org/wiki/Duff's_device</a>"
 
-      assert AutoLinker.link(text, scheme: true) == expected
+      assert AutoLinker.link(text) == expected
     end
   end
 
@@ -386,34 +382,33 @@ defmodule AutoLinkerTest do
       expected =
         "<a href=\"https://google.com\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">google.com</a>"
 
-      assert AutoLinker.link(text, scheme: true) == expected
+      assert AutoLinker.link(text) == expected
     end
 
     test "only existing TLDs with scheme" do
       text = "this url https://google.foobar.blah11blah/ has invalid TLD"
 
       expected = "this url https://google.foobar.blah11blah/ has invalid TLD"
-      assert AutoLinker.link(text, scheme: true) == expected
+      assert AutoLinker.link(text) == expected
 
       text = "this url https://google.foobar.com/ has valid TLD"
 
       expected =
         "this url <a href=\"https://google.foobar.com/\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">google.foobar.com/</a> has valid TLD"
 
-      assert AutoLinker.link(text, scheme: true) == expected
+      assert AutoLinker.link(text) == expected
     end
 
     test "only existing TLDs without scheme" do
       text = "this url google.foobar.blah11blah/ has invalid TLD"
-      expected = "this url google.foobar.blah11blah/ has invalid TLD"
-      assert AutoLinker.link(text, scheme: false) == expected
+      assert AutoLinker.link(text) == text
 
       text = "this url google.foobar.com/ has valid TLD"
 
       expected =
         "this url <a href=\"http://google.foobar.com/\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">google.foobar.com/</a> has valid TLD"
 
-      assert AutoLinker.link(text, scheme: false) == expected
+      assert AutoLinker.link(text) == expected
     end
 
     test "only existing TLDs with and without scheme" do
@@ -422,14 +417,14 @@ defmodule AutoLinkerTest do
       expected =
         "this url <a href=\"http://google.foobar.com/\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">google.foobar.com/</a> has valid TLD"
 
-      assert AutoLinker.link(text, scheme: true) == expected
+      assert AutoLinker.link(text) == expected
 
       text = "this url google.foobar.com/ has valid TLD"
 
       expected =
         "this url <a href=\"http://google.foobar.com/\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">google.foobar.com/</a> has valid TLD"
 
-      assert AutoLinker.link(text, scheme: true) == expected
+      assert AutoLinker.link(text) == expected
     end
   end
 end

@@ -7,13 +7,11 @@ defmodule AutoLinker.Parser do
 
   @invalid_url ~r/(\.\.+)|(^(\d+\.){1,2}\d+$)/
 
-  @match_url ~r{^[\w\.-]+(?:\.[\w\.-]+)+[\w\-\._~%:/?#[\]@!\$&'\(\)\*\+,;=.]+$}
-
-  @match_scheme ~r{^(?:\W*)?(?<url>(?:https?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~%:\/?#[\]@!\$&'\(\)\*\+,;=.]+$)}u
+  @match_url ~r{^(?:\W*)?(?<url>(?:https?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~%:\/?#[\]@!\$&'\(\)\*\+,;=.]+$)}u
 
   @match_phone ~r"((?:x\d{2,7})|(?:(?:\+?1\s?(?:[.-]\s?)?)?(?:\(\s?(?:[2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9])\s?\)|(?:[2-9]1[02-9]|[2-9][02-8]1|[2-9][02-8][02-9]))\s?(?:[.-]\s?)?)(?:[2-9]1[02-9]|[2-9][02-9]1|[2-9][02-9]{2})\s?(?:[.-]\s?)?(?:[0-9]{4}))"
 
-  @match_hostname ~r{^(?:\W*https?:\/\/)?(?:[^@\n]+\\w@)?(?<host>[^:#~\/\n?]+)}u
+  @match_hostname ~r{^\W*(?<scheme>https?:\/\/)?(?:[^@\n]+\\w@)?(?<host>[^:#~\/\n?]+)}u
 
   @match_ip ~r"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
 
@@ -256,7 +254,7 @@ defmodule AutoLinker.Parser do
     str = strip_parens(buffer)
 
     if url?(str, opts) do
-      case parse_link(str, opts) do
+      case @match_url |> Regex.run(str, capture: [:url]) |> hd() do
         ^buffer -> link_url(buffer, opts)
         url -> String.replace(buffer, url, link_url(url, opts))
       end
@@ -264,12 +262,6 @@ defmodule AutoLinker.Parser do
       buffer
     end
   end
-
-  defp parse_link(str, %{scheme: true}) do
-    @match_scheme |> Regex.run(str, capture: [:url]) |> hd()
-  end
-
-  defp parse_link(str, _), do: str
 
   defp strip_parens("(" <> buffer) do
     ~r/[^\)]*/ |> Regex.run(buffer) |> hd()
@@ -310,11 +302,7 @@ defmodule AutoLinker.Parser do
   # @doc false
 
   def url?(buffer, opts) do
-    if opts[:scheme] do
-      valid_url?(buffer) && Regex.match?(@match_scheme, buffer) && valid_tld?(buffer, opts)
-    else
-      valid_url?(buffer) && Regex.match?(@match_url, buffer) && valid_tld?(buffer, opts)
-    end
+    valid_url?(buffer) && Regex.match?(@match_url, buffer) && valid_tld?(buffer, opts)
   end
 
   def email?(buffer, opts) do
@@ -324,24 +312,22 @@ defmodule AutoLinker.Parser do
   defp valid_url?(url), do: !Regex.match?(@invalid_url, url)
 
   def valid_tld?(buffer, opts) do
+    [scheme, host] = Regex.run(@match_hostname, buffer, capture: [:scheme, :host])
+
     cond do
       opts[:validate_tld] == false ->
         true
 
-      opts[:validate_tld] == :no_scheme && opts[:scheme] ->
+      ip?(host) ->
+        true
+
+      # don't validate if scheme is present
+      opts[:validate_tld] == :no_scheme and scheme != "" ->
         true
 
       true ->
-        with [host] <- Regex.run(@match_hostname, buffer, capture: [:host]) do
-          if ip?(host) do
-            true
-          else
-            tld = host |> String.split(".") |> List.last()
-            MapSet.member?(@tlds, tld)
-          end
-        else
-          _ -> false
-        end
+        tld = host |> String.split(".") |> List.last()
+        MapSet.member?(@tlds, tld)
     end
   end
 
