@@ -311,8 +311,15 @@ defmodule AutoLinker.Parser do
 
   defp valid_url?(url), do: !Regex.match?(@invalid_url, url)
 
-  def valid_tld?(buffer, opts) do
-    [scheme, host] = Regex.run(@match_hostname, buffer, capture: [:scheme, :host])
+  @doc """
+  Validates a URL's TLD. Returns a boolean.
+
+  Will return `true` if `:validate_tld` option set to `false`.
+
+  Will skip validation and return `true` if `:validate_tld` set to `:no_scheme` and the url has a scheme.
+  """
+  def valid_tld?(url, opts) do
+    [scheme, host] = Regex.run(@match_hostname, url, capture: [:scheme, :host])
 
     cond do
       opts[:validate_tld] == false ->
