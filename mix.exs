@@ -29,9 +29,8 @@ defmodule Linkify.Mixfile do
   # Dependencies can be Hex packages:
   defp deps do
     [
-      {:ex_doc, "~> 0.19", only: :dev, runtime: false},
-      {:earmark, "~> 1.2", only: :dev, override: true},
-      {:credo, "~> 1.0.0", only: [:dev, :test], runtime: false}
+      {:ex_doc, "~> 0.20", only: :dev, runtime: false},
+      {:credo, "~> 1.1.0", only: [:dev, :test], runtime: false}
     ]
   end
 
