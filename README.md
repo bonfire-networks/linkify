@@ -1,13 +1,6 @@
-# AutoLinker
+# Linkify
 
-[![Build Status](https://travis-ci.org/smpallen99/auto_linker.png?branch=master)](https://travis-ci.org/smpallen99/auto_linker) [![Hex Version][hex-img]][hex] [![License][license-img]][license]
-
-[hex-img]: https://img.shields.io/hexpm/v/auto_linker.svg
-[hex]: https://hex.pm/packages/auto_linker
-[license-img]: http://img.shields.io/badge/license-MIT-brightgreen.svg
-[license]: http://opensource.org/licenses/MIT
-
-AutoLinker is a basic package for turning website names, and phone numbers into links.
+Linkify is a basic package for turning website names, and phone numbers into links.
 
 Use this package in your web view to convert web references into click-able links.
 
@@ -15,11 +8,11 @@ This is a very early version. Some of the described options are not yet function
 
 ## Installation
 
-The package can be installed by adding `auto_linker` to your list of dependencies in `mix.exs`:
+The package can be installed by adding `linkify` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:auto_linker, "~> 0.2"}]
+  [{:linkify, "~> 0.1"}]
 end
 ```
 
@@ -28,26 +21,26 @@ end
 The following examples illustrate some examples on how to use the auto linker.
 
 ```iex
-iex> AutoLinker.link("google.com")
-"<a href='http://google.com' class='auto-linker' target='_blank' rel='noopener noreferrer'>google.com</a>"
+iex> Linkify.link("google.com")
+"<a href='http://google.com' class='linkified' target='_blank' rel='noopener noreferrer'>google.com</a>"
 
-iex> AutoLinker.link("google.com", new_window: false, rel: false)
-"<a href='http://google.com' class='auto-linker'>google.com</a>"
+iex> Linkify.link("google.com", new_window: false, rel: false)
+"<a href='http://google.com' class='linkified'>google.com</a>"
 
-iex> AutoLinker.link("google.com", new_window: false, rel: false, class: false)
+iex> Linkify.link("google.com", new_window: false, rel: false, class: false)
 "<a href='http://google.com'>google.com</a>"
 
-iex> AutoLinker.link("call me at x9999", phone: true)
+iex> Linkify.link("call me at x9999", phone: true)
 "call me at <a href=\"#\" class=\"phone-number\" data-phone=\"9999\">x9999</a>"
 
-iex> AutoLinker.link("or at home on 555.555.5555", phone: true)
+iex> Linkify.link("or at home on 555.555.5555", phone: true)
 "or at home on <a href=\"#\" class=\"phone-number\" data-phone=\"5555555555\">555.555.5555</a>"
 
-iex> AutoLinker.link(", work (555) 555-5555", phone: true)
+iex> Linkify.link(", work (555) 555-5555", phone: true)
 ", work <a href=\"#\" class=\"phone-number\" data-phone=\"5555555555\">(555) 555-5555</a>"
 ```
 
-See the [Docs](https://hexdocs.pm/auto_linker/) for more examples
+See the [Docs](https://hexdocs.pm/linkify/) for more examples
 
 ## Configuration
 
@@ -55,7 +48,7 @@ By default, link parsing is enabled and phone parsing is disabled.
 
 ```elixir
 # enable phone parsing, and disable link parsing
-config :auto_linker, opts: [phone: true, url: false]
+config :linkify, opts: [phone: true, url: false]
 ```
 
 

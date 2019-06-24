@@ -1,9 +1,9 @@
-defmodule AutoLinker.Parser do
+defmodule Linkify.Parser do
   @moduledoc """
   Module to handle parsing the the input string.
   """
 
-  alias AutoLinker.Builder
+  alias Linkify.Builder
 
   @invalid_url ~r/(\.\.+)|(^(\d+\.){1,2}\d+$)/
 
@@ -50,8 +50,8 @@ defmodule AutoLinker.Parser do
 
   ## Examples
 
-      iex> AutoLinker.Parser.parse("Check out google.com")
-      ~s{Check out <a href="http://google.com" class="auto-linker" target="_blank" rel="noopener noreferrer">google.com</a>}
+      iex> Linkify.Parser.parse("Check out google.com")
+      ~s{Check out <a href="http://google.com" class="linkified" target="_blank" rel="noopener noreferrer">google.com</a>}
   """
 
   @types [:url, :email, :hashtag, :mention, :extra]
@@ -213,8 +213,6 @@ defmodule AutoLinker.Parser do
   end
 
   defp strip_parens(buffer), do: buffer
-
-  # @doc false
 
   def url?(buffer, opts) do
     valid_url?(buffer) && Regex.match?(@match_url, buffer) && valid_tld?(buffer, opts)

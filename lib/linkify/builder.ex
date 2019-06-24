@@ -1,4 +1,4 @@
-defmodule AutoLinker.Builder do
+defmodule Linkify.Builder do
   @moduledoc """
   Module for building the auto generated link.
   """
@@ -36,7 +36,7 @@ defmodule AutoLinker.Builder do
   end
 
   defp build_attrs(attrs, _, opts, :class) do
-    case Map.get(opts, :class, "auto-linker") do
+    case Map.get(opts, :class, "linkified") do
       cls when is_binary(cls) -> [{:class, cls} | attrs]
       _ -> attrs
     end

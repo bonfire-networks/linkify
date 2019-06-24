@@ -1,4 +1,4 @@
-defmodule AutoLinker do
+defmodule Linkify do
   @moduledoc """
   Create url links from text containing urls.
 
@@ -7,24 +7,24 @@ defmodule AutoLinker do
 
   ## Examples
 
-      iex> AutoLinker.link("google.com")
-      ~s(<a href="http://google.com" class="auto-linker" target="_blank" rel="noopener noreferrer">google.com</a>)
+      iex> Linkify.link("google.com")
+      ~s(<a href="http://google.com" class="linkified" target="_blank" rel="noopener noreferrer">google.com</a>)
 
-      iex> AutoLinker.link("google.com", new_window: false, rel: false)
-      ~s(<a href="http://google.com" class="auto-linker">google.com</a>)
+      iex> Linkify.link("google.com", new_window: false, rel: false)
+      ~s(<a href="http://google.com" class="linkified">google.com</a>)
 
-      iex> AutoLinker.link("google.com", new_window: false, rel: false, class: false)
+      iex> Linkify.link("google.com", new_window: false, rel: false, class: false)
       ~s(<a href="http://google.com">google.com</a>)
   """
 
-  import AutoLinker.Parser
+  import Linkify.Parser
 
   @doc """
   Auto link a string.
 
   Options:
 
-  * `class: "auto-linker"` - specify the class to be added to the generated link. false to clear
+  * `class: "linkified"` - specify the class to be added to the generated link. false to clear
   * `rel: "noopener noreferrer"` - override the rel attribute. false to clear
   * `new_window: true` - set to false to remove `target='_blank'` attribute
   * `truncate: false` - Set to a number to truncate urls longer then the number. Truncated urls will end in `..`
@@ -42,9 +42,9 @@ defmodule AutoLinker do
   * `validate_tld: true` - Set to false to disable TLD validation for urls/emails, also can be set to :no_scheme to validate TLDs only for urls without a scheme (e.g `example.com` will be validated, but `http://example.loki` won't)
 
   Each of the above options can be specified when calling `link(text, opts)`
-  or can be set in the `:auto_linker`'s configuration. For example:
+  or can be set in the `:linkify`'s configuration. For example:
 
-       config :auto_linker,
+       config :linkify,
          class: false,
          new_window: false
 

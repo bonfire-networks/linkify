@@ -1,21 +1,21 @@
-defmodule AutoLinker.Mixfile do
+defmodule Linkify.Mixfile do
   use Mix.Project
 
-  @version "0.2.2"
+  @version "0.1.0"
 
   def project do
     [
-      app: :auto_linker,
+      app: :linkify,
       version: @version,
-      elixir: "~> 1.4",
+      elixir: "~> 1.7",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       docs: [extras: ["README.md"]],
       package: package(),
-      name: "AutoLinker",
+      name: "Linkify",
       description: """
-      AutoLinker is a basic package for turning website names into links.
+      Linkify is a basic package for turning website names into links.
       """
     ]
   end
@@ -37,10 +37,9 @@ defmodule AutoLinker.Mixfile do
 
   defp package do
     [
-      maintainers: ["Stephen Pallen"],
       licenses: ["MIT"],
-      links: %{"Github" => "https://github.com/smpallen99/auto_linker"},
-      files: ~w(lib README.md mix.exs LICENSE)
+      links: %{"GitLab" => "https://git.pleroma.social/pleroma/linkify"},
+      files: ~w(lib priv README.md mix.exs LICENSE)
     ]
   end
 end

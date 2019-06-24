@@ -1,8 +1,8 @@
-defmodule AutoLinker.ParserTest do
+defmodule Linkify.ParserTest do
   use ExUnit.Case, async: true
-  doctest AutoLinker.Parser
+  doctest Linkify.Parser
 
-  import AutoLinker.Parser
+  import Linkify.Parser
 
   describe "url?/2" do
     test "valid scheme true" do
@@ -111,7 +111,7 @@ defmodule AutoLinker.ParserTest do
       text = "google.com\r\nssss"
 
       expected =
-        "<a href=\"http://google.com\" class=\"auto-linker\" target=\"_blank\" rel=\"noopener noreferrer\">google.com</a>\r\nssss"
+        "<a href=\"http://google.com\" class=\"linkified\" target=\"_blank\" rel=\"noopener noreferrer\">google.com</a>\r\nssss"
 
       assert parse(text) == expected
     end
