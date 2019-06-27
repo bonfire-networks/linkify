@@ -1,10 +1,8 @@
 # Linkify
 
-Linkify is a basic package for turning website names, and phone numbers into links.
+Linkify is a basic package for turning website names into links.
 
 Use this package in your web view to convert web references into click-able links.
-
-This is a very early version. Some of the described options are not yet functional.
 
 ## Installation
 
@@ -37,13 +35,6 @@ iex> Linkify.link("google.com", new_window: true, rel: "noopener noreferrer")
 
 See the [Docs](https://hexdocs.pm/linkify/) for more examples
 
-## Configuration
-
-By default, link parsing is enabled and phone parsing is disabled.
-
-```elixir
-# enable phone parsing, and disable link parsing
-config :linkify, opts: [phone: true, url: false]
 ```
 
 
