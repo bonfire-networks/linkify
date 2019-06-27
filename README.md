@@ -35,12 +35,14 @@ iex> Linkify.link("google.com", new_window: true, rel: "noopener noreferrer")
 
 See the [Docs](https://hexdocs.pm/linkify/) for more examples
 
-```
+## Acknowledgements
 
+This is a fork of [auto_linker](https://github.com/smpallen99/auto_linker) by [Steve Pallen](https://github.com/smpallen99).
 
 ## License
 
-`auto_linker` is Copyright (c) 2017 E-MetroTel
+Copyright © 2017 E-MetroTel
+Copyright © 2019 Pleroma Authors
 
 The source is released under the MIT License.
 
