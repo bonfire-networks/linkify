@@ -25,18 +25,18 @@ defmodule Linkify.Builder do
   end
 
   defp build_attrs(attrs, _, opts, :rel) do
-    case Map.get(opts, :rel, "noopener noreferrer") do
+    case Map.get(opts, :rel) do
       rel when is_binary(rel) -> [{:rel, rel} | attrs]
       _ -> attrs
     end
   end
 
   defp build_attrs(attrs, _, opts, :target) do
-    if Map.get(opts, :new_window, true), do: [{:target, :_blank} | attrs], else: attrs
+    if Map.get(opts, :new_window), do: [{:target, :_blank} | attrs], else: attrs
   end
 
   defp build_attrs(attrs, _, opts, :class) do
-    case Map.get(opts, :class, "linkified") do
+    case Map.get(opts, :class) do
       cls when is_binary(cls) -> [{:class, cls} | attrs]
       _ -> attrs
     end

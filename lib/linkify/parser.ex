@@ -51,7 +51,7 @@ defmodule Linkify.Parser do
   ## Examples
 
       iex> Linkify.Parser.parse("Check out google.com")
-      ~s{Check out <a href="http://google.com" class="linkified" target="_blank" rel="noopener noreferrer">google.com</a>}
+      ~s{Check out <a href="http://google.com">google.com</a>}
   """
 
   @types [:url, :email, :hashtag, :mention, :extra]

@@ -20,24 +20,19 @@ end
 
 The following examples illustrate some examples on how to use the auto linker.
 
-```iex
+```elixir
+
 iex> Linkify.link("google.com")
-"<a href='http://google.com' class='linkified' target='_blank' rel='noopener noreferrer'>google.com</a>"
+"<a href=\"http://google.com\">google.com</a>"
 
-iex> Linkify.link("google.com", new_window: false, rel: false)
-"<a href='http://google.com' class='linkified'>google.com</a>"
+iex> Linkify.link("google.com", class: "linkified")
+"<a href=\"http://google.com\" class=\"linkified\">google.com</a>"
 
-iex> Linkify.link("google.com", new_window: false, rel: false, class: false)
-"<a href='http://google.com'>google.com</a>"
+iex> Linkify.link("google.com", new_window: true)
+"<a href=\"http://google.com\" target=\"_blank\">google.com</a>"
 
-iex> Linkify.link("call me at x9999", phone: true)
-"call me at <a href=\"#\" class=\"phone-number\" data-phone=\"9999\">x9999</a>"
-
-iex> Linkify.link("or at home on 555.555.5555", phone: true)
-"or at home on <a href=\"#\" class=\"phone-number\" data-phone=\"5555555555\">555.555.5555</a>"
-
-iex> Linkify.link(", work (555) 555-5555", phone: true)
-", work <a href=\"#\" class=\"phone-number\" data-phone=\"5555555555\">(555) 555-5555</a>"
+iex> Linkify.link("google.com", new_window: true, rel: "noopener noreferrer")
+"<a href=\"http://google.com\" target=\"_blank\" rel=\"noopener noreferrer\">google.com</a>"
 ```
 
 See the [Docs](https://hexdocs.pm/linkify/) for more examples

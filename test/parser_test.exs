@@ -109,9 +109,7 @@ defmodule Linkify.ParserTest do
   describe "parse" do
     test "handle line breakes" do
       text = "google.com\r\nssss"
-
-      expected =
-        "<a href=\"http://google.com\" class=\"linkified\" target=\"_blank\" rel=\"noopener noreferrer\">google.com</a>\r\nssss"
+      expected = "<a href=\"http://google.com\">google.com</a>\r\nssss"
 
       assert parse(text) == expected
     end
@@ -141,20 +139,20 @@ defmodule Linkify.ParserTest do
 
       expected = "<div><a href=\"http://google.com\">google.com</a></div>"
 
-      assert parse(text, class: false, rel: false, new_window: false) == expected
+      assert parse(text, class: false, rel: false) == expected
 
       text = "Check out <div class='section'>google.com</div>"
 
       expected =
         "Check out <div class='section'><a href=\"http://google.com\">google.com</a></div>"
 
-      assert parse(text, class: false, rel: false, new_window: false) == expected
+      assert parse(text, class: false, rel: false) == expected
     end
 
     test "links url inside nested html" do
       text = "<p><strong>google.com</strong></p>"
       expected = "<p><strong><a href=\"http://google.com\">google.com</a></strong></p>"
-      assert parse(text, class: false, rel: false, new_window: false) == expected
+      assert parse(text, class: false, rel: false) == expected
     end
 
     test "do not link parens" do
@@ -163,14 +161,14 @@ defmodule Linkify.ParserTest do
       expected =
         " foo (<a href=\"https://example.com/path/folder/\">example.com/path/folder/</a>), bar"
 
-      assert parse(text, class: false, rel: false, new_window: false, scheme: true) == expected
+      assert parse(text, class: false, rel: false, scheme: true) == expected
 
       text = " foo (example.com/path/folder/), bar"
 
       expected =
         " foo (<a href=\"http://example.com/path/folder/\">example.com/path/folder/</a>), bar"
 
-      assert parse(text, class: false, rel: false, new_window: false) == expected
+      assert parse(text, class: false, rel: false) == expected
     end
 
     test "do not link urls" do

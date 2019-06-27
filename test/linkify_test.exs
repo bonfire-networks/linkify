@@ -4,7 +4,7 @@ defmodule LinkifyTest do
 
   test "default link" do
     assert Linkify.link("google.com") ==
-             "<a href=\"http://google.com\" class=\"linkified\" target=\"_blank\" rel=\"noopener noreferrer\">google.com</a>"
+             "<a href=\"http://google.com\">google.com</a>"
   end
 
   test "does on link existing links" do
@@ -20,11 +20,18 @@ defmodule LinkifyTest do
 
     assert Linkify.link(text,
              email: true,
-             extra: true,
-             class: false,
-             new_window: false,
-             rel: false
+             extra: true
            ) == expected
+  end
+
+  test "class attribute" do
+    assert Linkify.link("google.com", class: "linkified") ==
+             "<a href=\"http://google.com\" class=\"linkified\">google.com</a>"
+  end
+
+  test "rel attribute" do
+    assert Linkify.link("google.com", rel: "noopener noreferrer") ==
+             "<a href=\"http://google.com\" rel=\"noopener noreferrer\">google.com</a>"
   end
 
   test "rel as function" do
@@ -36,11 +43,7 @@ defmodule LinkifyTest do
       url |> String.split(".") |> List.last()
     end
 
-    assert Linkify.link(text,
-             class: false,
-             new_window: false,
-             rel: custom_rel
-           ) == expected
+    assert Linkify.link(text, rel: custom_rel) == expected
 
     text = "google.com"
 
@@ -48,17 +51,12 @@ defmodule LinkifyTest do
 
     custom_rel = fn _ -> nil end
 
-    assert Linkify.link(text,
-             class: false,
-             new_window: false,
-             rel: custom_rel
-           ) == expected
+    assert Linkify.link(text, rel: custom_rel) == expected
   end
 
   test "link_map/2" do
     assert Linkify.link_map("google.com", []) ==
-             {"<a href=\"http://google.com\" class=\"linkified\" target=\"_blank\" rel=\"noopener noreferrer\">google.com</a>",
-              []}
+             {"<a href=\"http://google.com\">google.com</a>", []}
   end
 
   describe "custom handlers" do
@@ -100,8 +98,6 @@ defmodule LinkifyTest do
           hashtag: true,
           hashtag_handler: handler,
           hashtag_prefix: "https://example.com/user/",
-          class: false,
-          new_window: false,
           rel: false
         )
 
@@ -120,13 +116,14 @@ defmodule LinkifyTest do
       end
 
       expected =
-        ~s(Hello again, <span class="h-card"><a href="#/user/user">@<span>@user</span></a></span>.&lt;script&gt;&lt;/script&gt;\nThis is on another :moominmamma: line. <a href="/tag/2hu" class="linkified" target="_blank" rel="noopener noreferrer">#2hu</a> <a href="/tag/epic" class="linkified" target="_blank" rel="noopener noreferrer">#epic</a> <a href="/tag/phantasmagoric" class="linkified" target="_blank" rel="noopener noreferrer">#phantasmagoric</a>)
+        ~s(Hello again, <span class="h-card"><a href="#/user/user">@<span>@user</span></a></span>.&lt;script&gt;&lt;/script&gt;\nThis is on another :moominmamma: line. <a href="/tag/2hu" target="_blank">#2hu</a> <a href="/tag/epic" target="_blank">#epic</a> <a href="/tag/phantasmagoric" target="_blank">#phantasmagoric</a>)
 
       assert Linkify.link(text,
                mention: true,
                mention_handler: handler,
                hashtag: true,
-               hashtag_prefix: "/tag/"
+               hashtag_prefix: "/tag/",
+               new_window: true
              ) == expected
     end
   end
@@ -134,11 +131,12 @@ defmodule LinkifyTest do
   describe "mentions" do
     test "simple mentions" do
       expected =
-        ~s{hello <a href="https://example.com/user/user" class="linkified" target="_blank" rel="noopener noreferrer">@user</a> and <a href="https://example.com/user/anotherUser" class="linkified" target="_blank" rel="noopener noreferrer">@anotherUser</a>.}
+        ~s{hello <a href="https://example.com/user/user" target="_blank">@user</a> and <a href="https://example.com/user/anotherUser" target="_blank">@anotherUser</a>.}
 
       assert Linkify.link("hello @user and @anotherUser.",
                mention: true,
-               mention_prefix: "https://example.com/user/"
+               mention_prefix: "https://example.com/user/",
+               new_window: true
              ) == expected
     end
 
@@ -149,24 +147,19 @@ defmodule LinkifyTest do
       expected =
         "<p><strong>hello world</strong></p>\n<p><`em>another <a href=\"u/user__test\">@user__test</a> and <a href=\"u/user__test\">@user__test</a> <a href=\"http://google.com\">google.com</a> paragraph</em></p>\n"
 
-      assert Linkify.link(text,
-               mention: true,
-               mention_prefix: "u/",
-               class: false,
-               rel: false,
-               new_window: false
-             ) == expected
+      assert Linkify.link(text, mention: true, mention_prefix: "u/") == expected
     end
 
     test "metion @user@example.com" do
       text = "hey @user@example.com"
 
       expected =
-        "hey <a href=\"https://example.com/user/user@example.com\" class=\"linkified\" target=\"_blank\" rel=\"noopener noreferrer\">@user@example.com</a>"
+        "hey <a href=\"https://example.com/user/user@example.com\" target=\"_blank\">@user@example.com</a>"
 
       assert Linkify.link(text,
                mention: true,
-               mention_prefix: "https://example.com/user/"
+               mention_prefix: "https://example.com/user/",
+               new_window: true
              ) == expected
     end
   end
@@ -174,11 +167,12 @@ defmodule LinkifyTest do
   describe "hashtag links" do
     test "hashtag" do
       expected =
-        " one <a href=\"https://example.com/tag/2two\" class=\"linkified\" target=\"_blank\" rel=\"noopener noreferrer\">#2two</a> three <a href=\"https://example.com/tag/four\" class=\"linkified\" target=\"_blank\" rel=\"noopener noreferrer\">#four</a>."
+        " one <a href=\"https://example.com/tag/2two\" target=\"_blank\">#2two</a> three <a href=\"https://example.com/tag/four\" target=\"_blank\">#four</a>."
 
       assert Linkify.link(" one #2two three #four.",
                hashtag: true,
-               hashtag_prefix: "https://example.com/tag/"
+               hashtag_prefix: "https://example.com/tag/",
+               new_window: true
              ) == expected
     end
 
@@ -188,9 +182,7 @@ defmodule LinkifyTest do
       assert Linkify.link("#1ok #42 #7",
                hashtag: true,
                hashtag_prefix: "/t/",
-               class: false,
-               rel: false,
-               new_window: false
+               rel: false
              ) == expected
     end
 
@@ -203,9 +195,7 @@ defmodule LinkifyTest do
       assert Linkify.link(text,
                hashtag: true,
                hashtag_prefix: "/t/",
-               class: false,
-               rel: false,
-               new_window: false
+               rel: false
              ) == expected
     end
 
@@ -218,9 +208,7 @@ defmodule LinkifyTest do
       assert Linkify.link(text,
                hashtag: true,
                hashtag_prefix: "/t/",
-               class: false,
-               rel: false,
-               new_window: false
+               rel: false
              ) == expected
     end
 
@@ -232,8 +220,6 @@ defmodule LinkifyTest do
 
       assert Linkify.link(text,
                hashtag: true,
-               class: false,
-               new_window: false,
                rel: false,
                hashtag_prefix: "https://example.com/tag/"
              ) == expected
@@ -246,8 +232,6 @@ defmodule LinkifyTest do
         "<a href=\"https://example.com/tag/漢字\">#漢字</a> <a href=\"https://example.com/tag/は\">#は</a> <a href=\"https://example.com/tag/тест\">#тест</a> <a href=\"https://example.com/tag/ทดสอบ\">#ทดสอบ</a>"
 
       assert Linkify.link(text,
-               class: false,
-               new_window: false,
                rel: false,
                hashtag: true,
                hashtag_prefix: "https://example.com/tag/"
@@ -260,73 +244,71 @@ defmodule LinkifyTest do
       text = "Hey, check out http://www.youtube.com/watch?v=8Zg1-TufF%20zY?x=1&y=2#blabla ."
 
       expected =
-        "Hey, check out <a href=\"http://www.youtube.com/watch?v=8Zg1-TufF%20zY?x=1&y=2#blabla\" class=\"linkified\" target=\"_blank\" rel=\"noopener noreferrer\">youtube.com/watch?v=8Zg1-TufF%20zY?x=1&y=2#blabla</a> ."
+        "Hey, check out <a href=\"http://www.youtube.com/watch?v=8Zg1-TufF%20zY?x=1&y=2#blabla\" target=\"_blank\">youtube.com/watch?v=8Zg1-TufF%20zY?x=1&y=2#blabla</a> ."
 
-      assert Linkify.link(text) == expected
+      assert Linkify.link(text, new_window: true) == expected
 
       # no scheme
       text = "Hey, check out www.youtube.com/watch?v=8Zg1-TufF%20zY?x=1&y=2#blabla ."
-      assert Linkify.link(text) == expected
+      assert Linkify.link(text, new_window: true) == expected
     end
 
     test "turn urls with schema into urls" do
       text = "📌https://google.com"
       expected = "📌<a href=\"https://google.com\">google.com</a>"
 
-      assert Linkify.link(text, class: false, new_window: false, rel: false) == expected
+      assert Linkify.link(text, rel: false) == expected
     end
 
     test "hostname/@user" do
       text = "https://example.com/@user"
 
-      expected =
-        "<a href=\"https://example.com/@user\" class=\"linkified\" target=\"_blank\" rel=\"noopener noreferrer\">example.com/@user</a>"
+      expected = "<a href=\"https://example.com/@user\" target=\"_blank\">example.com/@user</a>"
 
-      assert Linkify.link(text) == expected
-
-      text = "https://example.com:4000/@user"
-
-      expected =
-        "<a href=\"https://example.com:4000/@user\" class=\"linkified\" target=\"_blank\" rel=\"noopener noreferrer\">example.com:4000/@user</a>"
-
-      assert Linkify.link(text) == expected
+      assert Linkify.link(text, new_window: true) == expected
 
       text = "https://example.com:4000/@user"
 
       expected =
-        "<a href=\"https://example.com:4000/@user\" class=\"linkified\" target=\"_blank\" rel=\"noopener noreferrer\">example.com:4000/@user</a>"
+        "<a href=\"https://example.com:4000/@user\" target=\"_blank\">example.com:4000/@user</a>"
 
-      assert Linkify.link(text) == expected
+      assert Linkify.link(text, new_window: true) == expected
+
+      text = "https://example.com:4000/@user"
+
+      expected =
+        "<a href=\"https://example.com:4000/@user\" target=\"_blank\">example.com:4000/@user</a>"
+
+      assert Linkify.link(text, new_window: true) == expected
 
       text = "@username"
       expected = "@username"
-      assert Linkify.link(text) == expected
+      assert Linkify.link(text, new_window: true) == expected
 
       text = "http://www.cs.vu.nl/~ast/intel/"
 
-      expected =
-        "<a href=\"http://www.cs.vu.nl/~ast/intel/\" class=\"linkified\" target=\"_blank\" rel=\"noopener noreferrer\">cs.vu.nl/~ast/intel/</a>"
+      expected = "<a href=\"http://www.cs.vu.nl/~ast/intel/\">cs.vu.nl/~ast/intel/</a>"
 
       assert Linkify.link(text) == expected
 
       text = "https://forum.zdoom.org/viewtopic.php?f=44&t=57087"
 
       expected =
-        "<a href=\"https://forum.zdoom.org/viewtopic.php?f=44&t=57087\" class=\"linkified\" target=\"_blank\" rel=\"noopener noreferrer\">forum.zdoom.org/viewtopic.php?f=44&t=57087</a>"
+        "<a href=\"https://forum.zdoom.org/viewtopic.php?f=44&t=57087\">forum.zdoom.org/viewtopic.php?f=44&t=57087</a>"
 
       assert Linkify.link(text) == expected
 
       text = "https://en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul"
 
       expected =
-        "<a href=\"https://en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul\" class=\"linkified\" target=\"_blank\" rel=\"noopener noreferrer\">en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul</a>"
+        "<a href=\"https://en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul\">en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul</a>"
 
       assert Linkify.link(text) == expected
 
       text = "https://en.wikipedia.org/wiki/Duff's_device"
 
       expected =
-        "<a href=\"https://en.wikipedia.org/wiki/Duff's_device\" class=\"linkified\" target=\"_blank\" rel=\"noopener noreferrer\">en.wikipedia.org/wiki/Duff's_device</a>"
+        "<a href=\"https://en.wikipedia.org/wiki/Duff's_device\">en.wikipedia.org/wiki/Duff's_device</a>"
 
       assert Linkify.link(text) == expected
     end
@@ -336,14 +318,14 @@ defmodule LinkifyTest do
     test "xmpp" do
       text = "xmpp:user@example.com"
 
-      expected = "<a href=\"xmpp:user@example.com\" class=\"linkified\">xmpp:user@example.com</a>"
+      expected = "<a href=\"xmpp:user@example.com\">xmpp:user@example.com</a>"
 
-      assert Linkify.link(text, extra: true, new_window: false, rel: false) == expected
+      assert Linkify.link(text, extra: true) == expected
     end
 
     test "email" do
       text = "user@example.com"
-      expected = "<a href=\"mailto:user@example.com\" class=\"linkified\">user@example.com</a>"
+      expected = "<a href=\"mailto:user@example.com\">user@example.com</a>"
       assert Linkify.link(text, email: true) == expected
     end
 
@@ -352,9 +334,9 @@ defmodule LinkifyTest do
         "magnet:?xt=urn:btih:a4104a9d2f5615601c429fe8bab8177c47c05c84&dn=ubuntu-18.04.1.0-live-server-amd64.iso&tr=http%3A%2F%2Ftorrent.ubuntu.com%3A6969%2Fannounce&tr=http%3A%2F%2Fipv6.torrent.ubuntu.com%3A6969%2Fannounce"
 
       expected =
-        "<a href=\"magnet:?xt=urn:btih:a4104a9d2f5615601c429fe8bab8177c47c05c84&dn=ubuntu-18.04.1.0-live-server-amd64.iso&tr=http%3A%2F%2Ftorrent.ubuntu.com%3A6969%2Fannounce&tr=http%3A%2F%2Fipv6.torrent.ubuntu.com%3A6969%2Fannounce\" class=\"linkified\">magnet:?xt=urn:btih:a4104a9d2f5615601c429fe8bab8177c47c05c84&dn=ubuntu-18.04.1.0-live-server-amd64.iso&tr=http%3A%2F%2Ftorrent.ubuntu.com%3A6969%2Fannounce&tr=http%3A%2F%2Fipv6.torrent.ubuntu.com%3A6969%2Fannounce</a>"
+        "<a href=\"magnet:?xt=urn:btih:a4104a9d2f5615601c429fe8bab8177c47c05c84&dn=ubuntu-18.04.1.0-live-server-amd64.iso&tr=http%3A%2F%2Ftorrent.ubuntu.com%3A6969%2Fannounce&tr=http%3A%2F%2Fipv6.torrent.ubuntu.com%3A6969%2Fannounce\">magnet:?xt=urn:btih:a4104a9d2f5615601c429fe8bab8177c47c05c84&dn=ubuntu-18.04.1.0-live-server-amd64.iso&tr=http%3A%2F%2Ftorrent.ubuntu.com%3A6969%2Fannounce&tr=http%3A%2F%2Fipv6.torrent.ubuntu.com%3A6969%2Fannounce</a>"
 
-      assert Linkify.link(text, extra: true, new_window: false, rel: false) == expected
+      assert Linkify.link(text, extra: true) == expected
     end
 
     test "dweb" do
@@ -362,9 +344,9 @@ defmodule LinkifyTest do
         "dweb://584faa05d394190ab1a3f0240607f9bf2b7e2bd9968830a11cf77db0cea36a21+v1.0.0/path/to/file.txt"
 
       expected =
-        "<a href=\"dweb://584faa05d394190ab1a3f0240607f9bf2b7e2bd9968830a11cf77db0cea36a21+v1.0.0/path/to/file.txt\" class=\"linkified\">dweb://584faa05d394190ab1a3f0240607f9bf2b7e2bd9968830a11cf77db0cea36a21+v1.0.0/path/to/file.txt</a>"
+        "<a href=\"dweb://584faa05d394190ab1a3f0240607f9bf2b7e2bd9968830a11cf77db0cea36a21+v1.0.0/path/to/file.txt\">dweb://584faa05d394190ab1a3f0240607f9bf2b7e2bd9968830a11cf77db0cea36a21+v1.0.0/path/to/file.txt</a>"
 
-      assert Linkify.link(text, extra: true, new_window: false, rel: false) == expected
+      assert Linkify.link(text, extra: true) == expected
     end
   end
 
@@ -372,8 +354,7 @@ defmodule LinkifyTest do
     test "parse with scheme" do
       text = "https://google.com"
 
-      expected =
-        "<a href=\"https://google.com\" class=\"linkified\" target=\"_blank\" rel=\"noopener noreferrer\">google.com</a>"
+      expected = "<a href=\"https://google.com\">google.com</a>"
 
       assert Linkify.link(text) == expected
     end
@@ -387,7 +368,7 @@ defmodule LinkifyTest do
       text = "this url https://google.foobar.com/ has valid TLD"
 
       expected =
-        "this url <a href=\"https://google.foobar.com/\" class=\"linkified\" target=\"_blank\" rel=\"noopener noreferrer\">google.foobar.com/</a> has valid TLD"
+        "this url <a href=\"https://google.foobar.com/\">google.foobar.com/</a> has valid TLD"
 
       assert Linkify.link(text) == expected
     end
@@ -399,7 +380,7 @@ defmodule LinkifyTest do
       text = "this url google.foobar.com/ has valid TLD"
 
       expected =
-        "this url <a href=\"http://google.foobar.com/\" class=\"linkified\" target=\"_blank\" rel=\"noopener noreferrer\">google.foobar.com/</a> has valid TLD"
+        "this url <a href=\"http://google.foobar.com/\">google.foobar.com/</a> has valid TLD"
 
       assert Linkify.link(text) == expected
     end
@@ -408,14 +389,14 @@ defmodule LinkifyTest do
       text = "this url http://google.foobar.com/ has valid TLD"
 
       expected =
-        "this url <a href=\"http://google.foobar.com/\" class=\"linkified\" target=\"_blank\" rel=\"noopener noreferrer\">google.foobar.com/</a> has valid TLD"
+        "this url <a href=\"http://google.foobar.com/\">google.foobar.com/</a> has valid TLD"
 
       assert Linkify.link(text) == expected
 
       text = "this url google.foobar.com/ has valid TLD"
 
       expected =
-        "this url <a href=\"http://google.foobar.com/\" class=\"linkified\" target=\"_blank\" rel=\"noopener noreferrer\">google.foobar.com/</a> has valid TLD"
+        "this url <a href=\"http://google.foobar.com/\">google.foobar.com/</a> has valid TLD"
 
       assert Linkify.link(text) == expected
     end
