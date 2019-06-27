@@ -42,6 +42,7 @@ This is a fork of [auto_linker](https://github.com/smpallen99/auto_linker) by [S
 ## License
 
 Copyright © 2017 E-MetroTel
+
 Copyright © 2019 Pleroma Authors
 
 The source is released under the MIT License.
