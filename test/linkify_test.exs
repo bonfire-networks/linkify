@@ -16,7 +16,7 @@ defmodule LinkifyTest do
     text = "hello google.com https://ddg.com user@email.com irc:///mIRC"
 
     expected =
-      "hello <a href=\"http://google.com\">google.com</a> <a href=\"https://ddg.com\">ddg.com</a> <a href=\"mailto:user@email.com\">user@email.com</a> <a href=\"irc:///mIRC\">irc:///mIRC</a>"
+      "hello <a href=\"http://google.com\">google.com</a> <a href=\"https://ddg.com\">https://ddg.com</a> <a href=\"mailto:user@email.com\">user@email.com</a> <a href=\"irc:///mIRC\">irc:///mIRC</a>"
 
     assert Linkify.link(text,
              email: true,
@@ -244,40 +244,53 @@ defmodule LinkifyTest do
       text = "Hey, check out http://www.youtube.com/watch?v=8Zg1-TufF%20zY?x=1&y=2#blabla ."
 
       expected =
-        "Hey, check out <a href=\"http://www.youtube.com/watch?v=8Zg1-TufF%20zY?x=1&y=2#blabla\" target=\"_blank\">youtube.com/watch?v=8Zg1-TufF%20zY?x=1&y=2#blabla</a> ."
+        "Hey, check out <a href=\"http://www.youtube.com/watch?v=8Zg1-TufF%20zY?x=1&y=2#blabla\" target=\"_blank\">http://www.youtube.com/watch?v=8Zg1-TufF%20zY?x=1&y=2#blabla</a> ."
 
       assert Linkify.link(text, new_window: true) == expected
 
       # no scheme
       text = "Hey, check out www.youtube.com/watch?v=8Zg1-TufF%20zY?x=1&y=2#blabla ."
+
+      expected =
+        "Hey, check out <a href=\"http://www.youtube.com/watch?v=8Zg1-TufF%20zY?x=1&y=2#blabla\" target=\"_blank\">www.youtube.com/watch?v=8Zg1-TufF%20zY?x=1&y=2#blabla</a> ."
+
       assert Linkify.link(text, new_window: true) == expected
     end
 
     test "turn urls with schema into urls" do
       text = "📌https://google.com"
-      expected = "📌<a href=\"https://google.com\">google.com</a>"
+      expected = "📌<a href=\"https://google.com\">https://google.com</a>"
 
       assert Linkify.link(text, rel: false) == expected
+    end
+
+    test "skip prefix" do
+      assert Linkify.link("http://google.com", strip_prefix: true) ==
+               "<a href=\"http://google.com\">google.com</a>"
+
+      assert Linkify.link("http://www.google.com", strip_prefix: true) ==
+               "<a href=\"http://www.google.com\">google.com</a>"
     end
 
     test "hostname/@user" do
       text = "https://example.com/@user"
 
-      expected = "<a href=\"https://example.com/@user\" target=\"_blank\">example.com/@user</a>"
+      expected =
+        "<a href=\"https://example.com/@user\" target=\"_blank\">https://example.com/@user</a>"
 
       assert Linkify.link(text, new_window: true) == expected
 
       text = "https://example.com:4000/@user"
 
       expected =
-        "<a href=\"https://example.com:4000/@user\" target=\"_blank\">example.com:4000/@user</a>"
+        "<a href=\"https://example.com:4000/@user\" target=\"_blank\">https://example.com:4000/@user</a>"
 
       assert Linkify.link(text, new_window: true) == expected
 
       text = "https://example.com:4000/@user"
 
       expected =
-        "<a href=\"https://example.com:4000/@user\" target=\"_blank\">example.com:4000/@user</a>"
+        "<a href=\"https://example.com:4000/@user\" target=\"_blank\">https://example.com:4000/@user</a>"
 
       assert Linkify.link(text, new_window: true) == expected
 
@@ -287,28 +300,28 @@ defmodule LinkifyTest do
 
       text = "http://www.cs.vu.nl/~ast/intel/"
 
-      expected = "<a href=\"http://www.cs.vu.nl/~ast/intel/\">cs.vu.nl/~ast/intel/</a>"
+      expected = "<a href=\"http://www.cs.vu.nl/~ast/intel/\">http://www.cs.vu.nl/~ast/intel/</a>"
 
       assert Linkify.link(text) == expected
 
       text = "https://forum.zdoom.org/viewtopic.php?f=44&t=57087"
 
       expected =
-        "<a href=\"https://forum.zdoom.org/viewtopic.php?f=44&t=57087\">forum.zdoom.org/viewtopic.php?f=44&t=57087</a>"
+        "<a href=\"https://forum.zdoom.org/viewtopic.php?f=44&t=57087\">https://forum.zdoom.org/viewtopic.php?f=44&t=57087</a>"
 
       assert Linkify.link(text) == expected
 
       text = "https://en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul"
 
       expected =
-        "<a href=\"https://en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul\">en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul</a>"
+        "<a href=\"https://en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul\">https://en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul</a>"
 
       assert Linkify.link(text) == expected
 
       text = "https://en.wikipedia.org/wiki/Duff's_device"
 
       expected =
-        "<a href=\"https://en.wikipedia.org/wiki/Duff's_device\">en.wikipedia.org/wiki/Duff's_device</a>"
+        "<a href=\"https://en.wikipedia.org/wiki/Duff's_device\">https://en.wikipedia.org/wiki/Duff's_device</a>"
 
       assert Linkify.link(text) == expected
     end
@@ -354,7 +367,7 @@ defmodule LinkifyTest do
     test "parse with scheme" do
       text = "https://google.com"
 
-      expected = "<a href=\"https://google.com\">google.com</a>"
+      expected = "<a href=\"https://google.com\">https://google.com</a>"
 
       assert Linkify.link(text) == expected
     end
@@ -368,7 +381,7 @@ defmodule LinkifyTest do
       text = "this url https://google.foobar.com/ has valid TLD"
 
       expected =
-        "this url <a href=\"https://google.foobar.com/\">google.foobar.com/</a> has valid TLD"
+        "this url <a href=\"https://google.foobar.com/\">https://google.foobar.com/</a> has valid TLD"
 
       assert Linkify.link(text) == expected
     end
@@ -389,7 +402,7 @@ defmodule LinkifyTest do
       text = "this url http://google.foobar.com/ has valid TLD"
 
       expected =
-        "this url <a href=\"http://google.foobar.com/\">google.foobar.com/</a> has valid TLD"
+        "this url <a href=\"http://google.foobar.com/\">http://google.foobar.com/</a> has valid TLD"
 
       assert Linkify.link(text) == expected
 
