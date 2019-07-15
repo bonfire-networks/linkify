@@ -53,7 +53,7 @@ defmodule Linkify.Builder do
   defp format_url(attrs, url, opts) do
     url =
       url
-      |> strip_prefix(Map.get(opts, :strip_prefix, true))
+      |> strip_prefix(Map.get(opts, :strip_prefix, false))
       |> truncate(Map.get(opts, :truncate, false))
 
     attrs = format_attrs(attrs)

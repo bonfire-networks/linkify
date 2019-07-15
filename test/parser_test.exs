@@ -159,7 +159,7 @@ defmodule Linkify.ParserTest do
       text = " foo (https://example.com/path/folder/), bar"
 
       expected =
-        " foo (<a href=\"https://example.com/path/folder/\">example.com/path/folder/</a>), bar"
+        " foo (<a href=\"https://example.com/path/folder/\">https://example.com/path/folder/</a>), bar"
 
       assert parse(text, class: false, rel: false, scheme: true) == expected
 
