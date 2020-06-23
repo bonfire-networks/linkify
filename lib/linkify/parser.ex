@@ -62,18 +62,23 @@ defmodule Linkify.Parser do
 
   def parse(input, opts) do
     opts = Map.merge(@default_opts, opts)
+    opts_list = Map.to_list(opts)
 
-    Enum.reduce(opts, input, fn
-      {type, true}, input when type in @types ->
-        do_parse(input, opts, {"", "", :parsing}, type)
-
-      _, input ->
-        input
+    Enum.reduce(@types, input, fn
+      type, input ->
+        if {type, true} in opts_list do
+          do_parse(input, opts, {"", "", :parsing}, type)
+        else
+          input
+        end
     end)
   end
 
   defp do_parse({"", user_acc}, _opts, {"", acc, _}, _handler),
     do: {acc, user_acc}
+
+  defp do_parse({"@" <> text, user_acc}, opts, {buffer, acc, :skip}, type),
+    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "@", :skip}, type)
 
   defp do_parse({"<a" <> text, user_acc}, opts, {buffer, acc, :parsing}, type),
     do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "<a", :skip}, type)
