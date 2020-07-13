@@ -126,6 +126,34 @@ defmodule LinkifyTest do
                new_window: true
              ) == expected
     end
+
+    test "mentions handler with hostname/@user links" do
+      text =
+        "hi @user, take a look at this post: https://example.com/@valid_user/posts/9w5AkQp956XIh74apc"
+
+      valid_users = ["user", "valid_user"]
+
+      handler = fn "@" <> user = mention, buffer, _opts, acc ->
+        if Enum.member?(valid_users, user) do
+          link = ~s(<a href="https://example.com/user/#{user}" data-user="#{user}">#{mention}</a>)
+          {link, %{acc | mentions: MapSet.put(acc.mentions, {mention, user})}}
+        else
+          {buffer, acc}
+        end
+      end
+
+      {result_text, %{mentions: mentions}} =
+        Linkify.link_map(text, %{mentions: MapSet.new()},
+          mention: true,
+          mention_handler: handler,
+          new_window: true
+        )
+
+      assert result_text ==
+               "hi <a href=\"https://example.com/user/user\" data-user=\"user\">@user</a>, take a look at this post: <a href=\"https://example.com/@valid_user/posts/9w5AkQp956XIh74apc\" target=\"_blank\">https://example.com/@valid_user/posts/9w5AkQp956XIh74apc</a>"
+
+      assert mentions |> MapSet.to_list() |> Enum.map(&elem(&1, 1)) == ["user"]
+    end
   end
 
   describe "mentions" do
