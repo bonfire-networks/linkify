@@ -1,7 +1,7 @@
 defmodule Linkify.Mixfile do
   use Mix.Project
 
-  @version "0.1.1"
+  @version "0.2.0"
 
   def project do
     [
@@ -37,7 +37,7 @@ defmodule Linkify.Mixfile do
   defp package do
     [
       licenses: ["MIT"],
-      links: %{"GitLab" => "https://git.pleroma.social/pleroma/linkify"},
+      links: %{"GitLab" => "https://git.pleroma.social/pleroma/elixir-libraries/linkify"},
       files: ~w(lib priv README.md mix.exs LICENSE)
     ]
   end
