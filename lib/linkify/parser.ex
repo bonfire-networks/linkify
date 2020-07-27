@@ -189,7 +189,7 @@ defmodule Linkify.Parser do
           buffer
           |> String.split(url)
           |> Enum.intersperse(link_url(url, opts))
-          |> (if opts[:iodata], do: & &1, else: & Enum.join(&1)).()
+          |> if(opts[:iodata], do: & &1, else: &Enum.join(&1)).()
       end
     else
       :nomatch
@@ -336,13 +336,13 @@ defmodule Linkify.Parser do
   defp link(buffer, opts, user_acc) do
     opts_list = Map.to_list(opts)
 
-    Enum.reduce_while @types, {buffer, user_acc}, fn type, _ ->
+    Enum.reduce_while(@types, {buffer, user_acc}, fn type, _ ->
       if {type, true} in opts_list do
         check_and_link_reducer(type, buffer, opts, user_acc)
       else
         {:cont, {buffer, user_acc}}
       end
-    end
+    end)
   end
 
   defp check_and_link_reducer(type, buffer, opts, user_acc) do

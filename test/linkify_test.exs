@@ -14,7 +14,13 @@ defmodule LinkifyTest do
 
   test "default link safe iodata" do
     assert Linkify.link_safe("google.com") ==
-             [[{:safe, ["<a ", "href=\"http://google.com\"", ">"]}, "google.com", {:safe, "</a>"}]]
+             [
+               [
+                 {:safe, ["<a ", "href=\"http://google.com\"", ">"]},
+                 "google.com",
+                 {:safe, "</a>"}
+               ]
+             ]
   end
 
   test "does on link existing links" do
@@ -37,8 +43,17 @@ defmodule LinkifyTest do
   test "all kinds of links iodata" do
     text = "hello google.com https://ddg.com user@email.com irc:///mIRC"
 
-    expected =
-      ["hello", " ", ["<a ", "href=\"http://google.com\"", ">", "google.com", "</a>"], " ", ["<a ", "href=\"https://ddg.com\"", ">", "https://ddg.com", "</a>"], " ", ["<a ", "href=\"mailto:user@email.com\"", ">", "user@email.com", "</a>"], " ", ["<a ", "href=\"irc:///mIRC\"", ">", "irc:///mIRC", "</a>"]]
+    expected = [
+      "hello",
+      " ",
+      ["<a ", "href=\"http://google.com\"", ">", "google.com", "</a>"],
+      " ",
+      ["<a ", "href=\"https://ddg.com\"", ">", "https://ddg.com", "</a>"],
+      " ",
+      ["<a ", "href=\"mailto:user@email.com\"", ">", "user@email.com", "</a>"],
+      " ",
+      ["<a ", "href=\"irc:///mIRC\"", ">", "irc:///mIRC", "</a>"]
+    ]
 
     assert Linkify.link_to_iodata(text,
              email: true,
@@ -53,7 +68,15 @@ defmodule LinkifyTest do
 
   test "class attribute iodata" do
     assert Linkify.link_to_iodata("google.com", class: "linkified") ==
-             [["<a ", "href=\"http://google.com\" class=\"linkified\"", ">", "google.com", "</a>"]]
+             [
+               [
+                 "<a ",
+                 "href=\"http://google.com\" class=\"linkified\"",
+                 ">",
+                 "google.com",
+                 "</a>"
+               ]
+             ]
   end
 
   test "rel attribute" do
@@ -63,7 +86,15 @@ defmodule LinkifyTest do
 
   test "rel attribute iodata" do
     assert Linkify.link_to_iodata("google.com", rel: "noopener noreferrer") ==
-             [["<a ", "href=\"http://google.com\" rel=\"noopener noreferrer\"", ">", "google.com", "</a>"]]
+             [
+               [
+                 "<a ",
+                 "href=\"http://google.com\" rel=\"noopener noreferrer\"",
+                 ">",
+                 "google.com",
+                 "</a>"
+               ]
+             ]
   end
 
   test "rel as function" do
