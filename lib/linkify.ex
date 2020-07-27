@@ -40,9 +40,18 @@ defmodule Linkify do
   * `hashtag_handler: nil` - a custom handler to validate and formart a hashtag
   * `extra: false` - link urls with rarely used schemes (magnet, ipfs, irc, etc.)
   * `validate_tld: true` - Set to false to disable TLD validation for urls/emails, also can be set to :no_scheme to validate TLDs only for urls without a scheme (e.g `example.com` will be validated, but `http://example.loki` won't)
+  * `iodata` - Set to `true` to return iodata as a result, or `:safe` for iodata with linkified anchor tags wrapped in Phoenix.HTML `:safe` tuples (removes need for further sanitization)
   """
   def link(text, opts \\ []) do
     parse(text, opts)
+  end
+
+  def link_to_iodata(text, opts \\ []) do
+    parse(text, Keyword.merge(opts, iodata: true))
+  end
+
+  def link_safe(text, opts \\ []) do
+    parse(text, Keyword.merge(opts, iodata: :safe))
   end
 
   def link_map(text, acc, opts \\ []) do
