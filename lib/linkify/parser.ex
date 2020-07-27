@@ -334,10 +334,8 @@ defmodule Linkify.Parser do
   end
 
   defp link(buffer, opts, user_acc) do
-    opts_list = Map.to_list(opts)
-
     Enum.reduce_while(@types, {buffer, user_acc}, fn type, _ ->
-      if {type, true} in opts_list do
+      if opts[type] == true do
         check_and_link_reducer(type, buffer, opts, user_acc)
       else
         {:cont, {buffer, user_acc}}
