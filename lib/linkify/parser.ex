@@ -18,6 +18,14 @@ defmodule Linkify.Parser do
   @match_hashtag ~r/^(?<tag>\#[[:word:]_]*[[:alpha:]_·\x{200c}][[:word:]_·\p{M}\x{200c}]*)/u
 
   @match_skipped_tag ~r/^(?<tag>(a|code|pre)).*>*/
+  
+  # @user
+  # @user@example.com
+  # &Community
+  # &Community@instance.tld
+  # +CategoryTag
+  # +CategoryTag@instance.tld
+  @match_mention ~r"^[@|&|\+][a-zA-Z\d_-]+@[a-zA-Z0-9_-](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*|[@|&|\+][a-zA-Z\d_-]+"u
 
   @delimiters ~r/[,;:>?!]*$/
 
@@ -368,15 +376,15 @@ defmodule Linkify.Parser do
   end
 
   def match_mention(buffer) do
-    case Regex.run(~r/^@(?<user>[a-zA-Z\d_-]+)(@(?<host>[^@]+))?$/, buffer,
+    case Regex.run(~r/^([@&\+]?<user>[a-zA-Z\d_-]+)(@(?<host>[^@]+))?$/, buffer,
            capture: [:user, :host]
          ) do
       [user, ""] ->
-        "@" <> user
+        user
 
       [user, hostname] ->
         if valid_hostname?(hostname) && valid_tld?(hostname, []),
-          do: "@" <> user <> "@" <> hostname,
+          do: user <> "@" <> hostname,
           else: nil
 
       _ ->
@@ -408,12 +416,17 @@ defmodule Linkify.Parser do
   def link_mention(nil, _buffer, _, _user_acc), do: :nomatch
 
   def link_mention(mention, buffer, %{mention_handler: mention_handler} = opts, user_acc) do
+    # IO.inspect(link_mention: mention)
+    # IO.inspect(link_mention: buffer)
+
     mention
     |> mention_handler.(buffer, opts, user_acc)
     |> maybe_update_buffer(mention, buffer)
   end
 
   def link_mention(mention, buffer, opts, _user_acc) do
+    # IO.inspect(link_mention_default: mention)
+
     mention
     |> Builder.create_mention_link(buffer, opts)
     |> maybe_update_buffer(mention, buffer)
