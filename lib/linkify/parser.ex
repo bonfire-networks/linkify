@@ -15,7 +15,11 @@ defmodule Linkify.Parser do
 
   # @user
   # @user@example.com
-  @match_mention ~r"^@[a-zA-Z\d_-]+@[a-zA-Z0-9_-](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*|@[a-zA-Z\d_-]+"u
+  # &Community
+  # &Community@instance.tld
+  # +CategoryTag
+  # +CategoryTag@instance.tld
+  @match_mention ~r"^[@|&|\+][a-zA-Z\d_-]+@[a-zA-Z0-9_-](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*|[@|&|\+][a-zA-Z\d_-]+"u
 
   # https://www.w3.org/TR/html5/forms.html#valid-e-mail-address
   @match_email ~r"^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"u
@@ -259,9 +263,15 @@ defmodule Linkify.Parser do
   def ip?(buffer), do: Regex.match?(@match_ip, buffer)
 
   def match_mention(buffer) do
+    # IO.inspect(match_mention: buffer)
+
     case Regex.run(@match_mention, buffer) do
-      [mention] -> mention
-      _ -> nil
+      [mention] ->
+        # IO.inspect(matched_mention: mention)
+        mention
+
+      _ ->
+        nil
     end
   end
 
@@ -289,12 +299,17 @@ defmodule Linkify.Parser do
   def link_mention(nil, buffer, _, user_acc), do: {buffer, user_acc}
 
   def link_mention(mention, buffer, %{mention_handler: mention_handler} = opts, user_acc) do
+    # IO.inspect(link_mention: mention)
+    # IO.inspect(link_mention: buffer)
+
     mention
     |> mention_handler.(buffer, opts, user_acc)
     |> maybe_update_buffer(mention, buffer)
   end
 
   def link_mention(mention, buffer, opts, _user_acc) do
+    # IO.inspect(link_mention_default: mention)
+
     mention
     |> Builder.create_mention_link(buffer, opts)
     |> maybe_update_buffer(mention, buffer)
