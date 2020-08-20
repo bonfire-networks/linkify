@@ -62,27 +62,24 @@ defmodule Linkify.Parser do
 
   def parse(input, opts) do
     opts = Map.merge(@default_opts, opts)
-    acc = if opts[:iodata], do: [], else: ""
-    do_parse(input, opts, {"", acc, :parsing})
+
+    {buffer, user_acc} = do_parse(input, opts, {"", [], :parsing})
+
+    if opts[:iodata] do
+      {buffer, user_acc}
+    else
+      {IO.iodata_to_binary(buffer), user_acc}
+    end
   end
 
-  defp accumulate(acc, buffer) when is_list(acc),
+  defp accumulate(acc, buffer),
     do: [buffer | acc]
 
-  defp accumulate(acc, buffer) when is_binary(acc),
-    do: acc <> buffer
-
-  defp accumulate(acc, buffer, trailing) when is_list(acc),
+  defp accumulate(acc, buffer, trailing),
     do: [trailing, buffer | acc]
 
-  defp accumulate(acc, buffer, trailing) when is_binary(acc),
-    do: acc <> buffer <> trailing
-
-  defp do_parse({"", user_acc}, _opts, {"", acc, _}) when is_list(acc),
+  defp do_parse({"", user_acc}, _opts, {"", acc, _}),
     do: {Enum.reverse(acc), user_acc}
-
-  defp do_parse({"", user_acc}, _opts, {"", acc, _}) when is_binary(acc),
-    do: {acc, user_acc}
 
   defp do_parse({"@" <> text, user_acc}, opts, {buffer, acc, :skip}),
     do: do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, "@"), :skip})
@@ -146,7 +143,7 @@ defmodule Linkify.Parser do
       )
 
   defp do_parse({text, user_acc}, opts, {buffer, acc, {:open, level}}) do
-    do_parse({text, user_acc}, opts, {"", acc <> buffer, {:attrs, level}})
+    do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer), {:attrs, level}})
   end
 
   defp do_parse(
