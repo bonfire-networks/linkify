@@ -114,6 +114,20 @@ defmodule Linkify.ParserTest do
       assert parse(text) == expected
     end
 
+    test "handle angle bracket in the end" do
+      text = "google.com <br>"
+      assert parse(text) == "<a href=\"http://google.com\">google.com</a> <br>"
+
+      text = "google.com<br>"
+      assert parse(text) == "<a href=\"http://google.com\">google.com</a><br>"
+
+      text = "google.com<"
+      assert parse(text) == "<a href=\"http://google.com\">google.com</a><"
+
+      text = "google.com>"
+      assert parse(text) == "<a href=\"http://google.com\">google.com</a>>"
+    end
+
     test "does not link attributes" do
       text = "Check out <a href='google.com'>google</a>"
       assert parse(text) == text
@@ -183,6 +197,23 @@ defmodule Linkify.ParserTest do
         " foo (<a href=\"http://example.com/path/folder/\">example.com/path/folder/</a>), bar"
 
       assert parse(text, class: false, rel: false) == expected
+    end
+
+    test "do not link punctuation marks in the end" do
+      text = "google.com."
+      assert parse(text) == "<a href=\"http://google.com\">google.com</a>."
+
+      text = "google.com;"
+      assert parse(text) == "<a href=\"http://google.com\">google.com</a>;"
+
+      text = "google.com:"
+      assert parse(text) == "<a href=\"http://google.com\">google.com</a>:"
+
+      text = "hack google.com, please"
+      assert parse(text) == "hack <a href=\"http://google.com\">google.com</a>, please"
+
+      text = "(check out google.com)"
+      assert parse(text) == "(check out <a href=\"http://google.com\">google.com</a>)"
     end
 
     test "do not link urls" do

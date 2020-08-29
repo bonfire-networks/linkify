@@ -193,6 +193,7 @@ defmodule Linkify.Parser do
       buffer
       |> String.split("<")
       |> List.first()
+      |> String.replace(~r/[,.;:)>]$/, "")
       |> strip_parens()
 
     if url?(str, opts) do
