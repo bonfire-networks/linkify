@@ -155,6 +155,20 @@ defmodule Linkify.ParserTest do
       assert parse(text, class: false, rel: false) == expected
     end
 
+    test "html links inside html" do
+      text = ~s(<p><a href="http://google.com">google.com</a></p>)
+      assert parse(text) == text
+
+      text = ~s(<span><a href="http://google.com">google.com</a></span>)
+      assert parse(text) == text
+
+      text = ~s(<h1><a href="http://google.com">google.com</a></h1>)
+      assert parse(text) == text
+
+      text = ~s(<li><a href="http://google.com">google.com</a></li>)
+      assert parse(text) == text
+    end
+
     test "do not link parens" do
       text = " foo (https://example.com/path/folder/), bar"
 

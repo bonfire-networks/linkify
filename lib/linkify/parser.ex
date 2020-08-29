@@ -128,13 +128,8 @@ defmodule Linkify.Parser do
     do_parse({text, user_acc}, opts, {"<", acc, {:open, level + 1}})
   end
 
-  defp do_parse({">" <> text, user_acc}, opts, {buffer, acc, {:attrs, level}}),
-    do:
-      do_parse(
-        {text, user_acc},
-        opts,
-        {"", accumulate(acc, buffer, ">"), {:html, level}}
-      )
+  defp do_parse({">" <> text, user_acc}, opts, {buffer, acc, {:attrs, _level}}),
+    do: do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, ">"), :parsing})
 
   defp do_parse({<<ch::8>> <> text, user_acc}, opts, {"", acc, {:attrs, level}}) do
     do_parse({text, user_acc}, opts, {"", accumulate(acc, <<ch::8>>), {:attrs, level}})
@@ -194,7 +189,11 @@ defmodule Linkify.Parser do
     do: do_parse({text, user_acc}, opts, {buffer <> <<ch::8>>, acc, state})
 
   def check_and_link(:url, buffer, opts, _user_acc) do
-    str = strip_parens(buffer)
+    str =
+      buffer
+      |> String.split("<")
+      |> List.first()
+      |> strip_parens()
 
     if url?(str, opts) do
       case @match_url |> Regex.run(str, capture: [:url]) |> hd() do
