@@ -56,8 +56,9 @@ defmodule Linkify.Builder do
       |> strip_prefix(Map.get(opts, :strip_prefix, false))
       |> truncate(Map.get(opts, :truncate, false))
 
-    attrs = format_attrs(attrs)
-    "<a #{attrs}>#{url}</a>"
+    attrs
+    |> format_attrs()
+    |> format_tag(url, opts)
   end
 
   defp format_attrs(attrs) do
@@ -123,23 +124,39 @@ defmodule Linkify.Builder do
     |> format_extra(uri, opts)
   end
 
-  def format_mention(attrs, name, _opts) do
-    attrs = format_attrs(attrs)
-    "<a #{attrs}>@#{name}</a>"
+  def format_mention(attrs, name, opts) do
+    attrs
+    |> format_attrs()
+    |> format_tag("@#{name}", opts)
   end
 
-  def format_hashtag(attrs, tag, _opts) do
-    attrs = format_attrs(attrs)
-    "<a #{attrs}>##{tag}</a>"
+  def format_hashtag(attrs, tag, opts) do
+    attrs
+    |> format_attrs()
+    |> format_tag("##{tag}", opts)
   end
 
-  def format_email(attrs, email, _opts) do
-    attrs = format_attrs(attrs)
-    ~s(<a #{attrs}>#{email}</a>)
+  def format_email(attrs, email, opts) do
+    attrs
+    |> format_attrs()
+    |> format_tag(email, opts)
   end
 
-  def format_extra(attrs, uri, _opts) do
-    attrs = format_attrs(attrs)
-    ~s(<a #{attrs}>#{uri}</a>)
+  def format_extra(attrs, uri, opts) do
+    attrs
+    |> format_attrs()
+    |> format_tag(uri, opts)
+  end
+
+  def format_tag(attrs, content, %{iodata: true}) do
+    ["<a ", attrs, ">", content, "</a>"]
+  end
+
+  def format_tag(attrs, content, %{iodata: :safe}) do
+    [{:safe, ["<a ", attrs, ">"]}, content, {:safe, "</a>"}]
+  end
+
+  def format_tag(attrs, content, _opts) do
+    "<a #{attrs}>#{content}</a>"
   end
 end

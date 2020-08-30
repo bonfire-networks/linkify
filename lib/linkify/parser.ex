@@ -62,135 +62,139 @@ defmodule Linkify.Parser do
 
   def parse(input, opts) do
     opts = Map.merge(@default_opts, opts)
-    opts_list = Map.to_list(opts)
 
-    Enum.reduce(@types, input, fn
-      type, input ->
-        if {type, true} in opts_list do
-          do_parse(input, opts, {"", "", :parsing}, type)
-        else
-          input
-        end
-    end)
+    {buffer, user_acc} = do_parse(input, opts, {"", [], :parsing})
+
+    if opts[:iodata] do
+      {buffer, user_acc}
+    else
+      {IO.iodata_to_binary(buffer), user_acc}
+    end
   end
 
-  defp do_parse({"", user_acc}, _opts, {"", acc, _}, _handler),
-    do: {acc, user_acc}
+  defp accumulate(acc, buffer),
+    do: [buffer | acc]
 
-  defp do_parse({"@" <> text, user_acc}, opts, {buffer, acc, :skip}, type),
-    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "@", :skip}, type)
+  defp accumulate(acc, buffer, trailing),
+    do: [trailing, buffer | acc]
 
-  defp do_parse({"<a" <> text, user_acc}, opts, {buffer, acc, :parsing}, type),
-    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "<a", :skip}, type)
+  defp do_parse({"", user_acc}, _opts, {"", acc, _}),
+    do: {Enum.reverse(acc), user_acc}
 
-  defp do_parse({"<pre" <> text, user_acc}, opts, {buffer, acc, :parsing}, type),
-    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "<pre", :skip}, type)
+  defp do_parse({"@" <> text, user_acc}, opts, {buffer, acc, :skip}),
+    do: do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, "@"), :skip})
 
-  defp do_parse({"<code" <> text, user_acc}, opts, {buffer, acc, :parsing}, type),
-    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "<code", :skip}, type)
+  defp do_parse({"<a" <> text, user_acc}, opts, {buffer, acc, :parsing}),
+    do: do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, "<a"), :skip})
 
-  defp do_parse({"</a>" <> text, user_acc}, opts, {buffer, acc, :skip}, type),
-    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "</a>", :parsing}, type)
+  defp do_parse({"<pre" <> text, user_acc}, opts, {buffer, acc, :parsing}),
+    do: do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, "<pre"), :skip})
 
-  defp do_parse({"</pre>" <> text, user_acc}, opts, {buffer, acc, :skip}, type),
-    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "</pre>", :parsing}, type)
+  defp do_parse({"<code" <> text, user_acc}, opts, {buffer, acc, :parsing}),
+    do: do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, "<code"), :skip})
 
-  defp do_parse({"</code>" <> text, user_acc}, opts, {buffer, acc, :skip}, type),
-    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> "</code>", :parsing}, type)
+  defp do_parse({"</a>" <> text, user_acc}, opts, {buffer, acc, :skip}),
+    do: do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, "</a>"), :parsing})
 
-  defp do_parse({"<" <> text, user_acc}, opts, {"", acc, :parsing}, type),
-    do: do_parse({text, user_acc}, opts, {"<", acc, {:open, 1}}, type)
+  defp do_parse({"</pre>" <> text, user_acc}, opts, {buffer, acc, :skip}),
+    do: do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, "</pre>"), :parsing})
 
-  defp do_parse({"<" <> text, user_acc}, opts, {"", acc, {:html, level}}, type) do
-    do_parse({text, user_acc}, opts, {"<", acc, {:open, level + 1}}, type)
+  defp do_parse({"</code>" <> text, user_acc}, opts, {buffer, acc, :skip}),
+    do: do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, "</code>"), :parsing})
+
+  defp do_parse({"<" <> text, user_acc}, opts, {"", acc, :parsing}),
+    do: do_parse({text, user_acc}, opts, {"<", acc, {:open, 1}})
+
+  defp do_parse({"<" <> text, user_acc}, opts, {"", acc, {:html, level}}) do
+    do_parse({text, user_acc}, opts, {"<", acc, {:open, level + 1}})
   end
 
-  defp do_parse({">" <> text, user_acc}, opts, {buffer, acc, {:attrs, level}}, type),
+  defp do_parse({">" <> text, user_acc}, opts, {buffer, acc, {:attrs, level}}),
     do:
       do_parse(
         {text, user_acc},
         opts,
-        {"", acc <> buffer <> ">", {:html, level}},
-        type
+        {"", accumulate(acc, buffer, ">"), {:html, level}}
       )
 
-  defp do_parse({<<ch::8>> <> text, user_acc}, opts, {"", acc, {:attrs, level}}, type) do
-    do_parse({text, user_acc}, opts, {"", acc <> <<ch::8>>, {:attrs, level}}, type)
+  defp do_parse({<<ch::8>> <> text, user_acc}, opts, {"", acc, {:attrs, level}}) do
+    do_parse({text, user_acc}, opts, {"", accumulate(acc, <<ch::8>>), {:attrs, level}})
   end
 
-  defp do_parse({"</" <> text, user_acc}, opts, {buffer, acc, {:html, level}}, type) do
-    {buffer, user_acc} = link(type, buffer, opts, user_acc)
+  defp do_parse({"</" <> text, user_acc}, opts, {buffer, acc, {:html, level}}) do
+    {buffer, user_acc} = link(buffer, opts, user_acc)
 
     do_parse(
       {text, user_acc},
       opts,
-      {"", acc <> buffer <> "</", {:close, level}},
-      type
+      {"", accumulate(acc, buffer, "</"), {:close, level}}
     )
   end
 
-  defp do_parse({">" <> text, user_acc}, opts, {buffer, acc, {:close, 1}}, type),
-    do: do_parse({text, user_acc}, opts, {"", acc <> buffer <> ">", :parsing}, type)
+  defp do_parse({">" <> text, user_acc}, opts, {buffer, acc, {:close, 1}}),
+    do: do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, ">"), :parsing})
 
-  defp do_parse({">" <> text, user_acc}, opts, {buffer, acc, {:close, level}}, type),
+  defp do_parse({">" <> text, user_acc}, opts, {buffer, acc, {:close, level}}),
     do:
       do_parse(
         {text, user_acc},
         opts,
-        {"", acc <> buffer <> ">", {:html, level - 1}},
-        type
+        {"", accumulate(acc, buffer, ">"), {:html, level - 1}}
       )
 
-  defp do_parse({text, user_acc}, opts, {buffer, acc, {:open, level}}, type) do
-    do_parse({text, user_acc}, opts, {"", acc <> buffer, {:attrs, level}}, type)
+  defp do_parse({text, user_acc}, opts, {buffer, acc, {:open, level}}) do
+    do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer), {:attrs, level}})
   end
 
   defp do_parse(
          {<<char::bytes-size(1), text::binary>>, user_acc},
          opts,
-         {buffer, acc, state},
-         type
+         {buffer, acc, state}
        )
        when char in [" ", "\r", "\n"] do
-    {buffer, user_acc} = link(type, buffer, opts, user_acc)
+    {buffer, user_acc} = link(buffer, opts, user_acc)
 
     do_parse(
       {text, user_acc},
       opts,
-      {"", acc <> buffer <> char, state},
-      type
+      {"", accumulate(acc, buffer, char), state}
     )
   end
 
-  defp do_parse({<<ch::8>>, user_acc}, opts, {buffer, acc, state}, type) do
-    {buffer, user_acc} = link(type, buffer <> <<ch::8>>, opts, user_acc)
+  defp do_parse({<<ch::8>>, user_acc}, opts, {buffer, acc, state}) do
+    {buffer, user_acc} = link(buffer <> <<ch::8>>, opts, user_acc)
 
     do_parse(
       {"", user_acc},
       opts,
-      {"", acc <> buffer, state},
-      type
+      {"", accumulate(acc, buffer), state}
     )
   end
 
-  defp do_parse({<<ch::8>> <> text, user_acc}, opts, {buffer, acc, state}, type),
-    do: do_parse({text, user_acc}, opts, {buffer <> <<ch::8>>, acc, state}, type)
+  defp do_parse({<<ch::8>> <> text, user_acc}, opts, {buffer, acc, state}),
+    do: do_parse({text, user_acc}, opts, {buffer <> <<ch::8>>, acc, state})
 
   def check_and_link(:url, buffer, opts, _user_acc) do
     str = strip_parens(buffer)
 
     if url?(str, opts) do
       case @match_url |> Regex.run(str, capture: [:url]) |> hd() do
-        ^buffer -> link_url(buffer, opts)
-        url -> String.replace(buffer, url, link_url(url, opts))
+        ^buffer ->
+          link_url(buffer, opts)
+
+        url ->
+          buffer
+          |> String.split(url)
+          |> Enum.intersperse(link_url(url, opts))
+          |> if(opts[:iodata], do: & &1, else: &Enum.join(&1)).()
       end
     else
-      buffer
+      :nomatch
     end
   end
 
   def check_and_link(:email, buffer, opts, _user_acc) do
-    if email?(buffer, opts), do: link_email(buffer, opts), else: buffer
+    if email?(buffer, opts), do: link_email(buffer, opts), else: :nomatch
   end
 
   def check_and_link(:mention, buffer, opts, user_acc) do
@@ -210,7 +214,7 @@ defmodule Linkify.Parser do
   end
 
   def check_and_link(:extra, buffer, opts, _user_acc) do
-    if String.starts_with?(buffer, @prefix_extra), do: link_extra(buffer, opts), else: buffer
+    if String.starts_with?(buffer, @prefix_extra), do: link_extra(buffer, opts), else: :nomatch
   end
 
   defp strip_parens("(" <> buffer) do
@@ -272,7 +276,7 @@ defmodule Linkify.Parser do
     end
   end
 
-  def link_hashtag(nil, buffer, _, _user_acc), do: buffer
+  def link_hashtag(nil, _buffer, _, _user_acc), do: :nomatch
 
   def link_hashtag(hashtag, buffer, %{hashtag_handler: hashtag_handler} = opts, user_acc) do
     hashtag
@@ -286,7 +290,7 @@ defmodule Linkify.Parser do
     |> maybe_update_buffer(hashtag, buffer)
   end
 
-  def link_mention(nil, buffer, _, user_acc), do: {buffer, user_acc}
+  def link_mention(nil, _buffer, _, _user_acc), do: :nomatch
 
   def link_mention(mention, buffer, %{mention_handler: mention_handler} = opts, user_acc) do
     mention
@@ -326,10 +330,21 @@ defmodule Linkify.Parser do
     Builder.create_extra_link(buffer, opts)
   end
 
-  defp link(type, buffer, opts, user_acc) do
+  defp link(buffer, opts, user_acc) do
+    Enum.reduce_while(@types, {buffer, user_acc}, fn type, _ ->
+      if opts[type] == true do
+        check_and_link_reducer(type, buffer, opts, user_acc)
+      else
+        {:cont, {buffer, user_acc}}
+      end
+    end)
+  end
+
+  defp check_and_link_reducer(type, buffer, opts, user_acc) do
     case check_and_link(type, buffer, opts, user_acc) do
-      {buffer, user_acc} -> {buffer, user_acc}
-      buffer -> {buffer, user_acc}
+      :nomatch -> {:cont, {buffer, user_acc}}
+      {buffer, user_acc} -> {:halt, {buffer, user_acc}}
+      buffer -> {:halt, {buffer, user_acc}}
     end
   end
 end
