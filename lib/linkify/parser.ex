@@ -22,6 +22,8 @@ defmodule Linkify.Parser do
 
   @match_hashtag ~r/^(?<tag>\#[[:word:]_]*[[:alpha:]_·][[:word:]_·\p{M}]*)/u
 
+  @match_skipped_tag ~r/^(?<tag>(a|code|pre)).*>*/
+
   @prefix_extra [
     "magnet:?",
     "dweb://",
@@ -83,6 +85,23 @@ defmodule Linkify.Parser do
 
   defp do_parse({"@" <> text, user_acc}, opts, {buffer, acc, :skip}),
     do: do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, "@"), :skip})
+
+  defp do_parse(
+         {"<" <> text, user_acc},
+         %{hashtag: true} = opts,
+         {"#" <> _ = buffer, acc, :parsing}
+       ) do
+    {buffer, user_acc} = link(buffer, opts, user_acc)
+
+    case Regex.run(@match_skipped_tag, text, capture: [:tag]) do
+      [tag] ->
+        text = String.trim_leading(text, tag)
+        do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, "<#{tag}"), :skip})
+
+      nil ->
+        do_parse({text, user_acc}, opts, {"<", acc, {:open, 1}})
+    end
+  end
 
   defp do_parse({"<a" <> text, user_acc}, opts, {buffer, acc, :parsing}),
     do: do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, "<a"), :skip})

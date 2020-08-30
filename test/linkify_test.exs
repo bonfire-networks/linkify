@@ -178,6 +178,61 @@ defmodule LinkifyTest do
                "<a href=\"https://example.com/user/hello\">#hello</a> <a href=\"https://example.com/user/world\">#world</a>"
 
       assert MapSet.to_list(tags) == ["#hello", "#world"]
+
+      text = "#cofe <br><a href=\"https://pleroma.social/\">Source</a>"
+
+      {_result_text, %{tags: tags}} =
+        Linkify.link_map(text, %{tags: MapSet.new()},
+          hashtag: true,
+          hashtag_handler: handler,
+          hashtag_prefix: "https://example.com/tag/"
+        )
+
+      assert MapSet.to_list(tags) == ["#cofe"]
+
+      text = "#cofe<br><a href=\"https://pleroma.social/\">Source</a>"
+
+      {_result_text, %{tags: tags}} =
+        Linkify.link_map(text, %{tags: MapSet.new()},
+          hashtag: true,
+          hashtag_handler: handler,
+          hashtag_prefix: "https://example.com/tag/"
+        )
+
+      assert MapSet.to_list(tags) == ["#cofe"]
+
+      text = "#cofe<a href=\"https://pleroma.social/\">Source</a>"
+
+      {_result_text, %{tags: tags}} =
+        Linkify.link_map(text, %{tags: MapSet.new()},
+          hashtag: true,
+          hashtag_handler: handler,
+          hashtag_prefix: "https://example.com/tag/"
+        )
+
+      assert MapSet.to_list(tags) == ["#cofe"]
+
+      text = "#cofe<code>fetch()</code>"
+
+      {_result_text, %{tags: tags}} =
+        Linkify.link_map(text, %{tags: MapSet.new()},
+          hashtag: true,
+          hashtag_handler: handler,
+          hashtag_prefix: "https://example.com/tag/"
+        )
+
+      assert MapSet.to_list(tags) == ["#cofe"]
+
+      text = "#cofe<pre>fetch()</pre>"
+
+      {_result_text, %{tags: tags}} =
+        Linkify.link_map(text, %{tags: MapSet.new()},
+          hashtag: true,
+          hashtag_handler: handler,
+          hashtag_prefix: "https://example.com/tag/"
+        )
+
+      assert MapSet.to_list(tags) == ["#cofe"]
     end
 
     test "mention handler and hashtag prefix" do
