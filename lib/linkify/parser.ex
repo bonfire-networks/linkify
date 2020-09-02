@@ -24,6 +24,8 @@ defmodule Linkify.Parser do
 
   @match_skipped_tag ~r/^(?<tag>(a|code|pre)).*>*/
 
+  @delimiters ~r/[,.;:>]*$/
+
   @prefix_extra [
     "magnet:?",
     "dweb://",
@@ -56,7 +58,7 @@ defmodule Linkify.Parser do
       ~s{Check out <a href="http://google.com">google.com</a>}
   """
 
-  @types [:url, :email, :hashtag, :mention, :extra]
+  @types [:url, :email, :hashtag, :extra, :mention]
 
   def parse(input, opts \\ %{})
   def parse(input, opts) when is_binary(input), do: {input, %{}} |> parse(opts) |> elem(0)
@@ -98,6 +100,11 @@ defmodule Linkify.Parser do
       nil ->
         do_parse({text, user_acc}, opts, {"<", acc, {:open, 1}})
     end
+  end
+
+  defp do_parse({"<br" <> text, user_acc}, opts, {buffer, acc, :parsing}) do
+    {buffer, user_acc} = link(buffer, opts, user_acc)
+    do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, "<br"), {:open, 1}})
   end
 
   defp do_parse({"<a" <> text, user_acc}, opts, {buffer, acc, :parsing}),
@@ -161,23 +168,14 @@ defmodule Linkify.Parser do
     do: do_parse({text, user_acc}, opts, {buffer <> <<ch::8>>, acc, state})
 
   def check_and_link(:url, buffer, opts, _user_acc) do
-    str =
-      buffer
-      |> String.split("<")
-      |> List.first()
-      |> String.replace(~r/[,.;:)>]$/, "")
-      |> strip_parens()
-
-    if url?(str, opts) do
-      case @match_url |> Regex.run(str, capture: [:url]) |> hd() do
+    if url?(buffer, opts) do
+      case @match_url |> Regex.run(buffer, capture: [:url]) |> hd() do
         ^buffer ->
           link_url(buffer, opts)
 
         url ->
-          buffer
-          |> String.split(url)
-          |> Enum.intersperse(link_url(url, opts))
-          |> if(opts[:iodata], do: & &1, else: &Enum.join(&1)).()
+          link = link_url(url, opts)
+          restore_stripped_symbols(buffer, url, link, opts)
       end
     else
       :nomatch
@@ -200,19 +198,21 @@ defmodule Linkify.Parser do
     |> link_hashtag(buffer, opts, user_acc)
   end
 
-  def check_and_link(:extra, "xmpp:" <> handle, opts, _user_acc) do
-    if email?(handle, opts), do: link_extra("xmpp:" <> handle, opts), else: handle
+  def check_and_link(:extra, "xmpp:" <> handle = buffer, opts, _user_acc) do
+    if email?(handle, opts), do: link_extra(buffer, opts), else: :nomatch
   end
 
   def check_and_link(:extra, buffer, opts, _user_acc) do
     if String.starts_with?(buffer, @prefix_extra), do: link_extra(buffer, opts), else: :nomatch
   end
 
-  defp strip_parens("(" <> buffer) do
-    ~r/[^\)]*/ |> Regex.run(buffer) |> hd()
+  defp strip_parens(buffer) do
+    buffer
+    |> String.trim_leading("(")
+    |> String.trim_trailing(")")
   end
 
-  defp strip_parens(buffer), do: buffer
+  defp strip_punctuation(buffer), do: String.replace(buffer, @delimiters, "")
 
   def url?(buffer, opts) do
     valid_url?(buffer) && Regex.match?(@match_url, buffer) && valid_tld?(buffer, opts)
@@ -332,10 +332,31 @@ defmodule Linkify.Parser do
   end
 
   defp check_and_link_reducer(type, buffer, opts, user_acc) do
-    case check_and_link(type, buffer, opts, user_acc) do
-      :nomatch -> {:cont, {buffer, user_acc}}
-      {buffer, user_acc} -> {:halt, {buffer, user_acc}}
-      buffer -> {:halt, {buffer, user_acc}}
+    str =
+      buffer
+      |> String.split("<")
+      |> List.first()
+      |> strip_punctuation()
+      |> strip_parens()
+
+    case check_and_link(type, str, opts, user_acc) do
+      :nomatch ->
+        {:cont, {buffer, user_acc}}
+
+      {link, user_acc} ->
+        {:halt, {restore_stripped_symbols(buffer, str, link, opts), user_acc}}
+
+      link ->
+        {:halt, {restore_stripped_symbols(buffer, str, link, opts), user_acc}}
     end
+  end
+
+  defp restore_stripped_symbols(buffer, buffer, link, _), do: link
+
+  defp restore_stripped_symbols(buffer, stripped_buffer, link, opts) do
+    buffer
+    |> String.split(stripped_buffer)
+    |> Enum.intersperse(link)
+    |> if(opts[:iodata], do: &Enum.reject(&1, fn el -> el == "" end), else: &Enum.join(&1)).()
   end
 end

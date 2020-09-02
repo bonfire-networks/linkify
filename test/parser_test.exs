@@ -118,8 +118,14 @@ defmodule Linkify.ParserTest do
       text = "google.com <br>"
       assert parse(text) == "<a href=\"http://google.com\">google.com</a> <br>"
 
-      text = "google.com<br>"
-      assert parse(text) == "<a href=\"http://google.com\">google.com</a><br>"
+      text = "google.com<br>hey"
+      assert parse(text) == "<a href=\"http://google.com\">google.com</a><br>hey"
+
+      text = "hey<br>google.com"
+      assert parse(text) == "hey<br><a href=\"http://google.com\">google.com</a>"
+
+      text = "<br />google.com"
+      assert parse(text) == "<br /><a href=\"http://google.com\">google.com</a>"
 
       text = "google.com<"
       assert parse(text) == "<a href=\"http://google.com\">google.com</a><"
