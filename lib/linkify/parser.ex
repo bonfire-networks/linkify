@@ -175,7 +175,7 @@ defmodule Linkify.Parser do
 
         url ->
           link = link_url(url, opts)
-          restore_stripped_symbols(buffer, url, link, opts)
+          restore_stripped_symbols(buffer, url, link)
       end
     else
       :nomatch
@@ -344,19 +344,18 @@ defmodule Linkify.Parser do
         {:cont, {buffer, user_acc}}
 
       {link, user_acc} ->
-        {:halt, {restore_stripped_symbols(buffer, str, link, opts), user_acc}}
+        {:halt, {restore_stripped_symbols(buffer, str, link), user_acc}}
 
       link ->
-        {:halt, {restore_stripped_symbols(buffer, str, link, opts), user_acc}}
+        {:halt, {restore_stripped_symbols(buffer, str, link), user_acc}}
     end
   end
 
-  defp restore_stripped_symbols(buffer, buffer, link, _), do: link
+  defp restore_stripped_symbols(buffer, buffer, link), do: link
 
-  defp restore_stripped_symbols(buffer, stripped_buffer, link, opts) do
+  defp restore_stripped_symbols(buffer, stripped_buffer, link) do
     buffer
     |> String.split(stripped_buffer)
     |> Enum.intersperse(link)
-    |> if(opts[:iodata], do: &Enum.reject(&1, fn el -> el == "" end), else: &Enum.join(&1)).()
   end
 end
