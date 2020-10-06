@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Hashtags followed by HTML tags "a", "code" and "pre" were not detected
+
 ## 0.2.0 - 2020-07-21
 
 ### Added
