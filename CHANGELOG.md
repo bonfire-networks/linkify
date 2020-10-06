@@ -5,6 +5,8 @@
 ### Fixed
 
 - Hashtags followed by HTML tags "a", "code" and "pre" were not detected
+- Incorrect parsing of HTML links inside HTML tags
+- Punctuation marks in the end of urls were included in the html links
 
 ## 0.2.0 - 2020-07-21
 

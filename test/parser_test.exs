@@ -114,6 +114,26 @@ defmodule Linkify.ParserTest do
       assert parse(text) == expected
     end
 
+    test "handle angle bracket in the end" do
+      text = "google.com <br>"
+      assert parse(text) == "<a href=\"http://google.com\">google.com</a> <br>"
+
+      text = "google.com<br>hey"
+      assert parse(text) == "<a href=\"http://google.com\">google.com</a><br>hey"
+
+      text = "hey<br>google.com"
+      assert parse(text) == "hey<br><a href=\"http://google.com\">google.com</a>"
+
+      text = "<br />google.com"
+      assert parse(text) == "<br /><a href=\"http://google.com\">google.com</a>"
+
+      text = "google.com<"
+      assert parse(text) == "<a href=\"http://google.com\">google.com</a><"
+
+      text = "google.com>"
+      assert parse(text) == "<a href=\"http://google.com\">google.com</a>>"
+    end
+
     test "does not link attributes" do
       text = "Check out <a href='google.com'>google</a>"
       assert parse(text) == text
@@ -155,6 +175,20 @@ defmodule Linkify.ParserTest do
       assert parse(text, class: false, rel: false) == expected
     end
 
+    test "html links inside html" do
+      text = ~s(<p><a href="http://google.com">google.com</a></p>)
+      assert parse(text) == text
+
+      text = ~s(<span><a href="http://google.com">google.com</a></span>)
+      assert parse(text) == text
+
+      text = ~s(<h1><a href="http://google.com">google.com</a></h1>)
+      assert parse(text) == text
+
+      text = ~s(<li><a href="http://google.com">google.com</a></li>)
+      assert parse(text) == text
+    end
+
     test "do not link parens" do
       text = " foo (https://example.com/path/folder/), bar"
 
@@ -169,6 +203,23 @@ defmodule Linkify.ParserTest do
         " foo (<a href=\"http://example.com/path/folder/\">example.com/path/folder/</a>), bar"
 
       assert parse(text, class: false, rel: false) == expected
+    end
+
+    test "do not link punctuation marks in the end" do
+      text = "google.com."
+      assert parse(text) == "<a href=\"http://google.com\">google.com</a>."
+
+      text = "google.com;"
+      assert parse(text) == "<a href=\"http://google.com\">google.com</a>;"
+
+      text = "google.com:"
+      assert parse(text) == "<a href=\"http://google.com\">google.com</a>:"
+
+      text = "hack google.com, please"
+      assert parse(text) == "hack <a href=\"http://google.com\">google.com</a>, please"
+
+      text = "(check out google.com)"
+      assert parse(text) == "(check out <a href=\"http://google.com\">google.com</a>)"
     end
 
     test "do not link urls" do

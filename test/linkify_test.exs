@@ -282,6 +282,63 @@ defmodule LinkifyTest do
 
       assert mentions |> MapSet.to_list() |> Enum.map(&elem(&1, 1)) == ["user"]
     end
+
+    test "mentions handler and extra links" do
+      text =
+        "hi @user, text me asap xmpp:me@cofe.ai, (or contact me at me@cofe.ai), please.<br>cofe.ai."
+
+      valid_users = ["user", "cofe"]
+
+      handler = fn "@" <> user = mention, buffer, _opts, acc ->
+        if Enum.member?(valid_users, user) do
+          link = ~s(<a href="https://example.com/user/#{user}" data-user="#{user}">#{mention}</a>)
+          {link, %{acc | mentions: MapSet.put(acc.mentions, {mention, user})}}
+        else
+          {buffer, acc}
+        end
+      end
+
+      {result_text, %{mentions: mentions}} =
+        Linkify.link_map(text, %{mentions: MapSet.new()},
+          mention: true,
+          mention_handler: handler,
+          extra: true,
+          email: true
+        )
+
+      assert result_text ==
+               "hi <a href=\"https://example.com/user/user\" data-user=\"user\">@user</a>, text me asap <a href=\"xmpp:me@cofe.ai\">xmpp:me@cofe.ai</a>, (or contact me at <a href=\"mailto:me@cofe.ai\">me@cofe.ai</a>), please.<br><a href=\"http://cofe.ai\">cofe.ai</a>."
+
+      assert MapSet.to_list(mentions) == [{"@user", "user"}]
+    end
+
+    test "mentions handler and emails" do
+      text = "hi @friend, here is my email<br><br>user@user.me"
+
+      valid_users = ["user", "friend"]
+
+      handler = fn "@" <> user = mention, buffer, _opts, acc ->
+        if Enum.member?(valid_users, user) do
+          link = ~s(<a href="https://example.com/user/#{user}" data-user="#{user}">#{mention}</a>)
+          {link, %{acc | mentions: MapSet.put(acc.mentions, {mention, user})}}
+        else
+          {buffer, acc}
+        end
+      end
+
+      {result_text, %{mentions: mentions}} =
+        Linkify.link_map(text, %{mentions: MapSet.new()},
+          mention: true,
+          mention_handler: handler,
+          extra: true,
+          email: true
+        )
+
+      assert result_text ==
+               "hi <a href=\"https://example.com/user/friend\" data-user=\"friend\">@friend</a>, here is my email<br><br><a href=\"mailto:user@user.me\">user@user.me</a>"
+
+      assert MapSet.to_list(mentions) == [{"@friend", "friend"}]
+    end
   end
 
   describe "mentions" do
@@ -306,7 +363,7 @@ defmodule LinkifyTest do
       assert Linkify.link(text, mention: true, mention_prefix: "u/") == expected
     end
 
-    test "metion @user@example.com" do
+    test "mention @user@example.com" do
       text = "hey @user@example.com"
 
       expected =
@@ -316,6 +373,16 @@ defmodule LinkifyTest do
                mention: true,
                mention_prefix: "https://example.com/user/",
                new_window: true
+             ) == expected
+
+      text = "That's @user@example.com's server"
+
+      expected =
+        "That's <a href=\"https://example.com/user/user@example.com\">@user@example.com</a>'s server"
+
+      assert Linkify.link(text,
+               mention: true,
+               mention_prefix: "https://example.com/user/"
              ) == expected
     end
   end
@@ -490,6 +557,12 @@ defmodule LinkifyTest do
       expected = "<a href=\"xmpp:user@example.com\">xmpp:user@example.com</a>"
 
       assert Linkify.link(text, extra: true) == expected
+    end
+
+    test "wrong xmpp" do
+      text = "xmpp:user.example.com"
+
+      assert Linkify.link(text, extra: true) == text
     end
 
     test "email" do
