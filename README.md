@@ -10,7 +10,7 @@ The package can be installed by adding `linkify` to your list of dependencies in
 
 ```elixir
 def deps do
-  [{:linkify, "~> 0.1"}]
+  [{:linkify, "~> 0.3"}]
 end
 ```
 
@@ -43,7 +43,7 @@ This is a fork of [auto_linker](https://github.com/smpallen99/auto_linker) by [S
 
 Copyright © 2017 E-MetroTel
 
-Copyright © 2019 Pleroma Authors
+Copyright © 2019-2020 Pleroma Authors
 
 The source is released under the MIT License.
 
