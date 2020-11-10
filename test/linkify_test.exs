@@ -385,6 +385,12 @@ defmodule LinkifyTest do
                mention_prefix: "https://example.com/user/"
              ) == expected
     end
+
+    test "invalid mentions" do
+      text = "hey user@example"
+
+      assert Linkify.link(text, mention: true, mention_prefix: "/users/") == text
+    end
   end
 
   describe "hashtag links" do
