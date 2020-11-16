@@ -15,6 +15,7 @@ defmodule Linkify.Parser do
 
   # @user
   # @user@example.com
+  # credo:disable-for-next-line
   @match_mention ~r/^(?:\W*)?(?<long>@[a-zA-Z\d_-]+@[a-zA-Z0-9_-](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*)|^(?:\W*)?(?<short>@[a-zA-Z\d_-]+)/u
 
   # https://www.w3.org/TR/html5/forms.html#valid-e-mail-address
