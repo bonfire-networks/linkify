@@ -304,7 +304,7 @@ defmodule Linkify.ParserTest do
       "misskey.loki"
     ]
 
-  def valid_emails, do: ["rms@ai.mit.edu", "vc@cock.li"]
+  def valid_emails, do: ["rms@ai.mit.edu", "vc@cock.li", "guardian@33y6fjyhs3phzfjj.onion"]
   def invalid_emails, do: ["rms[at]ai.mit.edu", "vc@cock", "xmpp:lain@trashserver.net"]
-  def valid_custom_tld_emails, do: ["guardian@33y6fjyhs3phzfjj.onion", "hi@company.null"]
+  def valid_custom_tld_emails, do: ["hi@company.null"]
 end

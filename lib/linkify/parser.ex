@@ -41,7 +41,11 @@ defmodule Linkify.Parser do
     "ssb://"
   ]
 
-  @tlds "./priv/tlds.txt" |> File.read!() |> String.split("\n", trim: true) |> MapSet.new()
+  @tlds "./priv/tlds.txt"
+        |> File.read!()
+        |> String.split("\n", trim: true)
+        |> Enum.concat(["onion"])
+        |> MapSet.new()
 
   @default_opts %{
     url: true,
