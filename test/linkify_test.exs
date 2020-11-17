@@ -244,7 +244,7 @@ defmodule LinkifyTest do
       end
 
       expected =
-        ~s(Hello again, <span class="h-card"><a href="#/user/user">@<span>@user</span></a></span>.&lt;script&gt;&lt;/script&gt;\nThis is on another :moominmamma: line. <a href="/tag/2hu" target="_blank">#2hu</a> <a href="/tag/epic" target="_blank">#epic</a> <a href="/tag/phantasmagoric" target="_blank">#phantasmagoric</a>)
+        ~s(Hello again, @user.&lt;script&gt;&lt;/script&gt;\nThis is on another :moominmamma: line. <a href="/tag/2hu" target="_blank">#2hu</a> <a href="/tag/epic" target="_blank">#epic</a> <a href="/tag/phantasmagoric" target="_blank">#phantasmagoric</a>)
 
       assert Linkify.link(text,
                mention: true,
@@ -377,22 +377,14 @@ defmodule LinkifyTest do
 
       text = "That's @user@example.com's server"
 
-      expected =
-        "That's <a href=\"https://example.com/user/user@example.com\">@user@example.com</a>'s server"
-
-      assert Linkify.link(text,
-               mention: true,
-               mention_prefix: "https://example.com/user/"
-             ) == expected
+      assert Linkify.link(text, mention: true, mention_prefix: "https://example.com/user/") ==
+               text
     end
 
-    test "mentions with symbols before them" do
-      text = "@@example hey! >@@test@example.com"
+    test "mentions with no word-separation before them" do
+      text = "@@example hey! >@@test@example.com idolm@ster"
 
-      expected =
-        "@<a href=\"/users/example\">@example</a> hey! >@<a href=\"/users/test@example.com\">@test@example.com</a>"
-
-      assert Linkify.link(text, mention: true, mention_prefix: "/users/") == expected
+      assert Linkify.link(text, mention: true, mention_prefix: "/users/") == text
     end
 
     test "invalid mentions" do
