@@ -385,6 +385,21 @@ defmodule LinkifyTest do
                mention_prefix: "https://example.com/user/"
              ) == expected
     end
+
+    test "mentions with symbols before them" do
+      text = "@@example hey! >@@test@example.com"
+
+      expected =
+        "@<a href=\"/users/example\">@example</a> hey! >@<a href=\"/users/test@example.com\">@test@example.com</a>"
+
+      assert Linkify.link(text, mention: true, mention_prefix: "/users/") == expected
+    end
+
+    test "invalid mentions" do
+      text = "hey user@example"
+
+      assert Linkify.link(text, mention: true, mention_prefix: "/users/") == text
+    end
   end
 
   describe "hashtag links" do

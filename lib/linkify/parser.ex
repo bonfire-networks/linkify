@@ -15,7 +15,8 @@ defmodule Linkify.Parser do
 
   # @user
   # @user@example.com
-  @match_mention ~r"^@[a-zA-Z\d_-]+@[a-zA-Z0-9_-](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*|@[a-zA-Z\d_-]+"u
+  # credo:disable-for-next-line
+  @match_mention ~r/^(?:\W*)?(?<long>@[a-zA-Z\d_-]+@[a-zA-Z0-9_-](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*)|^(?:\W*)?(?<short>@[a-zA-Z\d_-]+)/u
 
   # https://www.w3.org/TR/html5/forms.html#valid-e-mail-address
   @match_email ~r"^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"u
@@ -254,8 +255,9 @@ defmodule Linkify.Parser do
   def ip?(buffer), do: Regex.match?(@match_ip, buffer)
 
   def match_mention(buffer) do
-    case Regex.run(@match_mention, buffer) do
-      [mention] -> mention
+    case Regex.run(@match_mention, buffer, capture: [:long, :short]) do
+      [mention, ""] -> mention
+      ["", mention] -> mention
       _ -> nil
     end
   end
