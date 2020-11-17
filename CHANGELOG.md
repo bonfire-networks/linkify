@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.3.0 - 2020-11-17
+
+### Added
+
+- Support returning result as iodata and as safe iodata
+
 ### Fixed
 
 - Hashtags followed by HTML tags "a", "code" and "pre" were not detected
