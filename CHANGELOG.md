@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Support for linking URLs with FQDNs (e.g., "google.com.")
+
 ## 0.3.0 - 2020-11-17
 
 ### Added
