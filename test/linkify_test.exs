@@ -657,5 +657,15 @@ defmodule LinkifyTest do
 
       assert Linkify.link(text) == expected
     end
+
+    test "FQDN (with trailing period)" do
+      text =
+        "Check out this article: https://www.wired.com./story/marissa-mayer-startup-sunshine-contacts/"
+
+      expected =
+        "Check out this article: <a href=\"https://www.wired.com./story/marissa-mayer-startup-sunshine-contacts/\">https://www.wired.com./story/marissa-mayer-startup-sunshine-contacts/</a>"
+
+      assert Linkify.link(text) == expected
+    end
   end
 end

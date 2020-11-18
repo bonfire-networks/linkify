@@ -247,7 +247,7 @@ defmodule Linkify.Parser do
         true
 
       true ->
-        tld = host |> String.split(".") |> List.last()
+        tld = host |> String.trim_trailing(".") |> String.split(".") |> List.last()
         MapSet.member?(@tlds, tld)
     end
   end
