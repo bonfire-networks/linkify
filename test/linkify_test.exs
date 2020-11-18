@@ -667,5 +667,14 @@ defmodule LinkifyTest do
 
       assert Linkify.link(text) == expected
     end
+
+    test "Does not link trailing punctuation" do
+      text = "You can find more info at https://pleroma.social."
+
+      expected =
+        "You can find more info at <a href=\"https://pleroma.social\">https://pleroma.social</a>."
+
+      assert Linkify.link(text) == expected
+    end
   end
 end
