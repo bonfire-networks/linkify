@@ -343,7 +343,7 @@ defmodule LinkifyTest do
     test "href handler" do
       text = ~s(google.com)
 
-      result_text = Linkify.link(text, href_handler: & "/redirect?#{URI.encode_query(to: &1)}")
+      result_text = Linkify.link(text, href_handler: &"/redirect?#{URI.encode_query(to: &1)}")
 
       assert result_text == ~s(<a href="/redirect?to=http%3A%2F%2Fgoogle.com">google.com</a>)
     end
