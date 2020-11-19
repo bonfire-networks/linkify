@@ -14,7 +14,6 @@ accenture
 accountant
 accountants
 aco
-active
 actor
 ad
 adac
@@ -33,7 +32,6 @@ agakhan
 agency
 ai
 aig
-aigo
 airbus
 airforce
 airtel
@@ -48,6 +46,7 @@ ally
 alsace
 alstom
 am
+amazon
 americanexpress
 americanfamily
 amex
@@ -144,7 +143,6 @@ biz
 bj
 black
 blackfriday
-blanco
 blockbuster
 blog
 bloomberg
@@ -153,7 +151,6 @@ bm
 bms
 bmw
 bn
-bnl
 bnpparibas
 bo
 boats
@@ -164,7 +161,6 @@ bond
 boo
 book
 booking
-boots
 bosch
 bostik
 boston
@@ -213,7 +209,6 @@ care
 career
 careers
 cars
-cartier
 casa
 case
 caseih
@@ -239,14 +234,13 @@ cg
 ch
 chanel
 channel
+charity
 chase
 chat
 cheap
 chintai
-chloe
 christmas
 chrome
-chrysler
 church
 ci
 cipriani
@@ -298,6 +292,7 @@ country
 coupon
 coupons
 courses
+cpa
 cr
 credit
 creditcard
@@ -359,9 +354,7 @@ dnp
 do
 docs
 doctor
-dodge
 dog
-doha
 domains
 dot
 download
@@ -370,7 +363,6 @@ dtv
 dubai
 duck
 dunlop
-duns
 dupont
 durban
 dvag
@@ -391,7 +383,6 @@ energy
 engineer
 engineering
 enterprises
-epost
 epson
 equipment
 er
@@ -400,14 +391,12 @@ erni
 es
 esq
 estate
-esurance
 et
 etisalat
 eu
 eurovision
 eus
 events
-everbank
 exchange
 expert
 exposed
@@ -487,6 +476,7 @@ game
 games
 gap
 garden
+gay
 gb
 gbiz
 gd
@@ -522,7 +512,6 @@ gold
 goldpoint
 golf
 goo
-goodhands
 goodyear
 goog
 google
@@ -580,7 +569,6 @@ homegoods
 homes
 homesense
 honda
-honeywell
 horse
 hospital
 host
@@ -594,7 +582,6 @@ how
 hr
 hsbc
 ht
-htc
 hu
 hughes
 hyatt
@@ -615,6 +602,7 @@ imdb
 immo
 immobilien
 in
+inc
 industries
 infiniti
 info
@@ -624,7 +612,6 @@ institute
 insurance
 insure
 int
-intel
 international
 intuit
 investments
@@ -634,7 +621,6 @@ iq
 ir
 irish
 is
-iselect
 ismaili
 ist
 istanbul
@@ -642,7 +628,6 @@ it
 itau
 itv
 iveco
-iwc
 jaguar
 java
 jcb
@@ -652,7 +637,6 @@ jeep
 jetzt
 jewelry
 jio
-jlc
 jll
 jm
 jmp
@@ -701,12 +685,10 @@ kyoto
 kz
 la
 lacaixa
-ladbrokes
 lamborghini
 lamer
 lancaster
 lancia
-lancome
 land
 landrover
 lanxess
@@ -727,7 +709,6 @@ lego
 lexus
 lgbt
 li
-liaison
 lidl
 life
 lifeinsurance
@@ -745,6 +726,8 @@ live
 living
 lixil
 lk
+llc
+llp
 loan
 loans
 locker
@@ -799,9 +782,7 @@ meme
 memorial
 men
 menu
-meo
 merckmsd
-metlife
 mg
 mh
 miami
@@ -821,7 +802,6 @@ mn
 mo
 mobi
 mobile
-mobily
 moda
 moe
 moi
@@ -829,7 +809,6 @@ mom
 monash
 money
 monster
-mopar
 mormon
 mortgage
 moscow
@@ -837,7 +816,6 @@ moto
 motorcycles
 mov
 movie
-movistar
 mp
 mq
 mr
@@ -856,7 +834,6 @@ my
 mz
 na
 nab
-nadex
 nagoya
 name
 nationwide
@@ -935,7 +912,6 @@ ovh
 pa
 page
 panasonic
-panerai
 paris
 pars
 partners
@@ -958,7 +934,6 @@ photo
 photography
 photos
 physio
-piaget
 pics
 pictet
 pictures
@@ -1041,7 +1016,6 @@ rexroth
 rich
 richardli
 ricoh
-rightathome
 ril
 rio
 rip
@@ -1074,7 +1048,6 @@ sandvik
 sandvikcoromant
 sanofi
 sap
-sapo
 sarl
 sas
 save
@@ -1093,7 +1066,6 @@ schule
 schwarz
 science
 scjohnson
-scor
 scot
 sd
 se
@@ -1155,21 +1127,20 @@ solutions
 song
 sony
 soy
+spa
 space
-spiegel
+sport
 spot
 spreadbetting
 sr
 srl
-srt
+ss
 st
 stada
 staples
 star
-starhub
 statebank
 statefarm
-statoil
 stc
 stcgroup
 stockholm
@@ -1194,7 +1165,6 @@ swiss
 sx
 sy
 sydney
-symantec
 systems
 sz
 tab
@@ -1215,8 +1185,6 @@ team
 tech
 technology
 tel
-telecity
-telefonica
 temasek
 tennis
 teva
@@ -1276,7 +1244,6 @@ tz
 ua
 ubank
 ubs
-uconnect
 ug
 uk
 unicom
@@ -1310,8 +1277,6 @@ vip
 virgin
 visa
 vision
-vista
-vistaprint
 viva
 vivo
 vlaanderen
@@ -1330,7 +1295,6 @@ walmart
 walter
 wang
 wanggou
-warman
 watch
 watches
 weather
@@ -1406,6 +1370,7 @@ xn--bck1b9a5dre4c
 xn--c1avg
 xn--c2br7g
 xn--cck2b3b
+xn--cckwcxetd
 xn--cg4bki
 xn--clchc0ea0b2g2a9gcd
 xn--czr694b
@@ -1416,7 +1381,6 @@ xn--d1alf
 xn--e1a4c
 xn--eckvdtc9d
 xn--efvy88h
-xn--estv75g
 xn--fct429k
 xn--fhbei
 xn--fiq228c5hs
@@ -1442,12 +1406,12 @@ xn--io0a7i
 xn--j1aef
 xn--j1amh
 xn--j6w193g
+xn--jlq480n2rg
 xn--jlq61u9w7b
 xn--jvr189m
 xn--kcrx77d1x4a
 xn--kprw13d
 xn--kpry57d
-xn--kpu716f
 xn--kput3i
 xn--l1acc
 xn--lgbbat1ad8j
@@ -1458,13 +1422,14 @@ xn--mgba7c0bbn0a
 xn--mgbaakc7dvf
 xn--mgbaam7a8h
 xn--mgbab2bd
+xn--mgbah1a3hjkrd
 xn--mgbai9azgqp6j
 xn--mgbayh7gpa
-xn--mgbb9fbpob
 xn--mgbbh1a
 xn--mgbbh1a71e
 xn--mgbc0a9azcg
 xn--mgbca7dzdo
+xn--mgbcpq6gpa1a
 xn--mgberp4a5d4ar
 xn--mgbgu82a
 xn--mgbi4ecexp
@@ -1484,13 +1449,15 @@ xn--nqv7fs00ema
 xn--nyqy26a
 xn--o3cw4h
 xn--ogbpf8fl
+xn--otu796d
 xn--p1acf
 xn--p1ai
-xn--pbt977c
 xn--pgbs0dh
 xn--pssy2u
+xn--q7ce6a
 xn--q9jyb4c
 xn--qcka1pmc
+xn--qxa6a
 xn--qxam
 xn--rhqv96g
 xn--rovu88b
@@ -1516,7 +1483,6 @@ xn--y9a3aq
 xn--yfro4i67o
 xn--ygbi2ammx
 xn--zfr164b
-xperia
 xxx
 xyz
 yachts
@@ -1536,7 +1502,6 @@ zappos
 zara
 zero
 zip
-zippo
 zm
 zone
 zuerich
