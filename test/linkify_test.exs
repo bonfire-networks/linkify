@@ -392,6 +392,20 @@ defmodule LinkifyTest do
 
       assert Linkify.link(text, mention: true, mention_prefix: "/users/") == text
     end
+
+    test "IDN domain" do
+      text = "hello @lain@我爱你.com"
+
+      expected = "hello <a href=\"/users/lain@我爱你.com\">@lain@我爱你.com</a>"
+
+      assert Linkify.link(text, mention: true, mention_prefix: "/users/") == expected
+
+      text = "hello @lain@xn--6qq986b3xl.com"
+
+      expected = "hello <a href=\"/users/lain@xn--6qq986b3xl.com\">@lain@xn--6qq986b3xl.com</a>"
+
+      assert Linkify.link(text, mention: true, mention_prefix: "/users/") == expected
+    end
   end
 
   describe "hashtag links" do
