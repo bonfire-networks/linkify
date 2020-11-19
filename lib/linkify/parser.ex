@@ -11,10 +11,6 @@ defmodule Linkify.Parser do
 
   @get_scheme_host ~r{^\W*(?<scheme>https?:\/\/)?(?:[^@\n]+\\w@)?(?<host>[^:#~\/\n?]+)}u
 
-  # @user
-  # @user@example.com
-  # credo:disable-for-next-line
-
   @match_hashtag ~r/^(?<tag>\#[[:word:]_]*[[:alpha:]_·][[:word:]_·\p{M}]*)/u
 
   @match_skipped_tag ~r/^(?<tag>(a|code|pre)).*>*/
