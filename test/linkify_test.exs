@@ -494,7 +494,7 @@ defmodule LinkifyTest do
       assert Linkify.link(text, rel: false) == expected
     end
 
-    test "skip prefix" do
+    test "strip prefix" do
       assert Linkify.link("http://google.com", strip_prefix: true) ==
                "<a href=\"http://google.com\">google.com</a>"
 
