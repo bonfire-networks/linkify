@@ -42,8 +42,11 @@ defmodule Linkify.Builder do
     end
   end
 
-  defp build_attrs(attrs, url, _opts, :href) do
-    [{:href, url} | attrs]
+  defp build_attrs(attrs, url, opts, :href) do
+    case Map.get(opts, :href_handler) do
+      handler when is_function(handler) -> [{:href, handler.(url)} | attrs]
+      _ -> [{:href, url} | attrs]
+    end
   end
 
   defp add_scheme("http://" <> _ = url), do: url
