@@ -668,5 +668,19 @@ defmodule LinkifyTest do
 
       assert Linkify.link(text) == expected
     end
+
+    test "IDN and punycode domain" do
+      text = "FrauBücher.com says Neiiighhh!"
+
+      expected = "<a href=\"http://FrauBücher.com\">FrauBücher.com</a> says Neiiighhh!"
+
+      assert Linkify.link(text) == expected
+
+      text = "xn--fraubcher-u9a.com says Neiiighhh!"
+
+      expected = "<a href=\"http://xn--fraubcher-u9a.com\">xn--fraubcher-u9a.com</a> says Neiiighhh!"
+
+      assert Linkify.link(text) == expected
+    end
   end
 end
