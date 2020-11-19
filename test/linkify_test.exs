@@ -489,9 +489,49 @@ defmodule LinkifyTest do
 
     test "turn urls with schema into urls" do
       text = "📌https://google.com"
+
       expected = "📌<a href=\"https://google.com\">https://google.com</a>"
 
       assert Linkify.link(text, rel: false) == expected
+
+      text = "http://www.cs.vu.nl/~ast/intel/"
+
+      expected = "<a href=\"http://www.cs.vu.nl/~ast/intel/\">http://www.cs.vu.nl/~ast/intel/</a>"
+
+      assert Linkify.link(text) == expected
+
+      text = "https://forum.zdoom.org/viewtopic.php?f=44&t=57087"
+
+      expected =
+        "<a href=\"https://forum.zdoom.org/viewtopic.php?f=44&t=57087\">https://forum.zdoom.org/viewtopic.php?f=44&t=57087</a>"
+
+      assert Linkify.link(text) == expected
+
+      text = "https://en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul"
+
+      expected =
+        "<a href=\"https://en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul\">https://en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul</a>"
+
+      assert Linkify.link(text) == expected
+
+      text = "https://en.wikipedia.org/wiki/Duff's_device"
+
+      expected =
+        "<a href=\"https://en.wikipedia.org/wiki/Duff's_device\">https://en.wikipedia.org/wiki/Duff's_device</a>"
+
+      assert Linkify.link(text) == expected
+
+      text = "https://1.1.1.1/"
+
+      expected = "<a href=\"https://1.1.1.1/\">https://1.1.1.1/</a>"
+
+      assert Linkify.link(text) == expected
+
+      text = "https://1.1.1.1:8080/"
+
+      expected = "<a href=\"https://1.1.1.1:8080/\">https://1.1.1.1:8080/</a>"
+
+      assert Linkify.link(text) == expected
     end
 
     test "strip prefix" do
@@ -525,35 +565,10 @@ defmodule LinkifyTest do
       assert Linkify.link(text, new_window: true) == expected
 
       text = "@username"
+
       expected = "@username"
+
       assert Linkify.link(text, new_window: true) == expected
-
-      text = "http://www.cs.vu.nl/~ast/intel/"
-
-      expected = "<a href=\"http://www.cs.vu.nl/~ast/intel/\">http://www.cs.vu.nl/~ast/intel/</a>"
-
-      assert Linkify.link(text) == expected
-
-      text = "https://forum.zdoom.org/viewtopic.php?f=44&t=57087"
-
-      expected =
-        "<a href=\"https://forum.zdoom.org/viewtopic.php?f=44&t=57087\">https://forum.zdoom.org/viewtopic.php?f=44&t=57087</a>"
-
-      assert Linkify.link(text) == expected
-
-      text = "https://en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul"
-
-      expected =
-        "<a href=\"https://en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul\">https://en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul</a>"
-
-      assert Linkify.link(text) == expected
-
-      text = "https://en.wikipedia.org/wiki/Duff's_device"
-
-      expected =
-        "<a href=\"https://en.wikipedia.org/wiki/Duff's_device\">https://en.wikipedia.org/wiki/Duff's_device</a>"
-
-      assert Linkify.link(text) == expected
     end
   end
 
