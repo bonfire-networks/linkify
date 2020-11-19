@@ -406,6 +406,15 @@ defmodule LinkifyTest do
 
       assert Linkify.link(text, mention: true, mention_prefix: "/users/") == expected
     end
+
+    test ".onion domain" do
+      text = "Hey @admin@vww6ybal4bd7szmgncyruucpgfkqahzddi37ktceo3ah7ngmcopnpyyd.onion"
+
+      expected =
+        "Hey <a href=\"/users/admin@vww6ybal4bd7szmgncyruucpgfkqahzddi37ktceo3ah7ngmcopnpyyd.onion\">@admin@vww6ybal4bd7szmgncyruucpgfkqahzddi37ktceo3ah7ngmcopnpyyd.onion</a>"
+
+      assert Linkify.link(text, mention: true, mention_prefix: "/users/") == expected
+    end
   end
 
   describe "hashtag links" do
@@ -713,7 +722,8 @@ defmodule LinkifyTest do
 
       text = "I looked at theonion.com; it was no longer funny."
 
-      expected = "I looked at <a href=\"http://theonion.com\">theonion.com</a>; it was no longer funny."
+      expected =
+        "I looked at <a href=\"http://theonion.com\">theonion.com</a>; it was no longer funny."
 
       assert Linkify.link(text) == expected
     end
@@ -729,6 +739,16 @@ defmodule LinkifyTest do
 
       expected =
         "<a href=\"http://xn--fraubcher-u9a.com\">xn--fraubcher-u9a.com</a> says Neiiighhh!"
+
+      assert Linkify.link(text) == expected
+    end
+
+    test ".onion domain" do
+      text =
+        "The riseup.net hidden service is at vww6ybal4bd7szmgncyruucpgfkqahzddi37ktceo3ah7ngmcopnpyyd.onion"
+
+      expected =
+        "The <a href=\"http://riseup.net\">riseup.net</a> hidden service is at <a href=\"http://vww6ybal4bd7szmgncyruucpgfkqahzddi37ktceo3ah7ngmcopnpyyd.onion\">vww6ybal4bd7szmgncyruucpgfkqahzddi37ktceo3ah7ngmcopnpyyd.onion</a>"
 
       assert Linkify.link(text) == expected
     end
