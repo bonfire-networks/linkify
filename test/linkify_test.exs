@@ -675,11 +675,31 @@ defmodule LinkifyTest do
       assert Linkify.link(text) == expected
     end
 
-    test "Does not link trailing punctuation" do
+    test "Do not link trailing punctuation" do
       text = "You can find more info at https://pleroma.social."
 
       expected =
         "You can find more info at <a href=\"https://pleroma.social\">https://pleroma.social</a>."
+
+      assert Linkify.link(text) == expected
+
+      text = "Of course it was google.com!!"
+
+      expected = "Of course it was <a href=\"http://google.com\">google.com</a>!!"
+
+      assert Linkify.link(text) == expected
+
+      text =
+        "First I had to login to hotmail.com, then I had to delete emails because my 15MB quota was full."
+
+      expected =
+        "First I had to login to <a href=\"http://hotmail.com\">hotmail.com</a>, then I had to delete emails because my 15MB quota was full."
+
+      assert Linkify.link(text) == expected
+
+      text = "I looked at theonion.com; it was no longer funny."
+
+      expected = "I looked at <a href=\"http://theonion.com\">theonion.com</a>; it was no longer funny."
 
       assert Linkify.link(text) == expected
     end
@@ -693,7 +713,8 @@ defmodule LinkifyTest do
 
       text = "xn--fraubcher-u9a.com says Neiiighhh!"
 
-      expected = "<a href=\"http://xn--fraubcher-u9a.com\">xn--fraubcher-u9a.com</a> says Neiiighhh!"
+      expected =
+        "<a href=\"http://xn--fraubcher-u9a.com\">xn--fraubcher-u9a.com</a> says Neiiighhh!"
 
       assert Linkify.link(text) == expected
     end

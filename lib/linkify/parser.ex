@@ -19,7 +19,7 @@ defmodule Linkify.Parser do
 
   @match_skipped_tag ~r/^(?<tag>(a|code|pre)).*>*/
 
-  @delimiters ~r/[,.;:>]*$/
+  @delimiters ~r/[,.;:>?!]*$/
 
   @prefix_extra [
     "magnet:?",
@@ -249,7 +249,7 @@ defmodule Linkify.Parser do
         true
 
       true ->
-        tld = host |> String.trim_trailing(".") |> String.split(".") |> List.last()
+        tld = host |> strip_punctuation() |> String.split(".") |> List.last()
         MapSet.member?(@tlds, tld)
     end
   end
