@@ -9,23 +9,13 @@ defmodule Linkify.Parser do
 
   @match_url ~r{^(?:\W*)?(?<url>(?:https?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~%:\/?#[\]@!\$&'\(\)\*\+,;=.]+$)}u
 
-  @match_hostname ~r{^\W*(?<scheme>https?:\/\/)?(?:[^@\n]+\\w@)?(?<host>[^:#~\/\n?]+)}u
-
-  @match_ip ~r"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
-
-  # @user
-  # @user@example.com
-  # credo:disable-for-next-line
-  @match_mention ~r/^(?:\W*)?(?<long>@[a-zA-Z\d_-]+@[a-zA-Z0-9_-](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*)|^(?:\W*)?(?<short>@[a-zA-Z\d_-]+)/u
-
-  # https://www.w3.org/TR/html5/forms.html#valid-e-mail-address
-  @match_email ~r"^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"u
+  @get_scheme_host ~r{^\W*(?<scheme>https?:\/\/)?(?:[^@\n]+\\w@)?(?<host>[^:#~\/\n?]+)}u
 
   @match_hashtag ~r/^(?<tag>\#[[:word:]_]*[[:alpha:]_·][[:word:]_·\p{M}]*)/u
 
   @match_skipped_tag ~r/^(?<tag>(a|code|pre)).*>*/
 
-  @delimiters ~r/[,.;:>]*$/
+  @delimiters ~r/[,.;:>?!]*$/
 
   @prefix_extra [
     "magnet:?",
@@ -41,7 +31,11 @@ defmodule Linkify.Parser do
     "ssb://"
   ]
 
-  @tlds "./priv/tlds.txt" |> File.read!() |> String.split("\n", trim: true) |> MapSet.new()
+  @tlds "./priv/tlds.txt"
+        |> File.read!()
+        |> String.split("\n", trim: true)
+        |> Enum.concat(["onion"])
+        |> MapSet.new()
 
   @default_opts %{
     url: true,
@@ -59,7 +53,7 @@ defmodule Linkify.Parser do
       ~s{Check out <a href="http://google.com">google.com</a>}
   """
 
-  @types [:url, :email, :hashtag, :extra, :mention]
+  @types [:url, :hashtag, :extra, :mention, :email]
 
   def parse(input, opts \\ %{})
   def parse(input, opts) when is_binary(input), do: {input, %{}} |> parse(opts) |> elem(0)
@@ -220,7 +214,11 @@ defmodule Linkify.Parser do
   end
 
   def email?(buffer, opts) do
-    valid_url?(buffer) && Regex.match?(@match_email, buffer) && valid_tld?(buffer, opts)
+    # Note: In reality the local part can only be checked by the remote server
+    case Regex.run(~r/^(?<user>.*)@(?<host>[^@]+)$/, buffer, capture: [:user, :host]) do
+      [_user, hostname] -> valid_hostname?(hostname) && valid_tld?(hostname, opts)
+      _ -> false
+    end
   end
 
   defp valid_url?(url), do: !Regex.match?(@invalid_url, url)
@@ -233,7 +231,7 @@ defmodule Linkify.Parser do
   Will skip validation and return `true` if `:validate_tld` set to `:no_scheme` and the url has a scheme.
   """
   def valid_tld?(url, opts) do
-    [scheme, host] = Regex.run(@match_hostname, url, capture: [:scheme, :host])
+    [scheme, host] = Regex.run(@get_scheme_host, url, capture: [:scheme, :host])
 
     cond do
       opts[:validate_tld] == false ->
@@ -247,18 +245,63 @@ defmodule Linkify.Parser do
         true
 
       true ->
-        tld = host |> String.trim_trailing(".") |> String.split(".") |> List.last()
+        tld = host |> strip_punctuation() |> String.split(".") |> List.last()
         MapSet.member?(@tlds, tld)
     end
   end
 
-  def ip?(buffer), do: Regex.match?(@match_ip, buffer)
+  def safe_to_integer(string, base \\ 10) do
+    String.to_integer(string, base)
+  rescue
+    _ ->
+      nil
+  end
+
+  def ip?(buffer) do
+    v4 = String.split(buffer, ".")
+
+    v6 =
+      buffer
+      |> String.trim_leading("[")
+      |> String.trim_trailing("]")
+      |> String.split(":", trim: true)
+
+    cond do
+      length(v4) == 4 ->
+        !Enum.any?(v4, fn x -> safe_to_integer(x, 10) not in 0..255 end)
+
+      length(v6) in 1..8 ->
+        !Enum.any?(v4, fn x -> safe_to_integer(x, 16) not in 0..0xFFFF end)
+
+      false ->
+        false
+    end
+  end
+
+  # IDN-compatible, ported from musl-libc's is_valid_hostname()
+  def valid_hostname?(hostname) do
+    hostname
+    |> String.to_charlist()
+    |> Enum.any?(fn s ->
+      !(s >= 0x80 || s in 0x30..0x39 || s in 0x41..0x5A || s in 0x61..0x7A || s in '.-')
+    end)
+    |> Kernel.!()
+  end
 
   def match_mention(buffer) do
-    case Regex.run(@match_mention, buffer, capture: [:long, :short]) do
-      [mention, ""] -> mention
-      ["", mention] -> mention
-      _ -> nil
+    case Regex.run(~r/^@(?<user>[a-zA-Z\d_-]+)(@(?<host>[^@]+))?$/, buffer,
+           capture: [:user, :host]
+         ) do
+      [user, ""] ->
+        "@" <> user
+
+      [user, hostname] ->
+        if valid_hostname?(hostname) && valid_tld?(hostname, []),
+          do: "@" <> user <> "@" <> hostname,
+          else: nil
+
+      _ ->
+        nil
     end
   end
 

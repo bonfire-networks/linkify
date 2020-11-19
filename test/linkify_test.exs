@@ -244,7 +244,7 @@ defmodule LinkifyTest do
       end
 
       expected =
-        ~s(Hello again, <span class="h-card"><a href="#/user/user">@<span>@user</span></a></span>.&lt;script&gt;&lt;/script&gt;\nThis is on another :moominmamma: line. <a href="/tag/2hu" target="_blank">#2hu</a> <a href="/tag/epic" target="_blank">#epic</a> <a href="/tag/phantasmagoric" target="_blank">#phantasmagoric</a>)
+        ~s(Hello again, @user.&lt;script&gt;&lt;/script&gt;\nThis is on another :moominmamma: line. <a href="/tag/2hu" target="_blank">#2hu</a> <a href="/tag/epic" target="_blank">#epic</a> <a href="/tag/phantasmagoric" target="_blank">#phantasmagoric</a>)
 
       assert Linkify.link(text,
                mention: true,
@@ -385,28 +385,43 @@ defmodule LinkifyTest do
 
       text = "That's @user@example.com's server"
 
-      expected =
-        "That's <a href=\"https://example.com/user/user@example.com\">@user@example.com</a>'s server"
-
-      assert Linkify.link(text,
-               mention: true,
-               mention_prefix: "https://example.com/user/"
-             ) == expected
+      assert Linkify.link(text, mention: true, mention_prefix: "https://example.com/user/") ==
+               text
     end
 
-    test "mentions with symbols before them" do
-      text = "@@example hey! >@@test@example.com"
+    test "mentions with no word-separation before them" do
+      text = "@@example hey! >@@test@example.com idolm@ster"
 
-      expected =
-        "@<a href=\"/users/example\">@example</a> hey! >@<a href=\"/users/test@example.com\">@test@example.com</a>"
-
-      assert Linkify.link(text, mention: true, mention_prefix: "/users/") == expected
+      assert Linkify.link(text, mention: true, mention_prefix: "/users/") == text
     end
 
     test "invalid mentions" do
       text = "hey user@example"
 
       assert Linkify.link(text, mention: true, mention_prefix: "/users/") == text
+    end
+
+    test "IDN domain" do
+      text = "hello @lain@我爱你.com"
+
+      expected = "hello <a href=\"/users/lain@我爱你.com\">@lain@我爱你.com</a>"
+
+      assert Linkify.link(text, mention: true, mention_prefix: "/users/") == expected
+
+      text = "hello @lain@xn--6qq986b3xl.com"
+
+      expected = "hello <a href=\"/users/lain@xn--6qq986b3xl.com\">@lain@xn--6qq986b3xl.com</a>"
+
+      assert Linkify.link(text, mention: true, mention_prefix: "/users/") == expected
+    end
+
+    test ".onion domain" do
+      text = "Hey @admin@vww6ybal4bd7szmgncyruucpgfkqahzddi37ktceo3ah7ngmcopnpyyd.onion"
+
+      expected =
+        "Hey <a href=\"/users/admin@vww6ybal4bd7szmgncyruucpgfkqahzddi37ktceo3ah7ngmcopnpyyd.onion\">@admin@vww6ybal4bd7szmgncyruucpgfkqahzddi37ktceo3ah7ngmcopnpyyd.onion</a>"
+
+      assert Linkify.link(text, mention: true, mention_prefix: "/users/") == expected
     end
   end
 
@@ -505,12 +520,52 @@ defmodule LinkifyTest do
 
     test "turn urls with schema into urls" do
       text = "📌https://google.com"
+
       expected = "📌<a href=\"https://google.com\">https://google.com</a>"
 
       assert Linkify.link(text, rel: false) == expected
+
+      text = "http://www.cs.vu.nl/~ast/intel/"
+
+      expected = "<a href=\"http://www.cs.vu.nl/~ast/intel/\">http://www.cs.vu.nl/~ast/intel/</a>"
+
+      assert Linkify.link(text) == expected
+
+      text = "https://forum.zdoom.org/viewtopic.php?f=44&t=57087"
+
+      expected =
+        "<a href=\"https://forum.zdoom.org/viewtopic.php?f=44&t=57087\">https://forum.zdoom.org/viewtopic.php?f=44&t=57087</a>"
+
+      assert Linkify.link(text) == expected
+
+      text = "https://en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul"
+
+      expected =
+        "<a href=\"https://en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul\">https://en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul</a>"
+
+      assert Linkify.link(text) == expected
+
+      text = "https://en.wikipedia.org/wiki/Duff's_device"
+
+      expected =
+        "<a href=\"https://en.wikipedia.org/wiki/Duff's_device\">https://en.wikipedia.org/wiki/Duff's_device</a>"
+
+      assert Linkify.link(text) == expected
+
+      text = "https://1.1.1.1/"
+
+      expected = "<a href=\"https://1.1.1.1/\">https://1.1.1.1/</a>"
+
+      assert Linkify.link(text) == expected
+
+      text = "https://1.1.1.1:8080/"
+
+      expected = "<a href=\"https://1.1.1.1:8080/\">https://1.1.1.1:8080/</a>"
+
+      assert Linkify.link(text) == expected
     end
 
-    test "skip prefix" do
+    test "strip prefix" do
       assert Linkify.link("http://google.com", strip_prefix: true) ==
                "<a href=\"http://google.com\">google.com</a>"
 
@@ -541,35 +596,10 @@ defmodule LinkifyTest do
       assert Linkify.link(text, new_window: true) == expected
 
       text = "@username"
+
       expected = "@username"
+
       assert Linkify.link(text, new_window: true) == expected
-
-      text = "http://www.cs.vu.nl/~ast/intel/"
-
-      expected = "<a href=\"http://www.cs.vu.nl/~ast/intel/\">http://www.cs.vu.nl/~ast/intel/</a>"
-
-      assert Linkify.link(text) == expected
-
-      text = "https://forum.zdoom.org/viewtopic.php?f=44&t=57087"
-
-      expected =
-        "<a href=\"https://forum.zdoom.org/viewtopic.php?f=44&t=57087\">https://forum.zdoom.org/viewtopic.php?f=44&t=57087</a>"
-
-      assert Linkify.link(text) == expected
-
-      text = "https://en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul"
-
-      expected =
-        "<a href=\"https://en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul\">https://en.wikipedia.org/wiki/Sophia_(Gnosticism)#Mythos_of_the_soul</a>"
-
-      assert Linkify.link(text) == expected
-
-      text = "https://en.wikipedia.org/wiki/Duff's_device"
-
-      expected =
-        "<a href=\"https://en.wikipedia.org/wiki/Duff's_device\">https://en.wikipedia.org/wiki/Duff's_device</a>"
-
-      assert Linkify.link(text) == expected
     end
   end
 
@@ -676,11 +706,57 @@ defmodule LinkifyTest do
       assert Linkify.link(text) == expected
     end
 
-    test "Does not link trailing punctuation" do
+    test "Do not link trailing punctuation" do
       text = "You can find more info at https://pleroma.social."
 
       expected =
         "You can find more info at <a href=\"https://pleroma.social\">https://pleroma.social</a>."
+
+      assert Linkify.link(text) == expected
+
+      text = "Of course it was google.com!!"
+
+      expected = "Of course it was <a href=\"http://google.com\">google.com</a>!!"
+
+      assert Linkify.link(text) == expected
+
+      text =
+        "First I had to login to hotmail.com, then I had to delete emails because my 15MB quota was full."
+
+      expected =
+        "First I had to login to <a href=\"http://hotmail.com\">hotmail.com</a>, then I had to delete emails because my 15MB quota was full."
+
+      assert Linkify.link(text) == expected
+
+      text = "I looked at theonion.com; it was no longer funny."
+
+      expected =
+        "I looked at <a href=\"http://theonion.com\">theonion.com</a>; it was no longer funny."
+
+      assert Linkify.link(text) == expected
+    end
+
+    test "IDN and punycode domain" do
+      text = "FrauBücher.com says Neiiighhh!"
+
+      expected = "<a href=\"http://FrauBücher.com\">FrauBücher.com</a> says Neiiighhh!"
+
+      assert Linkify.link(text) == expected
+
+      text = "xn--fraubcher-u9a.com says Neiiighhh!"
+
+      expected =
+        "<a href=\"http://xn--fraubcher-u9a.com\">xn--fraubcher-u9a.com</a> says Neiiighhh!"
+
+      assert Linkify.link(text) == expected
+    end
+
+    test ".onion domain" do
+      text =
+        "The riseup.net hidden service is at vww6ybal4bd7szmgncyruucpgfkqahzddi37ktceo3ah7ngmcopnpyyd.onion"
+
+      expected =
+        "The <a href=\"http://riseup.net\">riseup.net</a> hidden service is at <a href=\"http://vww6ybal4bd7szmgncyruucpgfkqahzddi37ktceo3ah7ngmcopnpyyd.onion\">vww6ybal4bd7szmgncyruucpgfkqahzddi37ktceo3ah7ngmcopnpyyd.onion</a>"
 
       assert Linkify.link(text) == expected
     end
