@@ -1,6 +1,10 @@
 # Changelog
 
-## [Unreleased]
+## 0.4.1 - 2020-12-21
+
+### Fixed
+
+- Incorrect detection of IPv4 addresses causing random numbers (e.g., $123.45) to get linked
 
 ## 0.4.0 - 2020-11-24
 
