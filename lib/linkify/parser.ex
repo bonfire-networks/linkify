@@ -258,23 +258,9 @@ defmodule Linkify.Parser do
   end
 
   def ip?(buffer) do
-    v4 = String.split(buffer, ".")
-
-    v6 =
-      buffer
-      |> String.trim_leading("[")
-      |> String.trim_trailing("]")
-      |> String.split(":", trim: true)
-
-    cond do
-      length(v4) == 4 ->
-        !Enum.any?(v4, fn x -> safe_to_integer(x, 10) not in 0..255 end)
-
-      length(v6) in 1..8 ->
-        !Enum.any?(v4, fn x -> safe_to_integer(x, 16) not in 0..0xFFFF end)
-
-      false ->
-        false
+    case :inet.parse_strict_address(to_charlist(buffer)) do
+      {:error, _} -> false
+      {:ok, _} -> true
     end
   end
 

@@ -760,5 +760,21 @@ defmodule LinkifyTest do
 
       assert Linkify.link(text) == expected
     end
+
+    test "IPv4 is linked" do
+      text = "1.1.1.1"
+
+      expected = "<a href=\"http://1.1.1.1\">1.1.1.1</a>"
+
+      assert Linkify.link(text) == expected
+    end
+
+    test "shortened IPv4 are not linked" do
+      text = "109.99"
+
+      expected = "109.99"
+
+      assert Linkify.link(text) == expected
+    end
   end
 end
