@@ -123,6 +123,11 @@ defmodule Linkify.Parser do
   defp do_parse({"<" <> text, user_acc}, opts, {"", acc, :parsing}),
     do: do_parse({text, user_acc}, opts, {"<", acc, {:open, 1}})
 
+  defp do_parse({"<" <> text, user_acc}, opts, {buffer, acc, :parsing}) do
+    {buffer, user_acc} = link(buffer, opts, user_acc)
+    do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, "<"), {:open, 1}})
+  end
+
   defp do_parse({">" <> text, user_acc}, opts, {buffer, acc, {:attrs, _level}}),
     do: do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, ">"), :parsing})
 
