@@ -237,7 +237,7 @@ defmodule Linkify.Parser do
       opts[:validate_tld] == false ->
         true
 
-      ip?(host) ->
+      scheme != "" && ip?(host) ->
         true
 
       # don't validate if scheme is present
