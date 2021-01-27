@@ -202,22 +202,44 @@ defmodule Linkify.Parser do
   end
 
   defp maybe_strip_parens(buffer) do
-    with buffer = String.trim_leading(buffer, "("),
-         true <- String.ends_with?(buffer, ")"),
-         false <- buffer |> String.trim_trailing(")") |> email?(nil),
-         true <- buffer |> String.trim_trailing(")") |> url?(nil),
-         %{path: path, query: query} = URI.parse(buffer),
-         false <- not is_nil(query),
-         false <- not String.contains?(path, "/"),
-         false <- not String.contains?(path, "("),
-         graphemes = String.graphemes(buffer),
-         openidx = graphemes |> Enum.find_index(fn x -> x == "(" end),
-         closeidx = graphemes |> Enum.find_index(fn x -> x == ")" end),
-         true <- openidx < closeidx do
-      buffer
+    trimmed = String.trim_leading(buffer, "(")
+
+    with :next <- parens_check_trailing(buffer),
+         :next <- parens_found_email(trimmed),
+         :next <- parens_found_url(trimmed),
+         %{path: path, query: query} = URI.parse(trimmed),
+         :next <- parens_in_query(query),
+         :next <- parens_found_path_separator(path),
+         :next <- parens_path_has_open_paren(path),
+         :next <- parens_check_balanced(trimmed) do
+      buffer |> String.trim_leading("(") |> String.trim_trailing(")")
     else
-      false -> buffer |> String.trim_leading("(")
-      true -> buffer |> String.trim_leading("(") |> String.trim_trailing(")")
+      :both -> buffer |> String.trim_leading("(") |> String.trim_trailing(")")
+      :noop -> buffer
+      _ -> buffer
+    end
+  end
+
+  defp parens_check_trailing(buffer), do: (String.ends_with?(buffer, ")") && :next) || :noop
+
+  defp parens_found_email(trimmed),
+    do: (String.trim_trailing(trimmed, ")") |> email?(nil) && :both) || :next
+
+  defp parens_found_url(trimmed),
+    do: (String.trim_trailing(trimmed, ")") |> url?(nil) && :next) || :noop
+
+  defp parens_in_query(query), do: (is_nil(query) && :next) || :both
+  defp parens_found_path_separator(path), do: (String.contains?(path, "/") && :next) || :both
+  defp parens_path_has_open_paren(path), do: (String.contains?(path, "(") && :next) || :both
+
+  defp parens_check_balanced(trimmed) do
+    graphemes = String.graphemes(trimmed)
+    opencnt = graphemes |> Enum.count(fn x -> x == "(" end)
+    closecnt = graphemes |> Enum.count(fn x -> x == ")" end)
+
+    cond do
+      opencnt == closecnt -> :leading_only
+      true -> :next
     end
   end
 
