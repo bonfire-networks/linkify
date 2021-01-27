@@ -202,7 +202,7 @@ defmodule Linkify.Parser do
   end
 
   defp maybe_strip_parens(buffer) do
-    trimmed = String.trim_leading(buffer, "(")
+    trimmed = trim_leading_paren(buffer)
 
     with :next <- parens_check_trailing(buffer),
          :next <- parens_found_email(trimmed),
@@ -212,10 +212,10 @@ defmodule Linkify.Parser do
          :next <- parens_found_path_separator(path),
          :next <- parens_path_has_open_paren(path),
          :next <- parens_check_balanced(trimmed) do
-      buffer |> String.trim_leading("(") |> String.trim_trailing(")")
+      buffer |> trim_leading_paren |> trim_trailing_paren
     else
-      :both -> buffer |> String.trim_leading("(") |> String.trim_trailing(")")
-      :leading_only -> buffer |> String.trim_leading("(")
+      :both -> buffer |> trim_leading_paren |> trim_trailing_paren
+      :leading_only -> buffer |> trim_leading_paren
       :noop -> buffer
       _ -> buffer
     end
@@ -224,10 +224,10 @@ defmodule Linkify.Parser do
   defp parens_check_trailing(buffer), do: (String.ends_with?(buffer, ")") && :next) || :noop
 
   defp parens_found_email(trimmed),
-    do: (String.trim_trailing(trimmed, ")") |> email?(nil) && :both) || :next
+    do: (trim_trailing_paren(trimmed) |> email?(nil) && :both) || :next
 
   defp parens_found_url(trimmed),
-    do: (String.trim_trailing(trimmed, ")") |> url?(nil) && :next) || :noop
+    do: (trim_trailing_paren(trimmed) |> url?(nil) && :next) || :noop
 
   defp parens_in_query(query), do: (is_nil(query) && :next) || :both
   defp parens_found_path_separator(path), do: (String.contains?(path, "/") && :next) || :both
@@ -244,6 +244,16 @@ defmodule Linkify.Parser do
       :next
     end
   end
+
+  defp trim_leading_paren(buffer),
+    do:
+      (String.starts_with?(buffer, "(") && String.slice(buffer, 1, String.length(buffer))) ||
+        buffer
+
+  defp trim_trailing_paren(buffer),
+    do:
+      (String.ends_with?(buffer, ")") && String.slice(buffer, 0, String.length(buffer) - 1)) ||
+        buffer
 
   defp strip_punctuation(buffer), do: String.replace(buffer, @delimiters, "")
 
