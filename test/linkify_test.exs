@@ -776,5 +776,14 @@ defmodule LinkifyTest do
 
       assert Linkify.link(text) == expected
     end
+
+    test "URLs with last character is closing paren" do
+      text = "Have you read https://en.wikipedia.org/wiki/Frame_(networking)?"
+
+      expected =
+        "Have you read <a href=\"https://en.wikipedia.org/wiki/Frame_(networking)\">https://en.wikipedia.org/wiki/Frame_(networking)</a>?"
+
+      assert Linkify.link(text) == expected
+    end
   end
 end
