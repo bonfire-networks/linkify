@@ -215,6 +215,7 @@ defmodule Linkify.Parser do
       buffer |> String.trim_leading("(") |> String.trim_trailing(")")
     else
       :both -> buffer |> String.trim_leading("(") |> String.trim_trailing(")")
+      :leading_only -> buffer |> String.trim_leading("(")
       :noop -> buffer
       _ -> buffer
     end
