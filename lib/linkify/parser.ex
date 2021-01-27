@@ -237,9 +237,10 @@ defmodule Linkify.Parser do
     opencnt = graphemes |> Enum.count(fn x -> x == "(" end)
     closecnt = graphemes |> Enum.count(fn x -> x == ")" end)
 
-    cond do
-      opencnt == closecnt -> :leading_only
-      true -> :next
+    if opencnt == closecnt do
+      :leading_only
+    else
+      :next
     end
   end
 
