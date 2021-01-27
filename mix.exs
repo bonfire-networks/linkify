@@ -10,6 +10,7 @@ defmodule Linkify.Mixfile do
       elixir: "~> 1.8",
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
+      aliases: aliases(),
       deps: deps(),
       docs: [extras: ["README.md"]],
       package: package(),
@@ -40,5 +41,19 @@ defmodule Linkify.Mixfile do
       links: %{"GitLab" => "https://git.pleroma.social/pleroma/elixir-libraries/linkify"},
       files: ~w(lib priv README.md mix.exs LICENSE)
     ]
+  end
+
+  defp aliases do
+    [
+      "update.tlds": &update_tlds/1
+    ]
+  end
+
+  defp update_tlds(_) do
+    :os.cmd(
+      String.to_charlist(
+        "curl https://data.iana.org/TLD/tlds-alpha-by-domain.txt | tr '[:upper:]' '[:lower:]' | tail -n +2 > priv/tlds.txt"
+      )
+    )
   end
 end
