@@ -246,11 +246,9 @@ defmodule Linkify.Parser do
   end
 
   defp trim_leading_paren(buffer) do
-    if String.starts_with?(buffer, "(") do
-      "(" <> buffer = buffer
-      buffer
-    else
-      buffer
+    case buffer do
+      "(" <> buffer -> buffer
+      buffer -> buffer
     end
   end
 
