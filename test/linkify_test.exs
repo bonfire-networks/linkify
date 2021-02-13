@@ -383,10 +383,17 @@ defmodule LinkifyTest do
                new_window: true
              ) == expected
 
+      expected =
+        "That's <a href=\"https://example.com/user/user@example.com\" target=\"_blank\">@user@example.com</a>'s server"
+
       text = "That's @user@example.com's server"
 
-      assert Linkify.link(text, mention: true, mention_prefix: "https://example.com/user/") ==
-               text
+      assert Linkify.link(text,
+               mention: true,
+               mention_prefix: "https://example.com/user/",
+               new_window: true
+             ) ==
+               expected
     end
 
     test "mentions with no word-separation before them" do
