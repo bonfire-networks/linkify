@@ -17,6 +17,13 @@ defmodule Linkify.Parser do
 
   @delimiters ~r/[,.;:>?!]*$/
 
+  @en_apostrophes [
+    "'",
+    "'s",
+    "'ll",
+    "'d"
+  ]
+
   @prefix_extra [
     "magnet:?",
     "dweb://",
@@ -209,6 +216,12 @@ defmodule Linkify.Parser do
 
   defp strip_punctuation(buffer), do: String.replace(buffer, @delimiters, "")
 
+  defp strip_en_apostrophes(buffer) do
+    Enum.reduce(@en_apostrophes, buffer, fn abbrev, buf ->
+      String.replace_suffix(buf, abbrev, "")
+    end)
+  end
+
   def url?(buffer, opts) do
     valid_url?(buffer) && Regex.match?(@match_url, buffer) && valid_tld?(buffer, opts)
   end
@@ -367,6 +380,7 @@ defmodule Linkify.Parser do
       buffer
       |> String.split("<")
       |> List.first()
+      |> strip_en_apostrophes()
       |> strip_punctuation()
       |> strip_parens()
 
