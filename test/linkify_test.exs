@@ -369,6 +369,13 @@ defmodule LinkifyTest do
         "<p><strong>hello world</strong></p>\n<p><`em>another <a href=\"u/user__test\">@user__test</a> and <a href=\"u/user__test\">@user__test</a> <a href=\"http://google.com\">google.com</a> paragraph</em></p>\n"
 
       assert Linkify.link(text, mention: true, mention_prefix: "u/") == expected
+
+      text = "<p>hi</p><p>@user @anotherUser</p>"
+
+      expected =
+        "<p>hi</p><p><a href=\"u/user\">@user</a> <a href=\"u/anotherUser\">@anotherUser</a></p>"
+
+      assert Linkify.link(text, mention: true, mention_prefix: "u/") == expected
     end
 
     test "mention @user@example.com" do
