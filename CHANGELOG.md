@@ -5,6 +5,7 @@
 ### Fixed
 
 - Incorrect detection of IPv4 addresses causing random numbers (e.g., $123.45) to get linked
+- Inability to link mentions with a trailing apostrophe. e.g., @user@example's
 
 ## 0.4.0 - 2020-11-24
 
