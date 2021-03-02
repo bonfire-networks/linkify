@@ -275,9 +275,7 @@ defmodule Linkify.ParserTest do
       "example.com",
       "example.ca",
       "example.tv",
-      "example.com:999?one=one",
-      "255.255.255.255",
-      "255.255.255.255:3000?one=1&two=2"
+      "example.com:999?one=one"
     ]
 
   def invalid_non_scheme_urls,
@@ -285,7 +283,9 @@ defmodule Linkify.ParserTest do
       "invalid.com/perl.cgi?key= | web-site.com/cgi-bin/perl.cgi?key1=value1&key2",
       "invalid.",
       "hi..there",
-      "555.555.5555"
+      "555.555.5555",
+      "255.255.255.255",
+      "255.255.255.255:3000?one=1&two=2"
     ]
 
   def custom_tld_scheme_urls,
