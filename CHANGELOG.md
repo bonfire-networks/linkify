@@ -1,10 +1,13 @@
 # Changelog
 
-## 0.5.0 - 2021-XX-XX
+## 0.5.0 - 2021-03-02
 
 ### Added
 
 - More robust detection of URLs inside a parenthetical
+- Only link ip addresses with a scheme
+- Fix mentions in markdown
+- Fix mentions with apostrophe endings
 
 ## 0.4.1 - 2020-12-21
 
