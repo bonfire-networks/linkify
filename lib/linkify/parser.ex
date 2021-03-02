@@ -208,11 +208,61 @@ defmodule Linkify.Parser do
     if String.starts_with?(buffer, @prefix_extra), do: link_extra(buffer, opts), else: :nomatch
   end
 
-  defp strip_parens(buffer) do
-    buffer
-    |> String.trim_leading("(")
-    |> String.trim_trailing(")")
+  defp maybe_strip_parens(buffer) do
+    trimmed = trim_leading_paren(buffer)
+
+    with :next <- parens_check_trailing(buffer),
+         :next <- parens_found_email(trimmed),
+         :next <- parens_found_url(trimmed),
+         %{path: path, query: query} = URI.parse(trimmed),
+         :next <- parens_in_query(query),
+         :next <- parens_found_path_separator(path),
+         :next <- parens_path_has_open_paren(path),
+         :next <- parens_check_balanced(trimmed) do
+      buffer |> trim_leading_paren |> trim_trailing_paren
+    else
+      :both -> buffer |> trim_leading_paren |> trim_trailing_paren
+      :leading_only -> buffer |> trim_leading_paren
+      :noop -> buffer
+      _ -> buffer
+    end
   end
+
+  defp parens_check_trailing(buffer), do: (String.ends_with?(buffer, ")") && :next) || :noop
+
+  defp parens_found_email(trimmed),
+    do: (trim_trailing_paren(trimmed) |> email?(nil) && :both) || :next
+
+  defp parens_found_url(trimmed),
+    do: (trim_trailing_paren(trimmed) |> url?(nil) && :next) || :noop
+
+  defp parens_in_query(query), do: (is_nil(query) && :next) || :both
+  defp parens_found_path_separator(path), do: (String.contains?(path, "/") && :next) || :both
+  defp parens_path_has_open_paren(path), do: (String.contains?(path, "(") && :next) || :both
+
+  defp parens_check_balanced(trimmed) do
+    graphemes = String.graphemes(trimmed)
+    opencnt = graphemes |> Enum.count(fn x -> x == "(" end)
+    closecnt = graphemes |> Enum.count(fn x -> x == ")" end)
+
+    if opencnt == closecnt do
+      :leading_only
+    else
+      :next
+    end
+  end
+
+  defp trim_leading_paren(buffer) do
+    case buffer do
+      "(" <> buffer -> buffer
+      buffer -> buffer
+    end
+  end
+
+  defp trim_trailing_paren(buffer),
+    do:
+      (String.ends_with?(buffer, ")") && String.slice(buffer, 0, String.length(buffer) - 1)) ||
+        buffer
 
   defp strip_punctuation(buffer), do: String.replace(buffer, @delimiters, "")
 
@@ -382,7 +432,7 @@ defmodule Linkify.Parser do
       |> List.first()
       |> strip_en_apostrophes()
       |> strip_punctuation()
-      |> strip_parens()
+      |> maybe_strip_parens()
 
     case check_and_link(type, str, opts, user_acc) do
       :nomatch ->

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0 - 2021-XX-XX
+
+### Added
+
+- More robust detection of URLs inside a parenthetical
+
 ## 0.4.1 - 2020-12-21
 
 ### Fixed
