@@ -803,5 +803,13 @@ defmodule LinkifyTest do
 
       assert Linkify.link(text) == expected
     end
+
+    test "works with URLs ending in unbalanced closed paren, no path separator, and no query params" do
+      text = "http://example.com)"
+
+      expected = "<a href=\"http://example.com\">http://example.com</a>)"
+
+      assert Linkify.link(text) == expected
+    end
   end
 end
