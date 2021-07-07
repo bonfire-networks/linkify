@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.1 - 2021-07-07
+
+### Fixed
+
+- Parsing crash with URLs ending in unbalanced closed paren, no path separator, and no query parameters
+
 ## 0.5.0 - 2021-03-02
 
 ### Added

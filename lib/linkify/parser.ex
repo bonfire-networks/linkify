@@ -242,7 +242,9 @@ defmodule Linkify.Parser do
     do: (trim_trailing_paren(trimmed) |> url?(nil) && :next) || :noop
 
   defp parens_in_query(query), do: (is_nil(query) && :next) || :both
+  defp parens_found_path_separator(path) when is_nil(path), do: :next
   defp parens_found_path_separator(path), do: (String.contains?(path, "/") && :next) || :both
+  defp parens_path_has_open_paren(path) when is_nil(path), do: :next
   defp parens_path_has_open_paren(path), do: (String.contains?(path, "(") && :next) || :both
 
   defp parens_check_balanced(trimmed) do
