@@ -205,6 +205,19 @@ defmodule LinkifyTest do
       assert result_text ==
                "<a href=\"https://example.com/user/justOne\">#justOne</a>."
 
+      text = "#justOne "
+
+      {result_text, %{tags: _tags}} =
+        Linkify.link_map(text, %{tags: MapSet.new()},
+          hashtag: true,
+          hashtag_handler: handler,
+          hashtag_prefix: "https://example.com/user/",
+          rel: false
+        )
+
+      assert result_text ==
+               "<a href=\"https://example.com/user/justOne\">#justOne</a> "
+
       text = "#cofe <br><a href=\"https://pleroma.social/\">Source</a>"
 
       {_result_text, %{tags: tags}} =
