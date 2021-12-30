@@ -94,13 +94,19 @@ defmodule Linkify.Parser do
        ) do
     {buffer, user_acc} = link(buffer, opts, user_acc)
 
-    case Regex.run(@match_skipped_tag, text, capture: [:tag]) do
+    buffer =
+      case buffer do
+        [_, _, _] -> Enum.join(buffer)
+        _ -> buffer
+      end
+
+    case Regex.run(@match_skipped_tag, buffer, capture: [:tag]) do
       [tag] ->
         text = String.trim_leading(text, tag)
         do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, "<#{tag}"), :skip})
 
       nil ->
-        do_parse({text, user_acc}, opts, {"<", acc, {:open, 1}})
+        do_parse({text, user_acc}, opts, {"<", accumulate(acc, buffer, ""), {:open, 1}})
     end
   end
 
