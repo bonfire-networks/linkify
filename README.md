@@ -10,7 +10,7 @@ The package can be installed by adding `linkify` to your list of dependencies in
 
 ```elixir
 def deps do
-  [{:linkify, "~> 0.3"}]
+  [{:linkify, "~> 0.5"}]
 end
 ```
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.2 - 2022-01-09
+
+### Fixed
+
+- Fixed hashtags getting stripped at the end of lines.
+
 ## 0.5.1 - 2021-07-07
 
 ### Fixed
