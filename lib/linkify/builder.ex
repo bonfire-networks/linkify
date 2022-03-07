@@ -66,8 +66,7 @@ defmodule Linkify.Builder do
 
   defp format_attrs(attrs) do
     attrs
-    |> Enum.map(fn {key, value} -> ~s(#{key}="#{value}") end)
-    |> Enum.join(" ")
+    |> Enum.map_join(" ", fn {key, value} -> ~s(#{key}="#{value}") end)
   end
 
   defp truncate(url, false), do: url
