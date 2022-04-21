@@ -21,10 +21,7 @@ defmodule Linkify.Mixfile do
   end
 
   # Configuration for the OTP application
-  def application do
-    # Specify extra applications you'll use from Erlang/Elixir
-    [extra_applications: [:logger]]
-  end
+  def application, do: [ extra_applications: [:logger] ]
 
   # Dependencies can be Hex packages:
   defp deps do
