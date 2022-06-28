@@ -18,7 +18,7 @@ defmodule Linkify.Parser do
   @match_hashtag ~r/^(?<tag>\#[[:word:]_]*[[:alpha:]_·\x{200c}][[:word:]_·\p{M}\x{200c}]*)/u
 
   @match_skipped_tag ~r/^(?<tag>(a|code|pre)).*>*/
-  
+
   # @user
   # @user@example.com
   # &Community
@@ -397,6 +397,15 @@ defmodule Linkify.Parser do
       [hashtag] -> hashtag
       _ -> nil
     end
+  end
+
+  def maybe_link_url(url, %{url_handler: url_handler} = opts, user_acc) do
+    url
+    |> url_handler.(opts, user_acc)
+  end
+
+  def maybe_link_url(url, opts, _user_acc) do
+    link_url(url, opts)
   end
 
   def link_hashtag(nil, _buffer, _, _user_acc), do: :nomatch
