@@ -180,13 +180,13 @@ defmodule Linkify.Parser do
   defp do_parse({<<ch::8>> <> text, user_acc}, opts, {buffer, acc, state}, type),
     do: do_parse({text, user_acc}, opts, {buffer <> <<ch::8>>, acc, state}, type)
 
-  def check_and_link(:url, buffer, opts, _user_acc) do
+  def check_and_link(:url, buffer, opts, user_acc) do
     str = strip_parens(buffer)
 
     if url?(str, opts) do
       case @match_url |> Regex.run(str, capture: [:url]) |> hd() do
-        ^buffer -> link_url(buffer, opts)
-        url -> String.replace(buffer, url, link_url(url, opts))
+        ^buffer -> maybe_link_url(buffer, opts, user_acc)
+        url -> String.replace(buffer, url, maybe_link_url(url, opts, user_acc))
       end
     else
       buffer
@@ -280,6 +280,15 @@ defmodule Linkify.Parser do
       [hashtag] -> hashtag
       _ -> nil
     end
+  end
+
+  def maybe_link_url(url, %{url_handler: url_handler} = opts, user_acc) do
+    url
+    |> url_handler.(opts, user_acc)
+  end
+
+  def maybe_link_url(url, opts, _user_acc) do
+    link_url(url, opts)
   end
 
   def link_hashtag(nil, buffer, _, _user_acc), do: buffer
