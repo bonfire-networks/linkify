@@ -1,3 +1,7 @@
+# Copyright © 2017-2018 E-MetroTel
+# Copyright © 2019-2022 Pleroma Authors
+# SPDX-License-Identifier: MIT
+
 defmodule Linkify.Parser do
   @moduledoc """
   Module to handle parsing the the input string.

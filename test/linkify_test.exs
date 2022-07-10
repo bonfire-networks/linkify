@@ -1,3 +1,7 @@
+# Copyright © 2017-2018 E-MetroTel
+# Copyright © 2019-2022 Pleroma Authors
+# SPDX-License-Identifier: MIT
+
 defmodule LinkifyTest do
   use ExUnit.Case, async: true
   doctest Linkify
