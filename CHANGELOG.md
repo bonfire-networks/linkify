@@ -1,4 +1,9 @@
 # Changelog
+<!--
+Copyright © 2019-2022 Pleroma Authors
+SPDX-License-Identifier: MIT
+-->
+
 
 ## 0.5.2 - 2022-01-09
 

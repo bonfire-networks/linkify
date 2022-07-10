@@ -44,10 +44,10 @@ This is a fork of [auto_linker](https://github.com/smpallen99/auto_linker) by [S
 
 ## License
 
-Copyright © 2017 E-MetroTel
+Copyright © 2017-2018 E-MetroTel
 
-Copyright © 2019-2020 Pleroma Authors
+Copyright © 2019-2022 Pleroma Authors
 
-The source is released under the MIT License.
+SPDX-License-Identifier: MIT AND CC0-1.0
 
-Check [LICENSE](LICENSE) for more information.
+Check [REUSE Specification](https://reuse.software/spec/) on how to get more information.

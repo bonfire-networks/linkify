@@ -1,3 +1,6 @@
+# Copyright © 2017-2018 E-MetroTel
+# SPDX-License-Identifier: MIT
+
 language: elixir
 elixir:
   - 1.4.2

@@ -1,3 +1,7 @@
+# Copyright © 2017-2018 E-MetroTel
+# Copyright © 2019-2022 Pleroma Authors
+# SPDX-License-Identifier: MIT
+
 defmodule Linkify.Mixfile do
   use Mix.Project
 
@@ -37,9 +41,9 @@ defmodule Linkify.Mixfile do
 
   defp package do
     [
-      licenses: ["MIT"],
+      licenses: ["MIT", "CC0-1.0"],
       links: %{"GitLab" => "https://git.pleroma.social/pleroma/elixir-libraries/linkify"},
-      files: ~w(lib priv README.md mix.exs LICENSE)
+      files: ~w(lib priv README.md mix.exs)
     ]
   end
 
