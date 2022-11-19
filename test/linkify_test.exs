@@ -508,6 +508,32 @@ defmodule LinkifyTest do
 
       assert Linkify.link(text, mention: true, mention_prefix: "/users/") == expected
     end
+
+    test "mention @user@example.com:4000" do
+      text = "hey @user@example.com:4000"
+
+      expected =
+        "hey <a href=\"https://example.com:4000/user/user@example.com:4000\" target=\"_blank\">@user@example.com:4000</a>"
+
+      assert Linkify.link(text,
+               mention: true,
+               mention_prefix: "https://example.com:4000/user/",
+               new_window: true
+             ) == expected
+    end
+
+    test "mention @user@localhost:4000" do
+      text = "hey @user@localhost:4000"
+
+      expected =
+        "hey <a href=\"https://localhost:4000/user/user@localhost:4000\" target=\"_blank\">@user@localhost:4000</a>"
+
+      assert Linkify.link(text,
+               mention: true,
+               mention_prefix: "https://localhost:4000/user/",
+               new_window: true
+             ) == expected
+    end
   end
 
   describe "hashtag links" do

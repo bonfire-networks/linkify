@@ -25,7 +25,8 @@ defmodule Linkify.Parser do
   # &Community@instance.tld
   # +CategoryTag
   # +CategoryTag@instance.tld
-  @match_mention ~r"^[@|&|\+][a-zA-Z\d_-]+@[a-zA-Z0-9_-](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*|[@|&|\+][a-zA-Z\d_-]+"u
+  @match_mention ~r"^[@&\+][a-zA-Z\d_-]+@[a-zA-Z0-9_-](?:[a-zA-Z0-9-:]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-:]{0,61}[a-zA-Z0-9])?)*|[@&\+][a-zA-Z\d_-]+"u
+  # @match_mention ~r"([@&\+][a-zA-Z\d_-]+@[a-zA-Z0-9:._-]+)*|([@&\+][a-zA-Z\d_-]+)*"u
 
   @delimiters ~r/[,;:>?!]*$/
 
