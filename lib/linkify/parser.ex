@@ -15,7 +15,7 @@ defmodule Linkify.Parser do
 
   @get_scheme_host ~r{^\W*(?<scheme>https?:\/\/)?(?:[^@\n]+\\w@)?(?<host>[^:#~\/\n?]+)}u
 
-  @match_hashtag ~r/^(?<tag>\#[[:word:]_]*[[:alpha:]_·][[:word:]_·\p{M}]*)/u
+  @match_hashtag ~r/^(?<tag>\#[[:word:]_]*[[:alpha:]_·\x{200c}][[:word:]_·\p{M}\x{200c}]*)/u
 
   @match_skipped_tag ~r/^(?<tag>(a|code|pre)).*>*/
 
