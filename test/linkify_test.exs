@@ -555,6 +555,18 @@ defmodule LinkifyTest do
                hashtag_prefix: "https://example.com/tag/"
              ) == expected
     end
+
+    test "ZWNJ does not break up hashtags" do
+      text = "#ساٴين‌س"
+
+      expected = "<a href=\"https://example.com/tag/ساٴين‌س\">#ساٴين‌س</a>"
+
+      assert Linkify.link(text,
+               rel: false,
+               hashtag: true,
+               hashtag_prefix: "https://example.com/tag/"
+             ) == expected
+    end
   end
 
   describe "links" do
