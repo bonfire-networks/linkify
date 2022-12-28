@@ -301,7 +301,15 @@ defmodule Linkify.Parser do
     end
   end
 
-  defp valid_url?(url), do: !Regex.match?(@invalid_url, url)
+  defp valid_url?(url) do
+    with {_, [scheme]} <- {:regex, Regex.run(@get_scheme_host, url, capture: [:scheme])},
+         true <- scheme == "" do
+      !Regex.match?(@invalid_url, url)
+    else
+      _ ->
+        true
+    end
+  end
 
   @doc """
   Validates a URL's TLD. Returns a boolean.
