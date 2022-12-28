@@ -226,6 +226,11 @@ defmodule Linkify.ParserTest do
       assert parse(text) == "(check out <a href=\"http://google.com\">google.com</a>)"
     end
 
+    test "double dot in link is allowed" do
+      text = "https://example.to/something..mp3"
+      assert parse(text) == "<a href=\"#{text}\">#{text}</a>"
+    end
+
     test "do not link urls" do
       text = "google.com"
       assert parse(text, url: false) == text
