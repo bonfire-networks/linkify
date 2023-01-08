@@ -406,7 +406,7 @@ defmodule Linkify.Parser do
   end
 
   def maybe_link_url(url, opts, _user_acc) do
-    link_url(url, opts)
+    Builder.create_link(url, opts)
   end
 
   def link_hashtag(nil, _buffer, _, _user_acc), do: :nomatch
@@ -453,11 +453,6 @@ defmodule Linkify.Parser do
   end
 
   defp maybe_update_buffer(out, _match, _buffer), do: out
-
-  @doc false
-  def link_url(buffer, opts) do
-    Builder.create_link(buffer, opts)
-  end
 
   @doc false
   def link_email(buffer, opts) do

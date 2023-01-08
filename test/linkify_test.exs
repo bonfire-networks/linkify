@@ -6,6 +6,14 @@ defmodule LinkifyTest do
   use ExUnit.Case, async: true
   doctest Linkify
 
+  @opts [strip_prefix: true,
+        truncate: 30]
+
+  test "full link" do
+    assert Linkify.link("a link https://developer.mozilla.org/en-US/docs/Web/API/", @opts) ==
+             "a link <a href=\"https://developer.mozilla.org/en-US/docs/Web/API/\">developer.mozilla.org/en-US/...</a>"
+  end
+
   test "default link" do
     assert Linkify.link("google.com") ==
              "<a href=\"http://google.com\">google.com</a>"

@@ -11,6 +11,12 @@ defmodule Linkify.Builder do
   Create a link.
   """
   def create_link(text, opts) do
+    {display_url, attrs} = prepare_link(text, opts)
+
+    format_url(attrs, display_url, opts)
+  end
+
+  def prepare_link(text, opts) do
     url = add_scheme(text)
 
     []
@@ -18,7 +24,7 @@ defmodule Linkify.Builder do
     |> build_attrs(url, opts, :target)
     |> build_attrs(url, opts, :class)
     |> build_attrs(url, opts, :href)
-    |> format_url(text, opts)
+    |> prepare_url_attrs(text, opts)
   end
 
   defp build_attrs(attrs, uri, %{rel: get_rel}, :rel) when is_function(get_rel, 1) do
@@ -55,17 +61,25 @@ defmodule Linkify.Builder do
 
   defp add_scheme("http://" <> _ = url), do: url
   defp add_scheme("https://" <> _ = url), do: url
-  defp add_scheme(url), do: "http://" <> url
+  defp add_scheme(url) do
+    if String.contains?(url, "://") do
+      url
+    else
+     "http://" <> url
+    end
+  end
 
-  defp format_url(attrs, url, opts) do
-    url =
+  defp prepare_url_attrs(attrs, url, opts) do
+    display_url =
       url
       |> strip_prefix(Map.get(opts, :strip_prefix, false))
       |> truncate(Map.get(opts, :truncate, false))
 
-    attrs
-    |> format_attrs()
-    |> format_tag(url, opts)
+    {display_url, attrs}
+  end
+
+  def format_url(attrs, display_url, _opts \\ []) do
+    "<a #{format_attrs(attrs)}>#{display_url}</a>"
   end
 
   defp format_attrs(attrs) do
