@@ -151,7 +151,7 @@ defmodule LinkifyTest do
 
       handler = fn "@" <> user = mention, buffer, _opts, acc ->
         if Enum.member?(valid_users, user) do
-          link = ~s(<a href="https://example.com/user/#{user}" data-user="#{user}">#{mention}</a>)
+          link = ~s(<a href="https://example.local/user/#{user}" data-user="#{user}">#{mention}</a>)
           {link, %{acc | mentions: MapSet.put(acc.mentions, {mention, user})}}
         else
           {buffer, acc}
@@ -165,7 +165,7 @@ defmodule LinkifyTest do
         )
 
       assert result_text ==
-               "hello <a href=\"https://example.com/user/user\" data-user=\"user\">@user</a>, <a href=\"https://example.com/user/valid_user\" data-user=\"valid_user\">@valid_user</a> and @invalid_user"
+               "hello <a href=\"https://example.local/user/user\" data-user=\"user\">@user</a>, <a href=\"https://example.local/user/valid_user\" data-user=\"valid_user\">@valid_user</a> and @invalid_user"
 
       assert mentions |> MapSet.to_list() |> Enum.map(&elem(&1, 1)) == valid_users
     end
@@ -182,12 +182,12 @@ defmodule LinkifyTest do
         Linkify.link_map(text, %{tags: MapSet.new()},
           hashtag: true,
           hashtag_handler: handler,
-          hashtag_prefix: "https://example.com/user/",
+          hashtag_prefix: "https://example.local/user/",
           rel: false
         )
 
       assert result_text ==
-               "<a href=\"https://example.com/user/hello\">#hello</a> <a href=\"https://example.com/user/world\">#world</a>"
+               "<a href=\"https://example.local/user/hello\">#hello</a> <a href=\"https://example.local/user/world\">#world</a>"
 
       assert MapSet.to_list(tags) == ["#hello", "#world"]
 
@@ -308,13 +308,13 @@ defmodule LinkifyTest do
 
     test "mentions handler with hostname/@user links" do
       text =
-        "hi @user, take a look at this post: https://example.com/@valid_user/posts/9w5AkQp956XIh74apc"
+        "hi @user, take a look at this post: https://example.local/@valid_user/posts/9w5AkQp956XIh74apc"
 
       valid_users = ["user", "valid_user"]
 
       handler = fn "@" <> user = mention, buffer, _opts, acc ->
         if Enum.member?(valid_users, user) do
-          link = ~s(<a href="https://example.com/user/#{user}" data-user="#{user}">#{mention}</a>)
+          link = ~s(<a href="https://example.local/user/#{user}" data-user="#{user}">#{mention}</a>)
           {link, %{acc | mentions: MapSet.put(acc.mentions, {mention, user})}}
         else
           {buffer, acc}
@@ -329,7 +329,7 @@ defmodule LinkifyTest do
         )
 
       assert result_text ==
-               "hi <a href=\"https://example.com/user/user\" data-user=\"user\">@user</a>, take a look at this post: <a href=\"https://example.com/@valid_user/posts/9w5AkQp956XIh74apc\" target=\"_blank\">https://example.com/@valid_user/posts/9w5AkQp956XIh74apc</a>"
+               "hi <a href=\"https://example.local/user/user\" data-user=\"user\">@user</a>, take a look at this post: <a href=\"https://example.local/@valid_user/posts/9w5AkQp956XIh74apc\" target=\"_blank\">https://example.local/@valid_user/posts/9w5AkQp956XIh74apc</a>"
 
       assert mentions |> MapSet.to_list() |> Enum.map(&elem(&1, 1)) == ["user"]
     end
@@ -431,11 +431,11 @@ defmodule LinkifyTest do
   describe "mentions" do
     test "simple mentions" do
       expected =
-        ~s{hello <a href="https://example.com/user/user" target="_blank">@user</a> and <a href="https://example.com/user/anotherUser" target="_blank">@anotherUser</a>.}
+        ~s{hello <a href="https://example.local/user/user" target="_blank">@user</a> and <a href="https://example.local/user/anotherUser" target="_blank">@anotherUser</a>.}
 
       assert Linkify.link("hello @user and @anotherUser.",
                mention: true,
-               mention_prefix: "https://example.com/user/",
+               mention_prefix: "https://example.local/user/",
                new_window: true
              ) == expected
     end
@@ -461,11 +461,11 @@ defmodule LinkifyTest do
       text = "hey @user@example.com"
 
       expected =
-        "hey <a href=\"https://example.com/user/user@example.com\" target=\"_blank\">@user@example.com</a>"
+        "hey <a href=\"https://example.local/user/user@example.com\" target=\"_blank\">@user@example.com</a>"
 
       assert Linkify.link(text,
                mention: true,
-               mention_prefix: "https://example.com/user/",
+               mention_prefix: "https://example.local/user/",
                new_window: true
              ) == expected
 
@@ -521,11 +521,11 @@ defmodule LinkifyTest do
       text = "hey @user@example.com:4000"
 
       expected =
-        "hey <a href=\"https://example.com:4000/user/user@example.com:4000\" target=\"_blank\">@user@example.com:4000</a>"
+        "hey <a href=\"https://example.local:4000/user/user@example.com:4000\" target=\"_blank\">@user@example.com:4000</a>"
 
       assert Linkify.link(text,
                mention: true,
-               mention_prefix: "https://example.com:4000/user/",
+               mention_prefix: "https://example.local:4000/user/",
                new_window: true
              ) == expected
     end
@@ -547,11 +547,11 @@ defmodule LinkifyTest do
   describe "hashtag links" do
     test "hashtag" do
       expected =
-        " one <a href=\"https://example.com/tag/2two\" target=\"_blank\">#2two</a> three <a href=\"https://example.com/tag/four\" target=\"_blank\">#four</a>."
+        " one <a href=\"https://example.local/tag/2two\" target=\"_blank\">#2two</a> three <a href=\"https://example.local/tag/four\" target=\"_blank\">#four</a>."
 
       assert Linkify.link(" one #2two three #four.",
                hashtag: true,
-               hashtag_prefix: "https://example.com/tag/",
+               hashtag_prefix: "https://example.local/tag/",
                new_window: true
              ) == expected
     end
@@ -596,12 +596,12 @@ defmodule LinkifyTest do
       text = "google.com#test #test google.com/#test #tag"
 
       expected =
-        "<a href=\"http://google.com#test\">google.com#test</a> <a href=\"https://example.com/tag/test\">#test</a> <a href=\"http://google.com/#test\">google.com/#test</a> <a href=\"https://example.com/tag/tag\">#tag</a>"
+        "<a href=\"http://google.com#test\">google.com#test</a> <a href=\"https://example.local/tag/test\">#test</a> <a href=\"http://google.com/#test\">google.com/#test</a> <a href=\"https://example.local/tag/tag\">#tag</a>"
 
       assert Linkify.link(text,
                hashtag: true,
                rel: false,
-               hashtag_prefix: "https://example.com/tag/"
+               hashtag_prefix: "https://example.local/tag/"
              ) == expected
     end
 
@@ -609,12 +609,12 @@ defmodule LinkifyTest do
       text = "#漢字 #は #тест #ทดสอบ"
 
       expected =
-        "<a href=\"https://example.com/tag/漢字\">#漢字</a> <a href=\"https://example.com/tag/は\">#は</a> <a href=\"https://example.com/tag/тест\">#тест</a> <a href=\"https://example.com/tag/ทดสอบ\">#ทดสอบ</a>"
+        "<a href=\"https://example.local/tag/漢字\">#漢字</a> <a href=\"https://example.local/tag/は\">#は</a> <a href=\"https://example.local/tag/тест\">#тест</a> <a href=\"https://example.local/tag/ทดสอบ\">#ทดสอบ</a>"
 
       assert Linkify.link(text,
                rel: false,
                hashtag: true,
-               hashtag_prefix: "https://example.com/tag/"
+               hashtag_prefix: "https://example.local/tag/"
              ) == expected
     end
 
@@ -705,24 +705,24 @@ defmodule LinkifyTest do
     end
 
     test "hostname/@user" do
-      text = "https://example.com/@user"
+      text = "https://example.local/@user"
 
       expected =
-        "<a href=\"https://example.com/@user\" target=\"_blank\">https://example.com/@user</a>"
+        "<a href=\"https://example.local/@user\" target=\"_blank\">https://example.local/@user</a>"
 
       assert Linkify.link(text, new_window: true) == expected
 
-      text = "https://example.com:4000/@user"
+      text = "https://example.local:4000/@user"
 
       expected =
-        "<a href=\"https://example.com:4000/@user\" target=\"_blank\">https://example.com:4000/@user</a>"
+        "<a href=\"https://example.local:4000/@user\" target=\"_blank\">https://example.local:4000/@user</a>"
 
       assert Linkify.link(text, new_window: true) == expected
 
-      text = "https://example.com:4000/@user"
+      text = "https://example.local:4000/@user"
 
       expected =
-        "<a href=\"https://example.com:4000/@user\" target=\"_blank\">https://example.com:4000/@user</a>"
+        "<a href=\"https://example.local:4000/@user\" target=\"_blank\">https://example.local:4000/@user</a>"
 
       assert Linkify.link(text, new_window: true) == expected
 
