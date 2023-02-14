@@ -194,17 +194,17 @@ defmodule Linkify.ParserTest do
     end
 
     test "do not link parens" do
-      text = " foo (https://example.com/path/folder/), bar"
+      text = " foo (https://example.local/path/folder/), bar"
 
       expected =
-        " foo (<a href=\"https://example.com/path/folder/\">https://example.com/path/folder/</a>), bar"
+        " foo (<a href=\"https://example.local/path/folder/\">https://example.local/path/folder/</a>), bar"
 
       assert parse(text, class: false, rel: false, scheme: true) == expected
 
       text = " foo (example.com/path/folder/), bar"
 
       expected =
-        " foo (<a href=\"http://example.com/path/folder/\">example.com/path/folder/</a>), bar"
+        " foo (<a href=\"http://example.local/path/folder/\">example.com/path/folder/</a>), bar"
 
       assert parse(text, class: false, rel: false) == expected
     end
