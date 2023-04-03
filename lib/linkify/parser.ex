@@ -25,7 +25,8 @@ defmodule Linkify.Parser do
   # &Community@instance.tld
   # +CategoryTag
   # +CategoryTag@instance.tld
-  @match_mention ~r"^[@&\+][a-zA-Z\d_-]+@[a-zA-Z0-9_-](?:[a-zA-Z0-9-:]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-:]{0,61}[a-zA-Z0-9])?)*|[@&\+][a-zA-Z\d_-]+"u
+  @match_mention ~r/^(?<prefix>[@&\+])(?<user>[a-zA-Z\d_-]+)(@(?<host>[^@]+))?$/
+  # @match_mention ~r"^[@&\+][a-zA-Z\d_-]+@[a-zA-Z0-9_-](?:[a-zA-Z0-9-:]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-:]{0,61}[a-zA-Z0-9])?)*|[@&\+][a-zA-Z\d_-]+"u
   # @match_mention ~r"([@&\+][a-zA-Z\d_-]+@[a-zA-Z0-9:._-]+)*|([@&\+][a-zA-Z\d_-]+)*"u
 
   @delimiters ~r/[,;:>?!]*$/
@@ -193,14 +194,14 @@ defmodule Linkify.Parser do
   defp do_parse({<<ch::8>> <> text, user_acc}, opts, {buffer, acc, state}),
     do: do_parse({text, user_acc}, opts, {buffer <> <<ch::8>>, acc, state})
 
-  def check_and_link(:url, buffer, opts, _user_acc) do
+  def check_and_link(:url, buffer, opts, user_acc) do
     if url?(buffer, opts) do
       case @match_url |> Regex.run(buffer, capture: [:url]) |> hd() do
         ^buffer ->
-          link_url(buffer, opts)
+          link_url(buffer, opts, user_acc)
 
         url ->
-          link = link_url(url, opts)
+          link = link_url(url, opts, user_acc)
           restore_stripped_symbols(buffer, url, link)
       end
     else
@@ -214,7 +215,7 @@ defmodule Linkify.Parser do
 
   def check_and_link(:mention, buffer, opts, user_acc) do
     buffer
-    |> match_mention
+    |> match_mention(opts)
     |> link_mention(buffer, opts, user_acc)
   end
 
@@ -310,7 +311,7 @@ defmodule Linkify.Parser do
   def email?(buffer, opts) do
     # Note: In reality the local part can only be checked by the remote server
     case Regex.run(~r/^(?<user>.*)@(?<host>[^@]+)$/, buffer, capture: [:user, :host]) do
-      [_user, hostname] -> valid_hostname?(hostname) && valid_tld?(hostname, opts)
+      [_user, hostname] -> valid_hostname?(hostname, opts) && valid_tld?(hostname, opts)
       _ -> false
     end
   end
@@ -350,6 +351,7 @@ defmodule Linkify.Parser do
         tld = host |> String.trim_trailing(".") |> String.split(".") |> List.last()
         MapSet.member?(@tlds, tld)
     end
+    |> IO.inspect(label: url)
   end
 
   def safe_to_integer(string, base \\ 10) do
@@ -367,30 +369,37 @@ defmodule Linkify.Parser do
   end
 
   # IDN-compatible, ported from musl-libc's is_valid_hostname()
-  def valid_hostname?(hostname) do
-    hostname
-    |> String.to_charlist()
-    |> Enum.any?(fn s ->
-      !(s >= 0x80 || s in 0x30..0x39 || s in 0x41..0x5A || s in 0x61..0x7A || s in '.-')
-    end)
-    |> Kernel.!()
+  def valid_hostname?(hostname, opts) do
+    if opts[:validate_hostname] !=false do
+      hostname
+      |> String.to_charlist()
+      |> Enum.any?(fn s ->
+        !(s >= 0x80 || s in 0x30..0x39 || s in 0x41..0x5A || s in 0x61..0x7A || s in '.-')
+      end)
+      |> Kernel.!()
+    else
+      true
+    end
   end
 
-  def match_mention(buffer) do
-    case Regex.run(~r/^([@&\+]?<user>[a-zA-Z\d_-]+)(@(?<host>[^@]+))?$/, buffer,
-           capture: [:user, :host]
+  def match_mention(buffer, opts) do
+    case Regex.run(@match_mention, buffer,
+           capture: [:prefix, :user, :host]
          ) do
-      [user, ""] ->
-        user
+      [prefix, user, ""] ->
+        (prefix || "@") <> user
 
-      [user, hostname] ->
-        if valid_hostname?(hostname) && valid_tld?(hostname, []),
-          do: user <> "@" <> hostname,
+      [prefix, user, hostname] ->
+        # IO.inspect(hostname, label: "match_mention")
+        if valid_hostname?(hostname, opts) |> IO.inspect && valid_tld?(hostname, opts) |> IO.inspect,
+          do: (prefix || "@") <> user <> "@" <> hostname,
           else: nil
 
-      _ ->
+      other ->
+        IO.inspect(other)
         nil
     end
+    |> IO.inspect(label: "match_mention")
   end
 
   def match_hashtag(buffer) do
@@ -400,12 +409,12 @@ defmodule Linkify.Parser do
     end
   end
 
-  def maybe_link_url(url, %{url_handler: url_handler} = opts, user_acc) do
+  def link_url(url, %{url_handler: url_handler} = opts, user_acc) do
     url
     |> url_handler.(opts, user_acc)
   end
 
-  def maybe_link_url(url, opts, _user_acc) do
+  def link_url(url, opts, _user_acc) do
     Builder.create_link(url, opts)
   end
 
