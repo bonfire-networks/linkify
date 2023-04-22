@@ -396,10 +396,10 @@ defmodule Linkify.Parser do
           else: nil
 
       other ->
-        IO.inspect(other)
+        # IO.inspect(other)
         nil
     end
-    |> IO.inspect(label: "match_mention")
+    # |> IO.inspect(label: "match_mention")
   end
 
   def match_hashtag(buffer) do
