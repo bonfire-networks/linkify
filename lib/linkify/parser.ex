@@ -7,6 +7,8 @@ defmodule Linkify.Parser do
   Module to handle parsing the the input string.
   """
 
+  import Untangle
+
   alias Linkify.Builder
 
   @invalid_url ~r/(\.\.+)|(^(\d+\.){1,2}\d+$)/
@@ -351,7 +353,7 @@ defmodule Linkify.Parser do
         tld = host |> String.trim_trailing(".") |> String.split(".") |> List.last()
         MapSet.member?(@tlds, tld)
     end
-    |> IO.inspect(label: url)
+    |> debug(url)
   end
 
   def safe_to_integer(string, base \\ 10) do
@@ -390,16 +392,16 @@ defmodule Linkify.Parser do
         (prefix || "@") <> user
 
       [prefix, user, hostname] ->
-        # IO.inspect(hostname, label: "match_mention")
-        if valid_hostname?(hostname, opts) |> IO.inspect && valid_tld?(hostname, opts) |> IO.inspect,
+        # debug(hostname, "match_mention")
+        if valid_hostname?(hostname, opts) |> debug && valid_tld?(hostname, opts) |> debug,
           do: (prefix || "@") <> user <> "@" <> hostname,
           else: nil
 
       other ->
-        # IO.inspect(other)
+        debug(other)
         nil
     end
-    # |> IO.inspect(label: "match_mention")
+    # |> debug("match_mention")
   end
 
   def match_hashtag(buffer) do
@@ -435,8 +437,8 @@ defmodule Linkify.Parser do
   def link_mention(nil, _buffer, _, _user_acc), do: :nomatch
 
   def link_mention(mention, buffer, %{mention_handler: mention_handler} = opts, user_acc) do
-    # IO.inspect(link_mention: mention)
-    # IO.inspect(link_mention: buffer)
+    # debug(mention)
+    # debug(buffer)
 
     mention
     |> mention_handler.(buffer, opts, user_acc)
@@ -444,7 +446,7 @@ defmodule Linkify.Parser do
   end
 
   def link_mention(mention, buffer, opts, _user_acc) do
-    # IO.inspect(link_mention_default: mention)
+    # debug(mention)
 
     mention
     |> Builder.create_mention_link(buffer, opts)
