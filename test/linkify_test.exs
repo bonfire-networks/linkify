@@ -773,6 +773,11 @@ defmodule LinkifyTest do
         "Check out this article: <a href=\"https://www.wired.com./story/marissa-mayer-startup-sunshine-contacts/\">https://www.wired.com./story/marissa-mayer-startup-sunshine-contacts/</a>"
 
       assert Linkify.link(text) == expected
+
+      text = "https://www.wired.com;/story/marissa-mayer-startup-sunshine-contacts/"
+
+      refute Linkify.link(text) ==
+               "<a href=\"https://www.wired.com;/story/marissa-mayer-startup-sunshine-contacts/\">https://www.wired.com;/story/marissa-mayer-startup-sunshine-contacts/</a>"
     end
 
     test "Do not link trailing punctuation" do
