@@ -1,8 +1,18 @@
 # Changelog
 <!--
-Copyright © 2019-2022 Pleroma Authors
+Copyright © 2019-2024 Pleroma Authors
 SPDX-License-Identifier: MIT
 -->
+
+## 0.6.0 - 2024-??-??
+
+### Changed
+
+- No longer strips periods from the end of a link as it may break the link
+
+### Fixed
+
+- Incorrectly linked URLs where the domain part has a trailing character such as ,;:>?!
 
 
 ## 0.5.2 - 2022-01-09
