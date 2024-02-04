@@ -328,7 +328,7 @@ defmodule LinkifyTest do
 
     test "mentions handler and extra links" do
       text =
-        "hi @user, text me asap xmpp:me@cofe.ai, (or contact me at me@cofe.ai), please.<br>cofe.ai."
+        "hi @user, text me asap xmpp:me@cofe.ai, (or contact me at me@cofe.ai), please.<br>cofe.ai"
 
       valid_users = ["user", "cofe"]
 
@@ -350,7 +350,7 @@ defmodule LinkifyTest do
         )
 
       assert result_text ==
-               "hi <a href=\"https://example.com/user/user\" data-user=\"user\">@user</a>, text me asap <a href=\"xmpp:me@cofe.ai\">xmpp:me@cofe.ai</a>, (or contact me at <a href=\"mailto:me@cofe.ai\">me@cofe.ai</a>), please.<br><a href=\"http://cofe.ai\">cofe.ai</a>."
+               "hi <a href=\"https://example.com/user/user\" data-user=\"user\">@user</a>, text me asap <a href=\"xmpp:me@cofe.ai\">xmpp:me@cofe.ai</a>, (or contact me at <a href=\"mailto:me@cofe.ai\">me@cofe.ai</a>), please.<br><a href=\"http://cofe.ai\">cofe.ai</a>"
 
       assert MapSet.to_list(mentions) == [{"@user", "user"}]
     end
@@ -395,9 +395,9 @@ defmodule LinkifyTest do
   describe "mentions" do
     test "simple mentions" do
       expected =
-        ~s{hello <a href="https://example.com/user/user" target="_blank">@user</a> and <a href="https://example.com/user/anotherUser" target="_blank">@anotherUser</a>.}
+        ~s{hello <a href="https://example.com/user/user" target="_blank">@user</a> and <a href="https://example.com/user/anotherUser" target="_blank">@anotherUser</a>}
 
-      assert Linkify.link("hello @user and @anotherUser.",
+      assert Linkify.link("hello @user and @anotherUser",
                mention: true,
                mention_prefix: "https://example.com/user/",
                new_window: true
@@ -780,14 +780,7 @@ defmodule LinkifyTest do
                "<a href=\"https://www.wired.com;/story/marissa-mayer-startup-sunshine-contacts/\">https://www.wired.com;/story/marissa-mayer-startup-sunshine-contacts/</a>"
     end
 
-    test "Do not link trailing punctuation" do
-      text = "You can find more info at https://pleroma.social."
-
-      expected =
-        "You can find more info at <a href=\"https://pleroma.social\">https://pleroma.social</a>."
-
-      assert Linkify.link(text) == expected
-
+    test "Do not link most trailing punctuation (excluding periods, which are allowed in URLs)" do
       text = "Of course it was google.com!!"
 
       expected = "Of course it was <a href=\"http://google.com\">google.com</a>!!"

@@ -19,7 +19,7 @@ defmodule Linkify.Parser do
 
   @match_skipped_tag ~r/^(?<tag>(a|code|pre)).*>*/
 
-  @delimiters ~r/[,.;:>?!]*$/
+  @delimiters ~r/[,;:>?!]*$/
 
   @en_apostrophes [
     "'",
