@@ -423,9 +423,9 @@ defmodule LinkifyTest do
   describe "mentions" do
     test "simple mentions" do
       expected =
-        ~s{hello <a href="https://example.com/user/user" target="_blank">@user</a> and <a href="https://example.com/user/anotherUser" target="_blank">@anotherUser</a>}
+        ~s{hello <a href="https://example.com/user/user" target="_blank">@user</a> and <a href="https://example.com/user/anotherUser" target="_blank">@anotherUser</a>.}
 
-      assert Linkify.link("hello @user and @anotherUser",
+      assert Linkify.link("hello @user and @anotherUser.",
                mention: true,
                mention_prefix: "https://example.com/user/",
                new_window: true
