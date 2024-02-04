@@ -383,6 +383,34 @@ defmodule LinkifyTest do
       assert MapSet.to_list(mentions) == [{"@friend", "friend"}]
     end
 
+    test "mentions with apostrophes" do
+      text = "I'm going to @friend's house this weekend"
+
+      valid_users = ["friend"]
+
+      handler = fn "@" <> user = mention, buffer, _opts, acc ->
+        if Enum.member?(valid_users, user) do
+          link = ~s(<a href="https://example.com/user/#{user}" data-user="#{user}">#{mention}</a>)
+          {link, %{acc | mentions: MapSet.put(acc.mentions, {mention, user})}}
+        else
+          {buffer, acc}
+        end
+      end
+
+      {result_text, %{mentions: mentions}} =
+        Linkify.link_map(text, %{mentions: MapSet.new()},
+          mention: true,
+          mention_handler: handler,
+          extra: true,
+          email: true
+        )
+
+      assert result_text ==
+               "I'm going to <a href=\"https://example.com/user/friend\" data-user=\"friend\">@friend</a>'s house this weekend"
+
+      assert MapSet.to_list(mentions) == [{"@friend", "friend"}]
+    end
+
     test "href handler" do
       text = ~s(google.com)
 
