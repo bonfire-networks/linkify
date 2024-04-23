@@ -32,8 +32,11 @@ iex> Linkify.link("google.com", new_window: true)
 iex> Linkify.link("google.com", new_window: true, rel: "noopener noreferrer")
 "<a href=\"http://google.com\" target=\"_blank\" rel=\"noopener noreferrer\">google.com</a>"
 
-iex> Linkify.link("Hello @niceguy17@pleroma.com", mention: true, mention_prefix: "/users/")
-"Hello <a href=\"/users/niceguy17@social.com\">@niceguy17@social.com</a>"
+iex> Linkify.link("Hello @alice@social.com", mention: true, mention_prefix: "/users/")
+"Hello <a href=\"/users/alice@social.com\">@alice@social.com</a>"
+
+iex> Linkify.link("one #two three", hashtag: true, hashtag_prefix: "https://example.local/tag/")
+"one <a href=\"https://example.local/tag/2two\">#two</a> three"
 ```
 
 <!-- See the [Docs](https://hexdocs.pm/linkify/) for more examples -->
