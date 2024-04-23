@@ -10,7 +10,7 @@ The package can be installed by adding `linkify` to your list of dependencies in
 
 ```elixir
 def deps do
-  [{:linkify, "~> 0.5"}]
+  [{:linkify, git: "https://github.com/bonfire-networks/linkify"}]
 end
 ```
 
@@ -33,20 +33,22 @@ iex> Linkify.link("google.com", new_window: true, rel: "noopener noreferrer")
 "<a href=\"http://google.com\" target=\"_blank\" rel=\"noopener noreferrer\">google.com</a>"
 
 iex> Linkify.link("Hello @niceguy17@pleroma.com", mention: true, mention_prefix: "/users/")
-"Hello <a href=\"/users/niceguy17@pleroma.com\">@niceguy17@pleroma.com</a>"
+"Hello <a href=\"/users/niceguy17@social.com\">@niceguy17@social.com</a>"
 ```
 
-See the [Docs](https://hexdocs.pm/linkify/) for more examples
+<!-- See the [Docs](https://hexdocs.pm/linkify/) for more examples -->
 
 ## Acknowledgments
 
-This is a fork of [auto_linker](https://github.com/smpallen99/auto_linker) by [Steve Pallen](https://github.com/smpallen99).
+This is a fork of [Akkoma's Linkify](https://akkoma.dev/AkkomaGang/linkify.git), itself a fork of [auto_linker](https://github.com/smpallen99/auto_linker) by [Steve Pallen](https://github.com/smpallen99).
 
 ## License
 
 Copyright © 2017-2018 E-MetroTel
 
-Copyright © 2019-2022 Pleroma Authors
+Copyright © 2019-2022 Akkoma and Pleroma Authors
+
+Copyright © 2022-2024 Bonfire Authors
 
 SPDX-License-Identifier: MIT AND CC0-1.0
 
