@@ -209,10 +209,7 @@ defmodule Linkify.ParserTest do
       assert parse(text, class: false, rel: false) == expected
     end
 
-    test "do not link punctuation marks in the end" do
-      text = "google.com."
-      assert parse(text) == "<a href=\"http://google.com\">google.com</a>."
-
+    test "do not link reserved chars (punctuation marks) in the end" do
       text = "google.com;"
       assert parse(text) == "<a href=\"http://google.com\">google.com</a>;"
 
@@ -224,6 +221,14 @@ defmodule Linkify.ParserTest do
 
       text = "(check out google.com)"
       assert parse(text) == "(check out <a href=\"http://google.com\">google.com</a>)"
+    end
+
+    test "links include periods at the end" do
+      text =
+        "The article is at https://en.wikipedia.org/wiki/Revlon,_Inc._v._MacAndrews_%26_Forbes_Holdings,_Inc."
+
+      assert parse(text) ==
+               "The article is at <a href=\"https://en.wikipedia.org/wiki/Revlon,_Inc._v._MacAndrews_%26_Forbes_Holdings,_Inc.\">https://en.wikipedia.org/wiki/Revlon,_Inc._v._MacAndrews_%26_Forbes_Holdings,_Inc.</a>"
     end
 
     test "double dot in link is allowed" do

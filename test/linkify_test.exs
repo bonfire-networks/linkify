@@ -328,7 +328,7 @@ defmodule LinkifyTest do
 
     test "mentions handler and extra links" do
       text =
-        "hi @user, text me asap xmpp:me@cofe.ai, (or contact me at me@cofe.ai), please.<br>cofe.ai."
+        "hi @user, text me asap xmpp:me@cofe.ai, (or contact me at me@cofe.ai), please.<br>cofe.ai"
 
       valid_users = ["user", "cofe"]
 
@@ -350,7 +350,7 @@ defmodule LinkifyTest do
         )
 
       assert result_text ==
-               "hi <a href=\"https://example.com/user/user\" data-user=\"user\">@user</a>, text me asap <a href=\"xmpp:me@cofe.ai\">xmpp:me@cofe.ai</a>, (or contact me at <a href=\"mailto:me@cofe.ai\">me@cofe.ai</a>), please.<br><a href=\"http://cofe.ai\">cofe.ai</a>."
+               "hi <a href=\"https://example.com/user/user\" data-user=\"user\">@user</a>, text me asap <a href=\"xmpp:me@cofe.ai\">xmpp:me@cofe.ai</a>, (or contact me at <a href=\"mailto:me@cofe.ai\">me@cofe.ai</a>), please.<br><a href=\"http://cofe.ai\">cofe.ai</a>"
 
       assert MapSet.to_list(mentions) == [{"@user", "user"}]
     end
@@ -379,6 +379,34 @@ defmodule LinkifyTest do
 
       assert result_text ==
                "hi <a href=\"https://example.com/user/friend\" data-user=\"friend\">@friend</a>, here is my email<br><br><a href=\"mailto:user@user.me\">user@user.me</a>"
+
+      assert MapSet.to_list(mentions) == [{"@friend", "friend"}]
+    end
+
+    test "mentions with apostrophes" do
+      text = "I'm going to @friend's house this weekend"
+
+      valid_users = ["friend"]
+
+      handler = fn "@" <> user = mention, buffer, _opts, acc ->
+        if Enum.member?(valid_users, user) do
+          link = ~s(<a href="https://example.com/user/#{user}" data-user="#{user}">#{mention}</a>)
+          {link, %{acc | mentions: MapSet.put(acc.mentions, {mention, user})}}
+        else
+          {buffer, acc}
+        end
+      end
+
+      {result_text, %{mentions: mentions}} =
+        Linkify.link_map(text, %{mentions: MapSet.new()},
+          mention: true,
+          mention_handler: handler,
+          extra: true,
+          email: true
+        )
+
+      assert result_text ==
+               "I'm going to <a href=\"https://example.com/user/friend\" data-user=\"friend\">@friend</a>'s house this weekend"
 
       assert MapSet.to_list(mentions) == [{"@friend", "friend"}]
     end
@@ -773,16 +801,14 @@ defmodule LinkifyTest do
         "Check out this article: <a href=\"https://www.wired.com./story/marissa-mayer-startup-sunshine-contacts/\">https://www.wired.com./story/marissa-mayer-startup-sunshine-contacts/</a>"
 
       assert Linkify.link(text) == expected
+
+      text = "https://www.wired.com;/story/marissa-mayer-startup-sunshine-contacts/"
+
+      refute Linkify.link(text) ==
+               "<a href=\"https://www.wired.com;/story/marissa-mayer-startup-sunshine-contacts/\">https://www.wired.com;/story/marissa-mayer-startup-sunshine-contacts/</a>"
     end
 
-    test "Do not link trailing punctuation" do
-      text = "You can find more info at https://pleroma.social."
-
-      expected =
-        "You can find more info at <a href=\"https://pleroma.social\">https://pleroma.social</a>."
-
-      assert Linkify.link(text) == expected
-
+    test "Do not link most trailing punctuation (excluding periods, which are allowed in URLs)" do
       text = "Of course it was google.com!!"
 
       expected = "Of course it was <a href=\"http://google.com\">google.com</a>!!"

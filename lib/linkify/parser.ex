@@ -19,7 +19,7 @@ defmodule Linkify.Parser do
 
   @match_skipped_tag ~r/^(?<tag>(a|code|pre)).*>*/
 
-  @delimiters ~r/[,.;:>?!]*$/
+  @delimiters ~r/[,;:>?!]*$/
 
   @en_apostrophes [
     "'",
@@ -223,6 +223,11 @@ defmodule Linkify.Parser do
     if String.starts_with?(buffer, @prefix_extra), do: link_extra(buffer, opts), else: :nomatch
   end
 
+  defp maybe_strip_trailing_period(buffer, type) when type in [:mention, :hashtag, :email],
+    do: String.trim_trailing(buffer, ".")
+
+  defp maybe_strip_trailing_period(buffer, _), do: buffer
+
   defp maybe_strip_parens(buffer) do
     trimmed = trim_leading_paren(buffer)
 
@@ -333,7 +338,7 @@ defmodule Linkify.Parser do
         true
 
       true ->
-        tld = host |> strip_punctuation() |> String.split(".") |> List.last()
+        tld = host |> String.trim_trailing(".") |> String.split(".") |> List.last()
         MapSet.member?(@tlds, tld)
     end
   end
@@ -457,6 +462,7 @@ defmodule Linkify.Parser do
       |> List.first()
       |> strip_en_apostrophes()
       |> strip_punctuation()
+      |> maybe_strip_trailing_period(type)
       |> maybe_strip_parens()
 
     case check_and_link(type, str, opts, user_acc) do
