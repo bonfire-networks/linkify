@@ -103,6 +103,16 @@ defmodule Linkify.Builder do
   defp strip_prefix(url, _), do: url
 
   def create_mention_link("@" <> name, _buffer, opts) do
+    prepare_create_mention_link(name, opts)
+    |> format_mention("@" <> name, opts)
+  end
+
+  def create_mention_link(name, _buffer, opts) do
+    prepare_create_mention_link(name, opts)
+    |> format_mention(name, opts)
+  end
+
+  defp prepare_create_mention_link(name, opts) do
     mention_prefix = opts[:mention_prefix]
 
     url = mention_prefix <> name
@@ -112,7 +122,6 @@ defmodule Linkify.Builder do
     |> build_attrs(url, opts, :target)
     |> build_attrs(url, opts, :class)
     |> build_attrs(url, opts, :href)
-    |> format_mention(name, opts)
   end
 
   def create_hashtag_link("#" <> tag, _buffer, opts) do
@@ -147,7 +156,7 @@ defmodule Linkify.Builder do
   def format_mention(attrs, name, opts) do
     attrs
     |> format_attrs()
-    |> format_tag("@#{name}", opts)
+    |> format_tag(name, opts)
   end
 
   def format_hashtag(attrs, tag, opts) do

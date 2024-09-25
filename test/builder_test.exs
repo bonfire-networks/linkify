@@ -48,7 +48,7 @@ defmodule Linkify.BuilderTest do
   end
 
   test "format_mention/3" do
-    expected = "<a href=\"url\">@user@host</a>"
+    expected = "<a href=\"url\">user@host</a>"
     assert format_mention(%{href: "url"}, "user@host", nil) == expected
   end
 
