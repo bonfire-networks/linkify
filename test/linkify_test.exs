@@ -21,18 +21,12 @@ defmodule LinkifyTest do
 
   test "default link iodata" do
     assert Linkify.link_to_iodata("google.com") ==
-             [["<a ", "href=\"http://google.com\"", ">", "google.com", "</a>"]]
+             ["<a href=\"http://google.com\">google.com</a>"]
   end
 
   test "default link safe iodata" do
     assert Linkify.link_safe("google.com") ==
-             [
-               [
-                 {:safe, ["<a ", "href=\"http://google.com\"", ">"]},
-                 "google.com",
-                 {:safe, "</a>"}
-               ]
-             ]
+             ["<a href=\"http://google.com\">google.com</a>"]
   end
 
   test "does on link existing links" do
@@ -58,9 +52,9 @@ defmodule LinkifyTest do
     expected = [
       "hello",
       " ",
-      ["<a ", "href=\"http://google.com\"", ">", "google.com", "</a>"],
+      "<a href=\"http://google.com\">google.com</a>",
       " ",
-      ["<a ", "href=\"https://ddg.com\"", ">", "https://ddg.com", "</a>"],
+      "<a href=\"https://ddg.com\">https://ddg.com</a>",
       " ",
       ["<a ", "href=\"mailto:user@email.com\"", ">", "user@email.com", "</a>"],
       " ",
@@ -80,15 +74,7 @@ defmodule LinkifyTest do
 
   test "class attribute iodata" do
     assert Linkify.link_to_iodata("google.com", class: "linkified") ==
-             [
-               [
-                 "<a ",
-                 "href=\"http://google.com\" class=\"linkified\"",
-                 ">",
-                 "google.com",
-                 "</a>"
-               ]
-             ]
+             ["<a href=\"http://google.com\" class=\"linkified\">google.com</a>"]
   end
 
   test "rel attribute" do
@@ -99,14 +85,8 @@ defmodule LinkifyTest do
   test "rel attribute iodata" do
     assert Linkify.link_to_iodata("google.com", rel: "noopener noreferrer") ==
              [
-               [
-                 "<a ",
-                 "href=\"http://google.com\" rel=\"noopener noreferrer\"",
-                 ">",
-                 "google.com",
-                 "</a>"
-               ]
-             ]
+              "<a href=\"http://google.com\" rel=\"noopener noreferrer\">google.com</a>"
+            ]
   end
 
   test "rel as function" do
@@ -135,13 +115,11 @@ defmodule LinkifyTest do
   end
 
   test "strip parens iodata" do
-    assert Linkify.link_to_iodata("(google.com)") ==
-             [["(", ["<a ", "href=\"http://google.com\"", ">", "google.com", "</a>"], ")"]]
+    assert Linkify.link_to_iodata("(google.com)") == [["(", "<a href=\"http://google.com\">google.com</a>", ")"]]
   end
 
   test "link_map/2" do
-    assert Linkify.link_map("google.com", []) ==
-             {"<a href=\"http://google.com\">google.com</a>", []}
+    assert Linkify.link_map("google.com", []) == {"<a href=\"http://google.com\">google.com</a>", []}
   end
 
   describe "custom handlers" do
@@ -161,7 +139,7 @@ defmodule LinkifyTest do
       {result_text, %{mentions: mentions}} =
         Linkify.link_map(text, %{mentions: MapSet.new()},
           mention: true,
-          mention_handler: handler
+          mention_handler: handler, validate_tld: false
         )
 
       assert result_text ==
@@ -183,7 +161,7 @@ defmodule LinkifyTest do
           hashtag: true,
           hashtag_handler: handler,
           hashtag_prefix: "https://example.local/user/",
-          rel: false
+          rel: false, validate_tld: false
         )
 
       assert result_text ==
@@ -198,7 +176,7 @@ defmodule LinkifyTest do
           hashtag: true,
           hashtag_handler: handler,
           hashtag_prefix: "https://example.com/user/",
-          rel: false
+          rel: false, validate_tld: false
         )
 
       assert result_text ==
@@ -325,7 +303,7 @@ defmodule LinkifyTest do
         Linkify.link_map(text, %{mentions: MapSet.new()},
           mention: true,
           mention_handler: handler,
-          new_window: true
+          new_window: true, validate_tld: false
         )
 
       assert result_text ==
@@ -436,7 +414,7 @@ defmodule LinkifyTest do
       assert Linkify.link("hello @user and @anotherUser.",
                mention: true,
                mention_prefix: "https://example.local/user/",
-               new_window: true
+               new_window: true, validate_tld: false
              ) == expected
     end
 
@@ -466,7 +444,7 @@ defmodule LinkifyTest do
       assert Linkify.link(text,
                mention: true,
                mention_prefix: "https://example.local/user/",
-               new_window: true
+               new_window: true, validate_tld: false
              ) == expected
 
       expected =
@@ -477,7 +455,7 @@ defmodule LinkifyTest do
       assert Linkify.link(text,
                mention: true,
                mention_prefix: "https://example.com/user/",
-               new_window: true
+               new_window: true, validate_tld: false
              ) ==
                expected
     end
@@ -526,7 +504,7 @@ defmodule LinkifyTest do
       assert Linkify.link(text,
                mention: true,
                mention_prefix: "https://example.local:4000/user/",
-               new_window: true
+               new_window: true, validate_tld: false
              ) == expected
     end
 
@@ -534,12 +512,12 @@ defmodule LinkifyTest do
       text = "hey @user@localhost:4000"
 
       expected =
-        "hey <a href=\"https://localhost:4000/user/user@localhost:4000\" target=\"_blank\">@user@localhost:4000</a>"
+        "hey <a href=\"https://localhost:4000/user/user@localhost:4000\" target=\"_blank\">@user@example.local:4000</a>"
 
       assert Linkify.link(text,
                mention: true,
                mention_prefix: "https://localhost:4000/user/",
-               new_window: true
+               new_window: true, validate_tld: false
              ) == expected
     end
   end
@@ -552,7 +530,7 @@ defmodule LinkifyTest do
       assert Linkify.link(" one #2two three #four.",
                hashtag: true,
                hashtag_prefix: "https://example.local/tag/",
-               new_window: true
+               new_window: true, validate_tld: false
              ) == expected
     end
 
@@ -601,7 +579,7 @@ defmodule LinkifyTest do
       assert Linkify.link(text,
                hashtag: true,
                rel: false,
-               hashtag_prefix: "https://example.local/tag/"
+               hashtag_prefix: "https://example.local/tag/", validate_tld: false
              ) == expected
     end
 
@@ -614,7 +592,7 @@ defmodule LinkifyTest do
       assert Linkify.link(text,
                rel: false,
                hashtag: true,
-               hashtag_prefix: "https://example.local/tag/"
+               hashtag_prefix: "https://example.local/tag/", validate_tld: false
              ) == expected
     end
 
@@ -710,21 +688,21 @@ defmodule LinkifyTest do
       expected =
         "<a href=\"https://example.local/@user\" target=\"_blank\">https://example.local/@user</a>"
 
-      assert Linkify.link(text, new_window: true) == expected
+      assert Linkify.link(text, new_window: true, validate_tld: false) == expected
 
       text = "https://example.local:4000/@user"
 
       expected =
         "<a href=\"https://example.local:4000/@user\" target=\"_blank\">https://example.local:4000/@user</a>"
 
-      assert Linkify.link(text, new_window: true) == expected
+      assert Linkify.link(text, new_window: true, validate_tld: false) == expected
 
       text = "https://example.local:4000/@user"
 
       expected =
         "<a href=\"https://example.local:4000/@user\" target=\"_blank\">https://example.local:4000/@user</a>"
 
-      assert Linkify.link(text, new_window: true) == expected
+      assert Linkify.link(text, new_window: true, validate_tld: false) == expected
 
       text = "@username"
 
