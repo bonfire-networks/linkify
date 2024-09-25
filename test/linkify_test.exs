@@ -710,6 +710,22 @@ defmodule LinkifyTest do
 
       assert Linkify.link(text, new_window: true) == expected
     end
+
+    for codeblock_delimiter <- ["`", "\n```\n"] do
+      test "using #{codeblock_delimiter}, not linkify a URL inside a code block" do
+        del = unquote(codeblock_delimiter) 
+
+        assert Linkify.link("#{del}https://google.com#{del} some text") == "#{del}https://google.com#{del} some text"
+      end
+
+      test "using #{codeblock_delimiter}, linkify a URL outside a code block" do
+        del = unquote(codeblock_delimiter)
+
+        assert Linkify.link(
+            "#{del}some code#{del} https://google.com #{del}some other code#{del}") ==
+                 "#{del}some code#{del} <a href=\"https://google.com\">https://google.com</a> #{del}some other code#{del}"
+      end
+    end
   end
 
   describe "non http links" do
