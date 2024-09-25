@@ -4,7 +4,9 @@
 
 defmodule Linkify.Parser do
   @moduledoc """
-  Module to handle parsing the the input string.
+  A module for parsing strings to detect links, hashtags, and mentions.
+  This parser processes the input string character by character, handling
+  various special cases like HTML tags and code blocks.
   """
 
   import Untangle
@@ -21,15 +23,7 @@ defmodule Linkify.Parser do
 
   @match_skipped_tag ~r/^(?<tag>(a|code|pre)).*>*/
 
-  # @user
-  # @user@example.com
-  # &Community
-  # &Community@instance.tld
-  # +CategoryTag
-  # +CategoryTag@instance.tld
-  @match_mention ~r/^(?<prefix>[@&\+])(?<user>[a-zA-Z\d_-]+)(@(?<host>[^@]+))?$/
-  # @match_mention ~r"^[@&\+][a-zA-Z\d_-]+@[a-zA-Z0-9_-](?:[a-zA-Z0-9-:]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-:]{0,61}[a-zA-Z0-9])?)*|[@&\+][a-zA-Z\d_-]+"u
-  # @match_mention ~r"([@&\+][a-zA-Z\d_-]+@[a-zA-Z0-9:._-]+)*|([@&\+][a-zA-Z\d_-]+)*"u
+  @match_mention ~r/^(?<prefix>@)(?<user>[a-zA-Z\d_-]+)(@(?<host>[^@]+))?$/
 
   @delimiters ~r/[,;:>?!]*$/
 
@@ -64,6 +58,7 @@ defmodule Linkify.Parser do
     url: true,
     validate_tld: true
   }
+
 
   @doc """
   Parse the given string, identifying items to link.
@@ -103,6 +98,9 @@ defmodule Linkify.Parser do
   defp do_parse({"", user_acc}, _opts, {"", acc, _}),
     do: {Enum.reverse(acc), user_acc}
 
+
+
+  # special handling for hashtags
   defp do_parse(
          {"<" <> text, user_acc},
          %{hashtag: true} = opts,
@@ -131,6 +129,7 @@ defmodule Linkify.Parser do
     do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, "<br"), {:open, 1}})
   end
 
+  # Skip parsing inside certain HTML tags and code blocks
   defp do_parse({"<a" <> text, user_acc}, opts, {buffer, acc, :parsing}),
     do: do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, "<a"), :skip})
 
@@ -140,6 +139,7 @@ defmodule Linkify.Parser do
   defp do_parse({"<code" <> text, user_acc}, opts, {buffer, acc, :parsing}),
     do: do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, "<code"), :skip})
 
+  # Resume parsing after skipped sections
   defp do_parse({"</a>" <> text, user_acc}, opts, {buffer, acc, :skip}),
     do: do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, "</a>"), :parsing})
 
@@ -149,6 +149,7 @@ defmodule Linkify.Parser do
   defp do_parse({"</code>" <> text, user_acc}, opts, {buffer, acc, :skip}),
     do: do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, "</code>"), :parsing})
 
+  # Handle opening HTML tags
   defp do_parse({"<" <> text, user_acc}, opts, {"", acc, :parsing}),
     do: do_parse({text, user_acc}, opts, {"<", acc, {:open, 1}})
 
@@ -157,9 +158,11 @@ defmodule Linkify.Parser do
     do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, "<"), {:open, 1}})
   end
 
+  # Handle closing HTML tags
   defp do_parse({">" <> text, user_acc}, opts, {buffer, acc, {:attrs, _level}}),
     do: do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, ">"), :parsing})
 
+  # Handle attributes in HTML tags
   defp do_parse({<<ch::8>> <> text, user_acc}, opts, {"", acc, {:attrs, level}}) do
     do_parse({text, user_acc}, opts, {"", accumulate(acc, <<ch::8>>), {:attrs, level}})
   end
@@ -168,6 +171,25 @@ defmodule Linkify.Parser do
     do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer), {:attrs, level}})
   end
 
+    
+  # Detect start of Markdown code block
+  defp do_parse({"```" <> text, user_acc}, opts, {buffer, acc, :parsing}) do
+    do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, "```"), :codeblock})
+  end
+  defp do_parse({"`" <> text, user_acc}, opts, {buffer, acc, :parsing}) do
+    do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, "`"), :inline_codeblock})
+  end
+
+  # Accumulate content inside Markdown code block
+  defp do_parse({text, user_acc}, opts, {buffer, acc, :codeblock = type}) do
+    do_code_block({text, user_acc}, opts, {buffer, acc, {type, "```"}})
+  end
+  defp do_parse({text, user_acc}, opts, {buffer, acc, :inline_codeblock = type}) do
+    do_code_block({text, user_acc}, opts, {buffer, acc, {type, "`"}})
+  end
+
+
+  # Handle text after a whitespace
   defp do_parse(
          {<<char::bytes-size(1), text::binary>>, user_acc},
          opts,
@@ -183,6 +205,7 @@ defmodule Linkify.Parser do
     )
   end
 
+  # Handle end of input
   defp do_parse({<<ch::8>>, user_acc}, opts, {buffer, acc, state}) do
     {buffer, user_acc} = link(buffer <> <<ch::8>>, opts, user_acc)
 
@@ -193,9 +216,24 @@ defmodule Linkify.Parser do
     )
   end
 
+  # Handle regular characters
   defp do_parse({<<ch::8>> <> text, user_acc}, opts, {buffer, acc, state}),
     do: do_parse({text, user_acc}, opts, {buffer <> <<ch::8>>, acc, state})
 
+
+  defp do_code_block({text, user_acc}, opts, {buffer, acc, {type, separator}}) do
+    case String.split(text, separator, parts: 2) do
+      [code_content, rest] -> 
+        # End of code block
+        do_parse({rest, user_acc}, opts, {"", accumulate(acc, buffer <> code_content, separator), :parsing})
+
+      [remaining_text] ->
+        # Still inside the code block, accumulate the entire remaining text
+        do_parse({"", user_acc}, opts, {buffer <> remaining_text, acc, type})
+    end
+  end
+
+    
   def check_and_link(:url, buffer, opts, user_acc) do
     if url?(buffer, opts) do
       case @match_url |> Regex.run(buffer, capture: [:url]) |> hd() do
@@ -385,7 +423,7 @@ defmodule Linkify.Parser do
   end
 
   def match_mention(buffer, opts) do
-    case Regex.run(@match_mention, buffer,
+    case Regex.run(opts[:mention_regex] || @match_mention, buffer,
            capture: [:prefix, :user, :host]
          ) do
       [prefix, user, ""] ->

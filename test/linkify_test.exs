@@ -716,6 +716,7 @@ defmodule LinkifyTest do
         del = unquote(codeblock_delimiter) 
 
         assert Linkify.link("#{del}https://google.com#{del} some text") == "#{del}https://google.com#{del} some text"
+        assert Linkify.link("#{del}before https://google.com after#{del} some text") == "#{del}before https://google.com after#{del} some text"
       end
 
       test "using #{codeblock_delimiter}, linkify a URL outside a code block" do
