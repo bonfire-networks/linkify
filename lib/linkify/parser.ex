@@ -77,15 +77,20 @@ defmodule Linkify.Parser do
   def parse(input, opts) when is_binary(input), do: {input, %{}} |> parse(opts) |> elem(0)
   def parse(input, list) when is_list(list), do: parse(input, Enum.into(list, %{}))
 
-  def parse(input, opts) do
+  def parse(input_tuple, opts) when is_tuple(input_tuple) do
     opts = Map.merge(@default_opts, opts)
 
-    {buffer, user_acc} = do_parse(input, opts, {"", [], :parsing})
+    {buffer, user_acc} = do_parse(input_tuple, opts, {"", [], :parsing})
 
     if opts[:iodata] do
       {buffer, user_acc}
+      |> debug()
     else
-      {IO.iodata_to_binary(buffer), user_acc}
+      {if is_list(buffer) do 
+        IO.iodata_to_binary(buffer)
+      else
+        buffer
+      end, user_acc}
     end
   end
 
@@ -97,8 +102,6 @@ defmodule Linkify.Parser do
 
   defp do_parse({"", user_acc}, _opts, {"", acc, _}),
     do: {Enum.reverse(acc), user_acc}
-
-
 
   # special handling for hashtags
   defp do_parse(
@@ -356,6 +359,7 @@ defmodule Linkify.Parser do
     end
   end
 
+  defp valid_url?("["<>_), do: false
   defp valid_url?(url) do
     with {_, [scheme]} <- {:regex, Regex.run(@get_scheme_host, url, capture: [:scheme])},
          true <- scheme == "" do
@@ -501,7 +505,7 @@ defmodule Linkify.Parser do
     {out, user_acc}
   end
 
-  defp maybe_update_buffer(out, _match, _buffer), do: out
+  defp maybe_update_buffer(out, _match, _buffer), do: out # {out, user_acc}
 
   @doc false
   def link_email(buffer, opts) do
@@ -532,7 +536,7 @@ defmodule Linkify.Parser do
       |> maybe_strip_trailing_period(type)
       |> maybe_strip_parens()
 
-    case check_and_link(type, str, opts, user_acc) do
+    case check_and_link(type, str, opts, user_acc) |> debug("checked_and_linked") do
       :nomatch ->
         {:cont, {buffer, user_acc}}
 
