@@ -6,8 +6,7 @@ defmodule LinkifyTest do
   use ExUnit.Case, async: true
   doctest Linkify
 
-  @opts [strip_prefix: true,
-        truncate: 30]
+  @opts [strip_prefix: true, truncate: 30]
 
   test "full link" do
     assert Linkify.link("a link https://developer.mozilla.org/en-US/docs/Web/API/", @opts) ==
@@ -85,8 +84,8 @@ defmodule LinkifyTest do
   test "rel attribute iodata" do
     assert Linkify.link_to_iodata("google.com", rel: "noopener noreferrer") ==
              [
-              "<a href=\"http://google.com\" rel=\"noopener noreferrer\">google.com</a>"
-            ]
+               "<a href=\"http://google.com\" rel=\"noopener noreferrer\">google.com</a>"
+             ]
   end
 
   test "rel as function" do
@@ -115,11 +114,14 @@ defmodule LinkifyTest do
   end
 
   test "strip parens iodata" do
-    assert Linkify.link_to_iodata("(google.com)") == [["(", "<a href=\"http://google.com\">google.com</a>", ")"]]
+    assert Linkify.link_to_iodata("(google.com)") == [
+             ["(", "<a href=\"http://google.com\">google.com</a>", ")"]
+           ]
   end
 
   test "link_map/2" do
-    assert Linkify.link_map("google.com", []) == {"<a href=\"http://google.com\">google.com</a>", []}
+    assert Linkify.link_map("google.com", []) ==
+             {"<a href=\"http://google.com\">google.com</a>", []}
   end
 
   describe "custom handlers" do
@@ -129,7 +131,9 @@ defmodule LinkifyTest do
 
       handler = fn "@" <> user = mention, buffer, _opts, acc ->
         if Enum.member?(valid_users, user) do
-          link = ~s(<a href="https://example.local/user/#{user}" data-user="#{user}">#{mention}</a>)
+          link =
+            ~s(<a href="https://example.local/user/#{user}" data-user="#{user}">#{mention}</a>)
+
           {link, %{acc | mentions: MapSet.put(acc.mentions, {mention, user})}}
         else
           {buffer, acc}
@@ -139,7 +143,8 @@ defmodule LinkifyTest do
       {result_text, %{mentions: mentions}} =
         Linkify.link_map(text, %{mentions: MapSet.new()},
           mention: true,
-          mention_handler: handler, validate_tld: false
+          mention_handler: handler,
+          validate_tld: false
         )
 
       assert result_text ==
@@ -161,7 +166,8 @@ defmodule LinkifyTest do
           hashtag: true,
           hashtag_handler: handler,
           hashtag_prefix: "https://example.local/user/",
-          rel: false, validate_tld: false
+          rel: false,
+          validate_tld: false
         )
 
       assert result_text ==
@@ -176,7 +182,8 @@ defmodule LinkifyTest do
           hashtag: true,
           hashtag_handler: handler,
           hashtag_prefix: "https://example.com/user/",
-          rel: false, validate_tld: false
+          rel: false,
+          validate_tld: false
         )
 
       assert result_text ==
@@ -292,7 +299,9 @@ defmodule LinkifyTest do
 
       handler = fn "@" <> user = mention, buffer, _opts, acc ->
         if Enum.member?(valid_users, user) do
-          link = ~s(<a href="https://example.local/user/#{user}" data-user="#{user}">#{mention}</a>)
+          link =
+            ~s(<a href="https://example.local/user/#{user}" data-user="#{user}">#{mention}</a>)
+
           {link, %{acc | mentions: MapSet.put(acc.mentions, {mention, user})}}
         else
           {buffer, acc}
@@ -303,7 +312,8 @@ defmodule LinkifyTest do
         Linkify.link_map(text, %{mentions: MapSet.new()},
           mention: true,
           mention_handler: handler,
-          new_window: true, validate_tld: false
+          new_window: true,
+          validate_tld: false
         )
 
       assert result_text ==
@@ -414,7 +424,8 @@ defmodule LinkifyTest do
       assert Linkify.link("hello @user and @anotherUser.",
                mention: true,
                mention_prefix: "https://example.local/user/",
-               new_window: true, validate_tld: false
+               new_window: true,
+               validate_tld: false
              ) == expected
     end
 
@@ -444,7 +455,8 @@ defmodule LinkifyTest do
       assert Linkify.link(text,
                mention: true,
                mention_prefix: "https://example.local/user/",
-               new_window: true, validate_tld: false
+               new_window: true,
+               validate_tld: false
              ) == expected
 
       expected =
@@ -455,7 +467,8 @@ defmodule LinkifyTest do
       assert Linkify.link(text,
                mention: true,
                mention_prefix: "https://example.com/user/",
-               new_window: true, validate_tld: false
+               new_window: true,
+               validate_tld: false
              ) ==
                expected
     end
@@ -504,7 +517,8 @@ defmodule LinkifyTest do
       assert Linkify.link(text,
                mention: true,
                mention_prefix: "https://example.local:4000/user/",
-               new_window: true, validate_tld: false
+               new_window: true,
+               validate_tld: false
              ) == expected
     end
 
@@ -517,7 +531,8 @@ defmodule LinkifyTest do
       assert Linkify.link(text,
                mention: true,
                mention_prefix: "https://localhost:4000/user/",
-               new_window: true, validate_tld: false
+               new_window: true,
+               validate_tld: false
              ) == expected
     end
   end
@@ -530,7 +545,8 @@ defmodule LinkifyTest do
       assert Linkify.link(" one #2two three #four.",
                hashtag: true,
                hashtag_prefix: "https://example.local/tag/",
-               new_window: true, validate_tld: false
+               new_window: true,
+               validate_tld: false
              ) == expected
     end
 
@@ -579,7 +595,8 @@ defmodule LinkifyTest do
       assert Linkify.link(text,
                hashtag: true,
                rel: false,
-               hashtag_prefix: "https://example.local/tag/", validate_tld: false
+               hashtag_prefix: "https://example.local/tag/",
+               validate_tld: false
              ) == expected
     end
 
@@ -592,7 +609,8 @@ defmodule LinkifyTest do
       assert Linkify.link(text,
                rel: false,
                hashtag: true,
-               hashtag_prefix: "https://example.local/tag/", validate_tld: false
+               hashtag_prefix: "https://example.local/tag/",
+               validate_tld: false
              ) == expected
     end
 
@@ -713,17 +731,21 @@ defmodule LinkifyTest do
 
     for codeblock_delimiter <- ["`", "\n```\n"] do
       test "using #{codeblock_delimiter}, not linkify a URL inside a code block" do
-        del = unquote(codeblock_delimiter) 
+        del = unquote(codeblock_delimiter)
 
-        assert Linkify.link("#{del}https://google.com#{del} some text") == "#{del}https://google.com#{del} some text"
-        assert Linkify.link("#{del}before https://google.com after#{del} some text") == "#{del}before https://google.com after#{del} some text"
+        assert Linkify.link("#{del}https://google.com#{del} some text") ==
+                 "#{del}https://google.com#{del} some text"
+
+        assert Linkify.link("#{del}before https://google.com after#{del} some text") ==
+                 "#{del}before https://google.com after#{del} some text"
       end
 
       test "using #{codeblock_delimiter}, linkify a URL outside a code block" do
         del = unquote(codeblock_delimiter)
 
         assert Linkify.link(
-            "#{del}some code#{del} https://google.com #{del}some other code#{del}") ==
+                 "#{del}some code#{del} https://google.com #{del}some other code#{del}"
+               ) ==
                  "#{del}some code#{del} <a href=\"https://google.com\">https://google.com</a> #{del}some other code#{del}"
       end
     end

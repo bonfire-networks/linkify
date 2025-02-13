@@ -26,7 +26,7 @@ defmodule Linkify.Mixfile do
   end
 
   # Configuration for the OTP application
-  def application, do: [ extra_applications: [:logger] ]
+  def application, do: [extra_applications: [:logger]]
 
   # Dependencies can be Hex packages:
   defp deps do

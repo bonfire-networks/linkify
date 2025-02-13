@@ -59,7 +59,6 @@ defmodule Linkify.Parser do
     validate_tld: true
   }
 
-
   @doc """
   Parse the given string, identifying items to link.
 
@@ -86,11 +85,11 @@ defmodule Linkify.Parser do
       {buffer, user_acc}
       |> debug()
     else
-      {if is_list(buffer) do 
-        IO.iodata_to_binary(buffer)
-      else
-        buffer
-      end, user_acc}
+      {if is_list(buffer) do
+         IO.iodata_to_binary(buffer)
+       else
+         buffer
+       end, user_acc}
     end
   end
 
@@ -174,11 +173,11 @@ defmodule Linkify.Parser do
     do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer), {:attrs, level}})
   end
 
-    
   # Detect start of Markdown code block
   defp do_parse({"```" <> text, user_acc}, opts, {buffer, acc, :parsing}) do
     do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, "```"), :codeblock})
   end
+
   defp do_parse({"`" <> text, user_acc}, opts, {buffer, acc, :parsing}) do
     do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, "`"), :inline_codeblock})
   end
@@ -187,10 +186,10 @@ defmodule Linkify.Parser do
   defp do_parse({text, user_acc}, opts, {buffer, acc, :codeblock = type}) do
     do_code_block({text, user_acc}, opts, {buffer, acc, {type, "```"}})
   end
+
   defp do_parse({text, user_acc}, opts, {buffer, acc, :inline_codeblock = type}) do
     do_code_block({text, user_acc}, opts, {buffer, acc, {type, "`"}})
   end
-
 
   # Handle text after a whitespace
   defp do_parse(
@@ -223,12 +222,15 @@ defmodule Linkify.Parser do
   defp do_parse({<<ch::8>> <> text, user_acc}, opts, {buffer, acc, state}),
     do: do_parse({text, user_acc}, opts, {buffer <> <<ch::8>>, acc, state})
 
-
   defp do_code_block({text, user_acc}, opts, {buffer, acc, {type, separator}}) do
     case String.split(text, separator, parts: 2) do
-      [code_content, rest] -> 
+      [code_content, rest] ->
         # End of code block
-        do_parse({rest, user_acc}, opts, {"", accumulate(acc, buffer <> code_content, separator), :parsing})
+        do_parse(
+          {rest, user_acc},
+          opts,
+          {"", accumulate(acc, buffer <> code_content, separator), :parsing}
+        )
 
       [remaining_text] ->
         # Still inside the code block, accumulate the entire remaining text
@@ -236,7 +238,6 @@ defmodule Linkify.Parser do
     end
   end
 
-    
   def check_and_link(:url, buffer, opts, user_acc) do
     if url?(buffer, opts) do
       case @match_url |> Regex.run(buffer, capture: [:url]) |> hd() do
@@ -359,7 +360,8 @@ defmodule Linkify.Parser do
     end
   end
 
-  defp valid_url?("["<>_), do: false
+  defp valid_url?("[" <> _), do: false
+
   defp valid_url?(url) do
     with {_, [scheme]} <- {:regex, Regex.run(@get_scheme_host, url, capture: [:scheme])},
          true <- scheme == "" do
@@ -414,11 +416,11 @@ defmodule Linkify.Parser do
 
   # IDN-compatible, ported from musl-libc's is_valid_hostname()
   def valid_hostname?(hostname, opts) do
-    if opts[:validate_hostname] !=false do
+    if opts[:validate_hostname] != false do
       hostname
       |> String.to_charlist()
       |> Enum.any?(fn s ->
-        !(s >= 0x80 || s in 0x30..0x39 || s in 0x41..0x5A || s in 0x61..0x7A || s in '.-')
+        !(s >= 0x80 || s in 0x30..0x39 || s in 0x41..0x5A || s in 0x61..0x7A || s in ~c".-")
       end)
       |> Kernel.!()
     else
@@ -443,6 +445,7 @@ defmodule Linkify.Parser do
         debug(other)
         nil
     end
+
     # |> debug("match_mention")
   end
 
@@ -505,7 +508,8 @@ defmodule Linkify.Parser do
     {out, user_acc}
   end
 
-  defp maybe_update_buffer(out, _match, _buffer), do: out # {out, user_acc}
+  # {out, user_acc}
+  defp maybe_update_buffer(out, _match, _buffer), do: out
 
   @doc false
   def link_email(buffer, opts) do

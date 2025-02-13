@@ -61,11 +61,12 @@ defmodule Linkify.Builder do
 
   defp add_scheme("http://" <> _ = url), do: url
   defp add_scheme("https://" <> _ = url), do: url
+
   defp add_scheme(url) do
     if String.contains?(url, "://") do
       url
     else
-     "http://" <> url
+      "http://" <> url
     end
   end
 
