@@ -199,7 +199,7 @@ defmodule Linkify.ParserTest do
       expected =
         " foo (<a href=\"https://example.local/path/folder/\">https://example.local/path/folder/</a>), bar"
 
-      assert parse(text, class: false, rel: false, scheme: true) == expected
+      assert parse(text, class: false, rel: false, scheme: true, validate_tld: false) == expected
 
       text = " foo (example.com/path/folder/), bar"
 
