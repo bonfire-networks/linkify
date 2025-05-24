@@ -13,19 +13,14 @@ defmodule Linkify.Parser do
 
   alias Linkify.Builder
 
-  @invalid_url ~r/(\.\.+)|(^(\d+\.){1,2}\d+$)/
-
-  @match_url ~r{^(?:\W*)?(?<url>(?:https?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~%:\/?#[\]@!\$&'\(\)\*\+,;=.]+$)}u
-
-  @get_scheme_host ~r{^\W*(?<scheme>https?:\/\/)?(?:[^@\n]+\\w@)?(?<host>[^:#~\/\n?]+)}u
-
-  @match_hashtag ~r/^(?<tag>\#[[:word:]_]*[[:alpha:]_·\x{200c}][[:word:]_·\p{M}\x{200c}]*)/u
-
-  @match_skipped_tag ~r/^(?<tag>(a|code|pre)).*>*/
-
-  @match_mention ~r/^(?<prefix>@)(?<user>[a-zA-Z\d_-]+)(@(?<host>[^@]+))?$/
-
-  @delimiters ~r/[,;:>?!]*$/
+  # Individual regex pattern functions to comply with Erlang/OTP 28
+  def invalid_url, do: ~r/(\.\.+)|(^(\d+\.){1,2}\d+$)/
+  def match_url, do: ~r{^(?:\W*)?(?<url>(?:https?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~%:\/?#[\]@!\$&'\(\)\*\+,;=.]+$)}u
+  def get_scheme_host, do: ~r{^\W*(?<scheme>https?:\/\/)?(?:[^@\n]+\\w@)?(?<host>[^:#~\/\n?]+)}u
+  def match_hashtag, do: ~r/^(?<tag>\#[[:word:]_]*[[:alpha:]_·\x{200c}][[:word:]_·\p{M}\x{200c}]*)/u
+  def match_skipped_tag, do: ~r/^(?<tag>(a|code|pre)).*>*/
+  def match_mention, do: ~r/^(?<prefix>@)(?<user>[a-zA-Z\d_-]+)(@(?<host>[^@]+))?$/
+  def delimiters, do: ~r/[,;:>?!]*$/
 
   @en_apostrophes [
     "'",
@@ -58,6 +53,8 @@ defmodule Linkify.Parser do
     url: true,
     validate_tld: true
   }
+
+
 
   @doc """
   Parse the given string, identifying items to link.
@@ -116,7 +113,7 @@ defmodule Linkify.Parser do
         _ -> buffer
       end
 
-    case Regex.run(@match_skipped_tag, buffer, capture: [:tag]) do
+    case Regex.run(match_skipped_tag(), buffer, capture: [:tag]) do
       [tag] ->
         text = String.trim_leading(text, tag)
         do_parse({text, user_acc}, opts, {"", accumulate(acc, buffer, "<#{tag}"), :skip})
@@ -240,7 +237,7 @@ defmodule Linkify.Parser do
 
   def check_and_link(:url, buffer, opts, user_acc) do
     if url?(buffer, opts) do
-      case @match_url |> Regex.run(buffer, capture: [:url]) |> hd() do
+      case match_url() |> Regex.run(buffer, capture: [:url]) |> hd() do
         ^buffer ->
           link_url(buffer, opts, user_acc)
 
@@ -340,7 +337,7 @@ defmodule Linkify.Parser do
       (String.ends_with?(buffer, ")") && String.slice(buffer, 0, String.length(buffer) - 1)) ||
         buffer
 
-  defp strip_punctuation(buffer), do: String.replace(buffer, @delimiters, "")
+  defp strip_punctuation(buffer), do: String.replace(buffer, delimiters(), "")
 
   defp strip_en_apostrophes(buffer) do
     Enum.reduce(@en_apostrophes, buffer, fn abbrev, buf ->
@@ -349,7 +346,7 @@ defmodule Linkify.Parser do
   end
 
   def url?(buffer, opts) do
-    valid_url?(buffer) && Regex.match?(@match_url, buffer) && valid_tld?(buffer, opts)
+    valid_url?(buffer) && Regex.match?(match_url(), buffer) && valid_tld?(buffer, opts)
   end
 
   def email?(buffer, opts) do
@@ -363,9 +360,9 @@ defmodule Linkify.Parser do
   defp valid_url?("[" <> _), do: false
 
   defp valid_url?(url) do
-    with {_, [scheme]} <- {:regex, Regex.run(@get_scheme_host, url, capture: [:scheme])},
+    with {_, [scheme]} <- {:regex, Regex.run(get_scheme_host(), url, capture: [:scheme])},
          true <- scheme == "" do
-      !Regex.match?(@invalid_url, url)
+      !Regex.match?(invalid_url(), url)
     else
       _ ->
         true
@@ -380,7 +377,7 @@ defmodule Linkify.Parser do
   Will skip validation and return `true` if `:validate_tld` set to `:no_scheme` and the url has a scheme.
   """
   def valid_tld?(url, opts) do
-    [scheme, host] = Regex.run(@get_scheme_host, url, capture: [:scheme, :host])
+    [scheme, host] = Regex.run(get_scheme_host(), url, capture: [:scheme, :host])
 
     cond do
       opts[:validate_tld] == false ->
@@ -429,7 +426,7 @@ defmodule Linkify.Parser do
   end
 
   def match_mention(buffer, opts) do
-    case Regex.run(opts[:mention_regex] || @match_mention, buffer,
+    case Regex.run(opts[:mention_regex] || match_mention(), buffer,
            capture: [:prefix, :user, :host]
          ) do
       [prefix, user, ""] ->
@@ -450,7 +447,7 @@ defmodule Linkify.Parser do
   end
 
   def match_hashtag(buffer) do
-    case Regex.run(@match_hashtag, buffer, capture: [:tag]) do
+    case Regex.run(match_hashtag(), buffer, capture: [:tag]) do
       [hashtag] -> hashtag
       _ -> nil
     end
