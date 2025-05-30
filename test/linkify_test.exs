@@ -526,7 +526,7 @@ defmodule LinkifyTest do
       text = "hey @user@localhost:4000"
 
       expected =
-        "hey <a href=\"https://localhost:4000/user/user@localhost:4000\" target=\"_blank\">@user@example.local:4000</a>"
+        "hey <a href=\"https://localhost:4000/user/user@localhost:4000\" target=\"_blank\">@user@localhost:4000</a>"
 
       assert Linkify.link(text,
                mention: true,

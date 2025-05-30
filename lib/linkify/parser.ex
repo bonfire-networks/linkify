@@ -15,9 +15,16 @@ defmodule Linkify.Parser do
 
   # Individual regex pattern functions to comply with Erlang/OTP 28
   def invalid_url, do: ~r/(\.\.+)|(^(\d+\.){1,2}\d+$)/
-  def match_url, do: ~r{^(?:\W*)?(?<url>(?:https?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~%:\/?#[\]@!\$&'\(\)\*\+,;=.]+$)}u
+
+  def match_url,
+    do:
+      ~r{^(?:\W*)?(?<url>(?:https?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~%:\/?#[\]@!\$&'\(\)\*\+,;=.]+$)}u
+
   def get_scheme_host, do: ~r{^\W*(?<scheme>https?:\/\/)?(?:[^@\n]+\\w@)?(?<host>[^:#~\/\n?]+)}u
-  def match_hashtag, do: ~r/^(?<tag>\#[[:word:]_]*[[:alpha:]_·\x{200c}][[:word:]_·\p{M}\x{200c}]*)/u
+
+  def match_hashtag,
+    do: ~r/^(?<tag>\#[[:word:]_]*[[:alpha:]_·\x{200c}][[:word:]_·\p{M}\x{200c}]*)/u
+
   def match_skipped_tag, do: ~r/^(?<tag>(a|code|pre)).*>*/
   def match_mention, do: ~r/^(?<prefix>@)(?<user>[a-zA-Z\d_-]+)(@(?<host>[^@]+))?$/
   def delimiters, do: ~r/[,;:>?!]*$/
@@ -53,8 +60,6 @@ defmodule Linkify.Parser do
     url: true,
     validate_tld: true
   }
-
-
 
   @doc """
   Parse the given string, identifying items to link.
@@ -304,8 +309,33 @@ defmodule Linkify.Parser do
   defp parens_found_email(trimmed),
     do: (trim_trailing_paren(trimmed) |> email?(nil) && :both) || :next
 
-  defp parens_found_url(trimmed),
-    do: (trim_trailing_paren(trimmed) |> url?(nil) && :next) || :noop
+  defp parens_found_url(trimmed) do
+    stripped = trim_trailing_paren(trimmed)
+
+    # Check if the URL with parenthesis is valid first
+    if url?(trimmed, %{validate_tld: false}) do
+      # If the full URL (with paren) is valid, check if parens are balanced
+      graphemes = String.graphemes(trimmed)
+      opencnt = graphemes |> Enum.count(fn x -> x == "(" end)
+      closecnt = graphemes |> Enum.count(fn x -> x == ")" end)
+
+      if opencnt == closecnt && opencnt > 0 do
+        # Don't strip if balanced
+        :noop
+      else
+        # Continue checking
+        :next
+      end
+
+      # If URL with paren is invalid, check if URL without paren is valid
+    else
+      if url?(stripped, %{validate_tld: false}) do
+        :both
+      else
+        :next
+      end
+    end
+  end
 
   defp parens_in_query(query), do: (is_nil(query) && :next) || :both
   defp parens_found_path_separator(path) when is_nil(path), do: :next
@@ -318,8 +348,9 @@ defmodule Linkify.Parser do
     opencnt = graphemes |> Enum.count(fn x -> x == "(" end)
     closecnt = graphemes |> Enum.count(fn x -> x == ")" end)
 
-    if opencnt == closecnt do
-      :leading_only
+    if opencnt == closecnt && opencnt > 0 do
+      # Don't strip anything if parentheses are balanced
+      :noop
     else
       :next
     end
@@ -417,7 +448,7 @@ defmodule Linkify.Parser do
       hostname
       |> String.to_charlist()
       |> Enum.any?(fn s ->
-        !(s >= 0x80 || s in 0x30..0x39 || s in 0x41..0x5A || s in 0x61..0x7A || s in ~c".-")
+        !(s >= 0x80 || s in 0x30..0x39 || s in 0x41..0x5A || s in 0x61..0x7A || s in ~c".-:")
       end)
       |> Kernel.!()
     else
