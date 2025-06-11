@@ -585,8 +585,10 @@ defmodule Linkify.Parser do
   defp restore_stripped_symbols(buffer, buffer, link), do: link
 
   defp restore_stripped_symbols(buffer, stripped_buffer, link) do
-    buffer
-    |> String.split(stripped_buffer)
-    |> Enum.intersperse(link)
+    case String.split(buffer, stripped_buffer, parts: 2) do
+      [prefix, suffix] -> prefix <> link <> suffix
+      [single] when single == buffer -> link
+      _ -> buffer
+    end
   end
 end
