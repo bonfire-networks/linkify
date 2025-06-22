@@ -88,9 +88,9 @@ defmodule Linkify.Parser do
       |> debug()
     else
       {if is_list(buffer) do
-        buffer
-        |> Enum.filter(&is_binary/1)
-        |> IO.iodata_to_binary()
+         buffer
+         |> Enum.filter(&is_binary/1)
+         |> IO.iodata_to_binary()
        else
          buffer
        end, user_acc}

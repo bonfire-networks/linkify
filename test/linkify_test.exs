@@ -114,7 +114,9 @@ defmodule LinkifyTest do
   end
 
   test "strip parens iodata" do
-    assert Linkify.link_to_iodata("(google.com)") == ["(<a href=\"http://google.com\">google.com</a>)"]
+    assert Linkify.link_to_iodata("(google.com)") == [
+             "(<a href=\"http://google.com\">google.com</a>)"
+           ]
   end
 
   test "link_map/2" do
