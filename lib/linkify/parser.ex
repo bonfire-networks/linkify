@@ -582,13 +582,20 @@ defmodule Linkify.Parser do
     end
   end
 
-  defp restore_stripped_symbols(buffer, buffer, link), do: link
+  defp restore_stripped_symbols(buffer, buffer, link), do: link # when buffer and stripped_buffer are the same
 
-  defp restore_stripped_symbols(buffer, stripped_buffer, link) do
+  defp restore_stripped_symbols(buffer, stripped_buffer, {link, user_acc}) do
+    restore_stripped_symbols(buffer, stripped_buffer, link)
+  end
+
+  defp restore_stripped_symbols(buffer, stripped_buffer, link) when is_binary(link) do
     case String.split(buffer, stripped_buffer, parts: 2) do
       [prefix, suffix] -> prefix <> link <> suffix
       [single] when single == buffer -> link
       _ -> buffer
     end
   end
+
+  defp restore_stripped_symbols(buffer, _stripped_buffer, _link), do: buffer
+
 end
