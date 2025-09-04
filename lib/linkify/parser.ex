@@ -18,7 +18,7 @@ defmodule Linkify.Parser do
 
   def match_url,
     do:
-      ~r{^(?:\W*)?(?<url>(?:https?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~%:\/?#[\]@!\$&'\(\)\*\+,;=.]+$)}u
+      ~r{^(?:\W*)?(?<url>(?:https?:\/\/[\w.-]+(?:\.[\w\.-]+)*|(?:https?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+)[\w\-\._~%:\/?#[\]@!\$&'\(\)\*\+,;=.]*$)}u
 
   def get_scheme_host, do: ~r{^\W*(?<scheme>https?:\/\/)?(?:[^@\n]+\\w@)?(?<host>[^:#~\/\n?]+)}u
 
@@ -75,7 +75,11 @@ defmodule Linkify.Parser do
   @types [:url, :hashtag, :extra, :mention, :email]
 
   def parse(input, opts \\ %{})
-  def parse(input, opts) when is_binary(input), do: {input, %{}} |> parse(opts) |> elem(0)
+  def parse(input, opts) when is_binary(input) do
+    # Replace non-breaking spaces with regular spaces to avoid pain
+    # input = String.replace(input, "\u00A0", " ")
+    {input, %{}} |> parse(opts) |> elem(0)
+  end
   def parse(input, list) when is_list(list), do: parse(input, Enum.into(list, %{}))
 
   def parse(input_tuple, opts) when is_tuple(input_tuple) do
@@ -201,7 +205,7 @@ defmodule Linkify.Parser do
          opts,
          {buffer, acc, state}
        )
-       when char in [" ", "\r", "\n"] do
+       when char in [" ", "\r", "\n", "\u00A0"] do
     {buffer, user_acc} = link(buffer, opts, user_acc)
 
     do_parse(
@@ -243,7 +247,7 @@ defmodule Linkify.Parser do
   end
 
   def check_and_link(:url, buffer, opts, user_acc) do
-    if url?(buffer, opts) do
+    if url?(buffer, opts) |> flood("url?") do
       case match_url() |> Regex.run(buffer, capture: [:url]) |> hd() do
         ^buffer ->
           link_url(buffer, opts, user_acc)
@@ -379,7 +383,9 @@ defmodule Linkify.Parser do
   end
 
   def url?(buffer, opts) do
-    valid_url?(buffer) && Regex.match?(match_url(), buffer) && valid_tld?(buffer, opts)
+    valid_url?(buffer) |> flood("valid_url") && 
+    Regex.match?(match_url(), buffer) |> flood("matched?") && 
+    valid_tld?(buffer, opts) |> flood("valid_tld?")
   end
 
   def email?(buffer, opts) do
@@ -412,22 +418,43 @@ defmodule Linkify.Parser do
   def valid_tld?(url, opts) do
     [scheme, host] = Regex.run(get_scheme_host(), url, capture: [:scheme, :host])
 
+    # Remove port from host for validation
+    host_without_port = host |> String.split(":") |> List.first()
+    has_scheme? = scheme != ""
+
     cond do
       opts[:validate_tld] == false ->
         true
 
-      scheme != "" && ip?(host) ->
+      # don't validate if scheme is present
+      opts[:validate_tld] == :no_scheme and has_scheme? ->
         true
 
-      # don't validate if scheme is present
-      opts[:validate_tld] == :no_scheme and scheme != "" ->
+      has_scheme? && ip?(host_without_port) ->
         true
+
+      # For single-word hosts like localhost, require scheme OR port OR path
+      String.split(host_without_port, ".") |> length() == 1 ->
+        has_port? = String.contains?(url, ":")
+        has_path? = String.contains?(url, "/")
+
+        if has_scheme? || has_port? || has_path? do
+          # Allow localhost and other single-word hosts if they have additional URL components
+          true
+        else
+          # Reject bare single words without URL context
+          false
+        end
 
       true ->
-        tld = host |> String.trim_trailing(".") |> String.split(".") |> List.last()
-        MapSet.member?(@tlds, tld)
+        do_check_valid_tld?(host_without_port)
     end
-    |> debug(url)
+    |> flood("#{url} valid_tld?")
+  end
+
+  defp do_check_valid_tld?(host) do
+    tld = host |> String.trim_trailing(".") |> String.split(".") |> List.last()
+    MapSet.member?(@tlds, tld)
   end
 
   def safe_to_integer(string, base \\ 10) do
@@ -446,15 +473,17 @@ defmodule Linkify.Parser do
 
   # IDN-compatible, ported from musl-libc's is_valid_hostname()
   def valid_hostname?(hostname, opts) do
-    if opts[:validate_hostname] != false do
-      hostname
-      |> String.to_charlist()
-      |> Enum.any?(fn s ->
-        !(s >= 0x80 || s in 0x30..0x39 || s in 0x41..0x5A || s in 0x61..0x7A || s in ~c".-:")
-      end)
-      |> Kernel.!()
-    else
-      true
+    cond do
+      opts[:validate_hostname] == false ->
+        true
+
+      true ->
+        hostname
+        |> String.to_charlist()
+        |> Enum.any?(fn s ->
+          !(s >= 0x80 || s in 0x30..0x39 || s in 0x41..0x5A || s in 0x61..0x7A || s in ~c".-:")
+        end)
+        |> Kernel.!()
     end
   end
 
@@ -569,6 +598,10 @@ defmodule Linkify.Parser do
       |> strip_punctuation()
       |> maybe_strip_trailing_period(type)
       |> maybe_strip_parens()
+      |> debug("processed str")
+
+    debug(buffer, "original buffer")
+    debug(str, "stripped str")
 
     case check_and_link(type, str, opts, user_acc) |> debug("checked_and_linked") do
       :nomatch ->
