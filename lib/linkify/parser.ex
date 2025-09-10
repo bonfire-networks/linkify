@@ -247,7 +247,7 @@ defmodule Linkify.Parser do
   end
 
   def check_and_link(:url, buffer, opts, user_acc) do
-    if url?(buffer, opts) |> flood("url?") do
+    if url?(buffer, opts) |> debug("url?") do
       case match_url() |> Regex.run(buffer, capture: [:url]) |> hd() do
         ^buffer ->
           link_url(buffer, opts, user_acc)
@@ -383,9 +383,9 @@ defmodule Linkify.Parser do
   end
 
   def url?(buffer, opts) do
-    valid_url?(buffer) |> flood("valid_url") && 
-    Regex.match?(match_url(), buffer) |> flood("matched?") && 
-    valid_tld?(buffer, opts) |> flood("valid_tld?")
+    valid_url?(buffer) |> debug("valid_url") && 
+    Regex.match?(match_url(), buffer) |> debug("matched?") && 
+    valid_tld?(buffer, opts) |> debug("valid_tld?")
   end
 
   def email?(buffer, opts) do
@@ -449,7 +449,7 @@ defmodule Linkify.Parser do
       true ->
         do_check_valid_tld?(host_without_port)
     end
-    |> flood("#{url} valid_tld?")
+    |> debug("#{url} valid_tld?")
   end
 
   defp do_check_valid_tld?(host) do
