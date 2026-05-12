@@ -62,4 +62,20 @@ defmodule Linkify do
   def link_map(text, acc, opts \\ []) do
     parse({text, acc}, opts)
   end
+
+  @doc """
+  Returns all mention strings (e.g. "user@domain.tld") found in `text`
+  using Linkify's own mention parser, without any DB or HTTP lookups.
+  """
+  def collect_mentions(text, opts \\ []) when is_binary(text) do
+    collecting_handler = fn mention, _buffer, _opts, collected ->
+      nick = String.trim_leading(mention, "@")
+      {mention, [nick | collected]}
+    end
+
+    {_text, nicks} =
+      link_map(text, [], [mention: true, mention_handler: collecting_handler] ++ opts)
+
+    Enum.uniq(nicks)
+  end
 end
