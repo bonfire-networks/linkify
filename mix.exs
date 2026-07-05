@@ -33,7 +33,7 @@ defmodule Linkify.Mixfile do
     [
       {:ex_doc, "~> 0.20", only: :dev, runtime: false},
       # {:credo, "~> 1.6.6", only: [:dev, :test], runtime: false},
-      {:untangle, "~> 0.3"}
+      {:untangle, "~> 0.5"}
     ]
   end
 
