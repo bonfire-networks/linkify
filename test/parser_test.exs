@@ -262,6 +262,46 @@ defmodule Linkify.ParserTest do
 
   end
 
+  # each test here gets a timeout so that a regression fails loudly instead of
+  # spinning forever (an unterminated fence used to loop in `do_code_block/3`)
+  describe "markdown code blocks" do
+    @tag timeout: 5_000
+    test "unterminated inline code block does not loop, and its contents are not linked" do
+      text = "it's 90`s music, see google.com"
+      assert parse(text) == text
+    end
+
+    @tag timeout: 5_000
+    test "unterminated fenced code block does not loop, and its contents are not linked" do
+      text = "```\nsee google.com"
+      assert parse(text) == text
+    end
+
+    @tag timeout: 5_000
+    test "collecting mentions in an unterminated code block does not loop" do
+      assert Linkify.collect_mentions("hey `@someone") == []
+      assert Linkify.collect_mentions("hey @someone `and @other") == ["someone"]
+    end
+
+    @tag timeout: 5_000
+    test "code block separator at the very end of the input" do
+      text = "foo `"
+      assert parse(text) == text
+
+      text = "foo ```"
+      assert parse(text) == text
+    end
+
+    @tag timeout: 5_000
+    test "terminated code blocks still skip their contents only" do
+      assert parse("`google.com` and google.com") ==
+               "`google.com` and <a href=\"http://google.com\">google.com</a>"
+
+      assert parse("```\ngoogle.com\n``` and google.com") ==
+               "```\ngoogle.com\n``` and <a href=\"http://google.com\">google.com</a>"
+    end
+  end
+
   def valid_number?([list], number) do
     assert List.last(list) == number
   end

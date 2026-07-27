@@ -241,8 +241,10 @@ defmodule Linkify.Parser do
         )
 
       [remaining_text] ->
-        # Still inside the code block, accumulate the entire remaining text
-        do_parse({"", user_acc}, opts, {buffer <> remaining_text, acc, type})
+        # Unterminated code block: emit the rest verbatim (unparsed) and finish.
+        # NOTE: the buffer has to be flushed into `acc` here, otherwise `do_parse`
+        # re-enters this same clause with an identical state and loops forever.
+        do_parse({"", user_acc}, opts, {"", accumulate(acc, buffer <> remaining_text), type})
     end
   end
 
