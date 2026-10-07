@@ -20,13 +20,16 @@ defmodule Linkify.Parser do
     do:
       ~r{^(?:\W*)?(?<url>(?:https?:\/\/[\w.-]+(?:\.[\w\.-]+)*|(?:https?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+)[\w\-\._~%:\/?#[\]@!\$&'\(\)\*\+,;=.]*$)}u
 
-  def get_scheme_host, do: ~r{^\W*(?<scheme>https?:\/\/)?(?:[^@\n]+\\w@)?(?<host>[^:#~\/\n?]+)}u
+  def get_scheme_host, do: ~r{^\W*(?<scheme>https?:\/\/)?(?:[^@\n]+\w@)?(?<host>[^:#~\/\n?]+)}u
 
   def match_hashtag,
     do: ~r/^(?<tag>\#[[:word:]_]*[[:alpha:]_·\x{200c}][[:word:]_·\p{M}\x{200c}]*)/u
 
   def match_skipped_tag, do: ~r/^(?<tag>(a|code|pre)).*>*/
-  def match_mention, do: ~r/^(?<prefix>@)(?<user>[a-zA-Z\d_-]+)(@(?<host>[^@]+))?$/
+  # usernames may contain letters, marks and digits in any script, plus `_` and `-`, and dots between those (as Mastodon allows), see the W3C SocialCG ActivityPub and WebFinger report, 3.1.2
+  def match_mention,
+    do:
+      ~r/^(?<prefix>@)(?<user>[\p{L}\p{M}\p{N}_-]+(?:\.[\p{L}\p{M}\p{N}_-]+)*)(@(?<host>[^@]+))?$/u
   def delimiters, do: ~r/[,;:>?!]*$/
 
   @en_apostrophes [
@@ -72,7 +75,8 @@ defmodule Linkify.Parser do
       ~s{Check out <a href="http://google.com">google.com</a>}
   """
 
-  @types [:url, :hashtag, :extra, :mention, :email]
+  # mentions go before URLs, otherwise `@first.last@example.com` gets linked as the URL `http://first.last@example.com`
+  @types [:mention, :url, :hashtag, :extra, :email]
 
   def parse(input, opts \\ %{})
   def parse(input, opts) when is_binary(input) do
@@ -306,9 +310,10 @@ defmodule Linkify.Parser do
       buffer |> trim_leading_paren |> trim_trailing_paren
     else
       :both -> buffer |> trim_leading_paren |> trim_trailing_paren
-      :leading_only -> buffer |> trim_leading_paren
+      # none of the `parens_*` checks returns `:leading_only` (and they only return `:both`, `:noop` or `:next`), so the type checker flags these two clauses as dead
+      # :leading_only -> buffer |> trim_leading_paren
       :noop -> buffer
-      _ -> buffer
+      # _ -> buffer
     end
   end
 
@@ -619,7 +624,7 @@ defmodule Linkify.Parser do
 
   defp restore_stripped_symbols(buffer, buffer, link), do: link # when buffer and stripped_buffer are the same
 
-  defp restore_stripped_symbols(buffer, stripped_buffer, {link, user_acc}) do
+  defp restore_stripped_symbols(buffer, stripped_buffer, {link, _user_acc}) do
     restore_stripped_symbols(buffer, stripped_buffer, link)
   end
 

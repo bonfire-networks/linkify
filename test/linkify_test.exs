@@ -499,6 +499,68 @@ defmodule LinkifyTest do
       assert Linkify.link(text, mention: true, mention_prefix: "/users/") == expected
     end
 
+    # remote usernames may contain any valid RFC 7565 characters (W3C SocialCG ActivityPub and WebFinger report, 3.1.2)
+    test "non-ASCII username" do
+      for username <- ["josé", "你好"] do
+        text = "hey @#{username}@example.com"
+
+        expected =
+          "hey <a href=\"/users/#{username}@example.com\">@#{username}@example.com</a>"
+
+        assert Linkify.link(text, mention: true, mention_prefix: "/users/") == expected
+      end
+    end
+
+    test "non-ASCII username without a host" do
+      for username <- ["josé", "你好"] do
+        text = "hello @#{username}"
+
+        expected = "hello <a href=\"/users/#{username}\">@#{username}</a>"
+
+        assert Linkify.link(text, mention: true, mention_prefix: "/users/") == expected
+      end
+    end
+
+    test "non-ASCII username surrounded by CJK text" do
+      text = "你好 @你好@example.com 你好"
+
+      expected = "你好 <a href=\"/users/你好@example.com\">@你好@example.com</a> 你好"
+
+      assert Linkify.link(text, mention: true, mention_prefix: "/users/") == expected
+    end
+
+    test "non-ASCII username with no word-separation before it" do
+      text = "你好@你好@example.com"
+
+      assert Linkify.link(text, mention: true, mention_prefix: "/users/") == text
+    end
+
+    # Mastodon allows dots in the middle of a username
+    test "username with a dot is a mention, not a URL" do
+      text = "hey @first.last@example.com"
+
+      expected =
+        "hey <a href=\"/users/first.last@example.com\">@first.last@example.com</a>"
+
+      assert Linkify.link(text, mention: true, mention_prefix: "/users/") == expected
+    end
+
+    test "trailing punctuation stays outside the mention" do
+      text = "hey @first.last@example.com."
+
+      expected =
+        "hey <a href=\"/users/first.last@example.com\">@first.last@example.com</a>."
+
+      assert Linkify.link(text, mention: true, mention_prefix: "/users/") == expected
+
+      text = "hey (@josé@example.com)"
+
+      expected =
+        "hey (<a href=\"/users/josé@example.com\">@josé@example.com</a>)"
+
+      assert Linkify.link(text, mention: true, mention_prefix: "/users/") == expected
+    end
+
     test ".onion domain" do
       text = "Hey @admin@vww6ybal4bd7szmgncyruucpgfkqahzddi37ktceo3ah7ngmcopnpyyd.onion"
 
