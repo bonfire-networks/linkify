@@ -535,6 +535,38 @@ defmodule LinkifyTest do
       assert Linkify.link(text, mention: true, mention_prefix: "/users/") == text
     end
 
+    # the userpart and host examples from https://swicg.github.io/activitypub-webfinger/internationalized (except `anne.o'neill+notes`, whose ' and + aren't linkified in typed mentions)
+    @swicg_handles [
+      "user1@ตัวอย่าง.example",
+      "renée@উদাহরণ.example",
+      "иван@எடுத்துக்காட்டு.example",
+      "ελπίδα@ఉదాహరణ.example",
+      "小明@მაგალითი.example",
+      "किरण@example.հայ",
+      "ليلى@ምሳሌ.example",
+      "שרה@example.net",
+      "민수@example.中国",
+      "さくら@café.example"
+    ]
+
+    test "the SWICG userpart and host examples" do
+      for handle <- @swicg_handles do
+        assert Linkify.link("hey @#{handle} hi",
+                 mention: true,
+                 mention_prefix: "/users/",
+                 validate_tld: false
+               ) == "hey <a href=\"/users/#{handle}\">@#{handle}</a> hi"
+      end
+    end
+
+    # TLD validation is on in production, so internationalized TLDs must count as valid
+    test "internationalized TLDs are valid" do
+      for handle <- ["किरण@example.հայ", "민수@example.中国", "user@example.مصر"] do
+        assert Linkify.link("hey @#{handle} hi", mention: true, mention_prefix: "/users/") ==
+                 "hey <a href=\"/users/#{handle}\">@#{handle}</a> hi"
+      end
+    end
+
     # Mastodon allows dots in the middle of a username
     test "username with a dot is a mention, not a URL" do
       text = "hey @first.last@example.com"

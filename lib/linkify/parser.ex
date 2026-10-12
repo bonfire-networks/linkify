@@ -461,7 +461,21 @@ defmodule Linkify.Parser do
 
   defp do_check_valid_tld?(host) do
     tld = host |> String.trim_trailing(".") |> String.split(".") |> List.last()
-    MapSet.member?(@tlds, tld)
+    MapSet.member?(@tlds, tld) or MapSet.member?(@tlds, a_label(tld))
+  end
+
+  # the TLD list has internationalized TLDs only as A-labels (e.g. `xn--fiqs8s` for `中国`)
+  defp a_label(label) do
+    if String.match?(label, ~r/\A[[:ascii:]]*\z/) do
+      label
+    else
+      try do
+        to_string(:idna.encode(String.to_charlist(label), uts46: true))
+      catch
+        # `:idna` reports an invalid label by exiting
+        :exit, _ -> label
+      end
+    end
   end
 
   def safe_to_integer(string, base \\ 10) do
